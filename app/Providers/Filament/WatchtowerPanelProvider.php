@@ -18,6 +18,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Rupadana\ApiService\ApiServicePlugin;
 
 class WatchtowerPanelProvider extends PanelProvider
 {
@@ -57,6 +58,9 @@ class WatchtowerPanelProvider extends PanelProvider
 				'profile' => MenuItem::make()->url('/settings/profile'),
 			])
 			->spa()
+			->plugins([
+				ApiServicePlugin::make()
+			])
 			->maxContentWidth('full')
             ->unsavedChangesAlerts()
             ->sidebarWidth('17rem')
