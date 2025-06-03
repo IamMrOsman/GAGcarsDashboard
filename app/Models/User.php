@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Panel;
 use Illuminate\Support\Str;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -70,5 +71,10 @@ class User extends Authenticatable
 	{
 		return $this->belongsTo(State::class);
 	}
+
+	public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
+    }
 
 }
