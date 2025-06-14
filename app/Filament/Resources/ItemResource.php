@@ -59,16 +59,83 @@ class ItemResource extends Resource
 					->disabled()
 					->dehydrated()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description')
+				Forms\Components\Textarea::make('description')
 					->columnSpanFull()
-                    ->maxLength(255),
+					->maxLength(255),
+				Forms\Components\TextInput::make('year')
+					->required()
+					->numeric()
+					->minValue(1900)
+					->maxValue(date('Y'))
+					->default(date('Y')),
+				Forms\Components\TextInput::make('engine_capacity')
+					->required()
+					->numeric()
+					->minValue(0)
+					->maxValue(10000)
+					->default(0),
+				Forms\Components\Select::make('transmission')
+					->required()
+					->native(false)
+					->options([
+						'manual' => 'Manual',
+						'automatic' => 'Automatic',
+					])
+					->default('manual'),
+				Forms\Components\Select::make('steer_position')
+					->required()
+					->native(false)
+					->options([
+						'left' => 'Left',
+						'right' => 'Right',
+					])
+					->default('left'),
+				Forms\Components\Select::make('build_type')
+					->required()
+					->native(false)
+					->options([
+						'sedan' => 'Sedan',
+						'hatchback' => 'Hatchback',
+						'suv' => 'SUV',
+						'mpv' => 'MPV',
+						'coupe' => 'Coupe',
+						'convertible' => 'Convertible',
+						'pickup' => 'Pickup',
+						'van' => 'Van',
+						'other' => 'Other',
+					])
+					->default('sedan'),
+				Forms\Components\TextInput::make('number_of_passengers')
+					->required()
+					->numeric()
+					->minValue(1)
+					->maxValue(100)
+					->default(1),
                 Forms\Components\FileUpload::make('images')
 					->columnSpanFull()
                     ->multiple()
                     ->image(),
-                Forms\Components\TextInput::make('location')
+                Forms\Components\KeyValue::make('location')
 					->columnSpanFull()
-                    ->maxLength(255),
+					->default([
+						'longitude' => '',
+						'latitude' => '',
+					])
+					->addable(false)
+					->deletable(false),
+				Forms\Components\KeyValue::make('features')
+					->columnSpanFull()
+					->default([
+						'air_conditioning' => '',
+						'dashboard_camera' => '',
+						'power_windows' => '',
+						'power_locks' => '',
+						'power_mirrors' => '',
+						'power_steering' => '',
+						'power_seats' => '',
+					])
+					->addable(false)
+					->deletable(false),
                 Forms\Components\TextInput::make('serial_number')
 					->columnSpanFull()
                     ->maxLength(255),
