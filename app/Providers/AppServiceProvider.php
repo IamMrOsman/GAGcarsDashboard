@@ -2,10 +2,8 @@
 
 namespace App\Providers;
 
-use Livewire\Livewire;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Filament\Support\Facades\FilamentIcon;
 
@@ -32,10 +30,6 @@ class AppServiceProvider extends ServiceProvider
 
 		Gate::define('viewApiDocs', function () {
 			return true;
-		});
-
-		Livewire::setScriptRoute(function ($handle) {
-			return Route::get('/vendor/livewire/livewire.js', $handle);
 		});
     }
 }
