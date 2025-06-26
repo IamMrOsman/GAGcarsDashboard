@@ -66,7 +66,89 @@ class AuthController extends Controller
 	}
 
 	/**
-	 * User Details
+	 * Send OTP to user's phone and email
+	 */
+	public function sendOtp(Request $request)
+	{
+		$request->validate([
+			'phone' => 'required|string',
+			'email' => 'required|email',
+		]);
+
+		$user = User::where('phone', $request->phone)
+			->orWhere('email', $request->email)
+			->first();
+
+		if (!$user) {
+			throw ValidationException::withMessages([
+				'phone' => ['User not found with provided phone or email.'],
+			]);
+		}
+
+		// Generate OTP for phone
+		$phoneOtp = Otp::generate($user->phone);
+
+		// Generate OTP for email
+		$emailOtp = Otp::generate($user->email);
+
+		// Send SMS via Arkesel
+		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
+		$smsDriver->send($user->phone, "Your OTP is: {$phoneOtp}");
+
+		// Send Email using Laravel's built-in mail
+		\Mail::raw("Your OTP is: {$emailOtp}", function ($message) use ($user) {
+			$message->to($user->email)
+				->subject('Your OTP Code');
+		});
+
+		return response()->json([
+			'message' => 'OTP sent successfully to both phone and email',
+			'phone' => $user->phone,
+			'email' => $user->email
+		], 200);
+	}
+
+	/**
+	 * Verify OTP and return authentication token
+	 */
+	public function verifyOtp(Request $request)
+	{
+		$request->validate([
+			'phone' => 'required|string',
+			'otp' => 'required|string|size:6',
+			'device_name' => 'nullable',
+		]);
+
+		$user = User::where('phone', $request->phone)->first();
+
+		if (!$user) {
+			throw ValidationException::withMessages([
+				'phone' => ['User not found.'],
+			]);
+		}
+
+		// Verify OTP for phone
+		if (!Otp::match($request->otp, $user->phone)) {
+			// Also try to verify with email OTP
+			if (!Otp::match($request->otp, $user->email)) {
+				throw ValidationException::withMessages([
+					'otp' => ['Invalid OTP.'],
+				]);
+			}
+		}
+
+		// Generate token
+		$token = $user->createToken($request->device_name)->plainTextToken;
+
+		return response()->json([
+			'message' => 'OTP verified successfully',
+			'token' => $token,
+			'user' => $user
+		], 200);
+	}
+
+	/**
+	 * Get authenticated user details
 	 */
 	public function user(Request $request)
 	{

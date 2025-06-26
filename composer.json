@@ -16,7 +16,8 @@
         "livewire/flux": "^2.1.1",
         "livewire/volt": "^1.7.0",
         "rupadana/filament-api-service": "^3.4",
-        "secondnetwork/blade-tabler-icons": "^3.31"
+        "secondnetwork/blade-tabler-icons": "^3.31",
+        "tzsk/otp": "^9.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
