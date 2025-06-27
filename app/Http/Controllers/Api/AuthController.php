@@ -73,11 +73,11 @@ class AuthController extends Controller
 	{
 		$request->validate([
 			'phone' => 'required|string',
-			'email' => 'required|email',
+			'email' => 'nullable|email',
 		]);
 
 		$user = User::where('phone', $request->phone)
-			->orWhere('email', $request->email)
+			// ->orWhere('email', $request->email)
 			->first();
 
 		if (!$user) {
@@ -90,20 +90,20 @@ class AuthController extends Controller
 		$phoneOtp = Otp::generate($user->phone);
 
 		// Generate OTP for email
-		$emailOtp = Otp::generate($user->email);
+		// $emailOtp = Otp::generate($user->email);
 
 		// Send SMS via Arkesel
 		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
 		$smsDriver->send($user->phone, "Your OTP is: {$phoneOtp}");
 
 		// Send Email using Laravel's built-in mail
-		\Mail::raw("Your OTP is: {$emailOtp}", function ($message) use ($user) {
-			$message->to($user->email)
-				->subject('Your OTP Code');
-		});
+		// \Mail::raw("Your OTP is: {$emailOtp}", function ($message) use ($user) {
+		// 	$message->to($user->email)
+		// 		->subject('Your OTP Code');
+		// });
 
 		return response()->json([
-			'message' => 'OTP sent successfully to both phone and email',
+			'message' => 'OTP sent successfully to phone',
 			'phone' => $user->phone,
 			'email' => $user->email
 		], 200);
