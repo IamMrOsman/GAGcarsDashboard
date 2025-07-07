@@ -1,14 +1,14 @@
 <?php
-namespace App\Filament\Resources\SpecialOfferResource\Api;
+namespace App\Filament\Resources\FaqResource\Api;
 
 use Rupadana\ApiService\ApiService;
-use App\Filament\Resources\SpecialOfferResource;
+use App\Filament\Resources\FaqResource;
 use Illuminate\Routing\Router;
 
 
-class SpecialOfferApiService extends ApiService
+class FaqApiService extends ApiService
 {
-    protected static string | null $resource = SpecialOfferResource::class;
+    protected static string | null $resource = FaqResource::class;
 
     public static function handlers() : array
     {
