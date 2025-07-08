@@ -22,6 +22,11 @@ class BrandModelResource extends Resource
 
 	protected static ?string $recordTitleAttribute = 'name';
 
+	protected static ?string $navigationLabel = 'Models';
+
+	protected static ?string $modelLabel = 'Model';
+	protected static ?string $pluralModelLabel = 'Models';
+
     protected static ?string $navigationIcon = 'tabler-car-4wd';
 
     public static function form(Form $form): Form

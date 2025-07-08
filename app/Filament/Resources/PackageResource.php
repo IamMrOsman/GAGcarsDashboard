@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PackageResource\Pages;
 use App\Filament\Resources\PackageResource\RelationManagers;
 use App\Models\Package;
+use App\Models\Country;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -26,15 +27,26 @@ class PackageResource extends Resource
 				Forms\Components\TextInput::make('name')
 					->required()
 					->label('Package Name')
-					->columnSpanFull()
 					->maxLength(255),
+				Forms\Components\Select::make('country_id')
+					->relationship('country', 'name')
+					->preload()
+					->searchable()
+					->reactive(),
 				Forms\Components\Textarea::make('description')
 					->maxLength(65535)
 					->columnSpanFull(),
 				Forms\Components\TextInput::make('price')
 					->required()
 					->numeric()
-					->prefix('GHC')
+					->prefix(function ($get) {
+						$countryId = $get('country_id');
+						if ($countryId) {
+							$country = Country::find($countryId);
+							return $country ? $country->currency_symbol : 'GHC';
+						}
+						return 'GHC';
+					})
 					->minValue(0)
 					->step(0.01),
 				Forms\Components\TextInput::make('number_of_listings')
@@ -50,11 +62,17 @@ class PackageResource extends Resource
 			->columns([
 				Tables\Columns\TextColumn::make('name')
 					->searchable(),
+				Tables\Columns\TextColumn::make('country.name'),
 				Tables\Columns\TextColumn::make('description')
 					->limit(50)
 					->searchable(),
 				Tables\Columns\TextColumn::make('price')
-					->money('USD')
+					->formatStateUsing(function ($state, $record) {
+						if ($record && $record->country) {
+							return $record->country->currency_symbol . ' ' . number_format($state, 2);
+						}
+						return 'GHC ' . number_format($state, 2);
+					})
 					->sortable(),
 				Tables\Columns\TextColumn::make('number_of_listings')
 					->numeric()

@@ -24,7 +24,7 @@ class BroadcastResource extends Resource
         return $form
             ->schema([
 				Forms\Components\Hidden::make('user_id')
-					->default(auth()->user()->id),
+					->default(auth()->id()),
                 Forms\Components\TextInput::make('subject')
                     ->required()
 					->columnSpanFull()
@@ -34,6 +34,7 @@ class BroadcastResource extends Resource
 					->columnSpanFull()
                     ->rows(5),
                 Forms\Components\FileUpload::make('image')
+					->columnSpanFull()
                     ->image(),
                 Forms\Components\Select::make('target')
                     ->options([
@@ -42,6 +43,10 @@ class BroadcastResource extends Resource
                         'all' => 'All',
                     ])
                     ->default('customers'),
+				Forms\Components\Select::make('country_id')
+					->relationship('country', 'name')
+					->preload()
+					->searchable(),
                 Forms\Components\DateTimePicker::make('scheduled_at'),
                 Forms\Components\Select::make('status')
                     ->options([
@@ -59,6 +64,7 @@ class BroadcastResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('subject'),
                 Tables\Columns\TextColumn::make('target'),
+                Tables\Columns\TextColumn::make('country.name'),
                 Tables\Columns\TextColumn::make('status'),
                 Tables\Columns\TextColumn::make('scheduled_at'),
                 Tables\Columns\TextColumn::make('created_at'),

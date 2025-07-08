@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('broadcasts', function (Blueprint $table) {
             $table->ulid('id')->primary();
 			$table->foreignUlid('user_id')->constrained('users');
+			$table->foreignId('country_id')->nullable()->constrained('countries');
 			$table->string('subject');
 			$table->text('message');
 			$table->string('image')->nullable();

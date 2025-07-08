@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('packages', function (Blueprint $table) {
-            $table->ulid('id')->primary();
-			$table->foreignId('country_id')->nullable()->constrained('countries');
+        Schema::create('item_fields', function (Blueprint $table) {
+            $table->id();
 			$table->string('name');
-			$table->string('description')->nullable();
-			$table->decimal('price', 10, 2);
-			$table->integer('number_of_listings');
+			$table->string('label');
+			$table->string('type');
+			$table->boolean('unique')->default(false);
+			$table->boolean('nullable')->default(false);
+			$table->json('options')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('packages');
+        Schema::dropIfExists('item_fields');
     }
 };

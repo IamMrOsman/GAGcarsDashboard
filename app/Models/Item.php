@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Item extends Model
 {
-    use HasFactory;
+	use HasFactory;
 	use SoftDeletes;
 	use HasUlids;
 
@@ -33,5 +33,10 @@ class Item extends Model
 	public function user()
 	{
 		return $this->belongsTo(User::class);
+	}
+
+	public function country()
+	{
+		return $this->belongsTo(Country::class);
 	}
 }

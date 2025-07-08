@@ -18,97 +18,108 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CategoryResource extends Resource
 {
-    protected static ?string $model = Category::class;
+	protected static ?string $model = Category::class;
 
 	protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'iconpark-branch';
+	protected static ?string $navigationIcon = 'iconpark-branch';
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('user_id')
+	public static function form(Form $form): Form
+	{
+		return $form
+			->schema([
+				Forms\Components\TextInput::make('user_id')
 					->hidden()
 					->default(auth()->id())
-                    ->maxLength(26),
-                Forms\Components\TextInput::make('name')
-                    ->required()
+					->maxLength(26),
+				Forms\Components\TextInput::make('name')
+					->required()
 					->columnSpanFull()
 					->live()
-					->afterStateUpdated(fn (Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('slug')
-                    ->required()
+					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
+					->maxLength(255),
+				Forms\Components\TextInput::make('slug')
+					->required()
 					->unique()
 					->disabled()
 					->dehydrated()
 					->columnSpanFull()
-                    ->maxLength(255),
+					->maxLength(255),
 				Forms\Components\Select::make('parent_id')
 					->label('Parent Category')
 					->columnSpanFull()
 					->relationship('parent', 'name')
 					->preload()
 					->searchable(),
-                Forms\Components\Textarea::make('description')
+				Forms\Components\Textarea::make('description')
 					->columnSpanFull()
-                    ->maxLength(255),
-                Forms\Components\FileUpload::make('image')
+					->maxLength(255),
+				Forms\Components\Select::make('itemFields')
 					->columnSpanFull()
-                    ->image(),
-            ]);
-    }
+					->label('Available Fields')
+					->relationship('itemFields', 'label')
+					->multiple()
+					->preload()
+					->searchable()
+					->helperText('Select the fields that should be available for items in this category')
+					->getOptionLabelFromRecordUsing(function ($record) {
+						return $record->label . ' (' . $record->type . ', ' . ($record->required ? 'required' : 'nullable') . ')';
+					}),
+				Forms\Components\FileUpload::make('image')
+					->columnSpanFull()
+					->image(),
+			]);
+	}
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('parent.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('slug')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('description')
-                    ->searchable(),
-                Tables\Columns\ImageColumn::make('image'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
+	public static function table(Table $table): Table
+	{
+		return $table
+			->columns([
+				Tables\Columns\TextColumn::make('parent.name')
+					->numeric()
+					->sortable(),
+				Tables\Columns\TextColumn::make('name')
+					->searchable(),
+				Tables\Columns\TextColumn::make('slug')
+					->searchable(),
+				Tables\Columns\TextColumn::make('description')
+					->searchable(),
+				Tables\Columns\ImageColumn::make('image'),
+				Tables\Columns\TextColumn::make('created_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+				Tables\Columns\TextColumn::make('updated_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+			])
+			->filters([
+				//
+			])
+			->actions([
+				Tables\Actions\EditAction::make(),
+			])
+			->bulkActions([
+				Tables\Actions\BulkActionGroup::make([
+					Tables\Actions\DeleteBulkAction::make(),
+				]),
+			]);
+	}
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+	public static function getRelations(): array
+	{
+		return [
+			//
+		];
+	}
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListCategories::route('/'),
-            // 'create' => Pages\CreateCategory::route('/create'),
-            // 'edit' => Pages\EditCategory::route('/{record}/edit'),
-        ];
-    }
+	public static function getPages(): array
+	{
+		return [
+			'index' => Pages\ListCategories::route('/'),
+			// 'create' => Pages\CreateCategory::route('/create'),
+			// 'edit' => Pages\EditCategory::route('/{record}/edit'),
+		];
+	}
 }

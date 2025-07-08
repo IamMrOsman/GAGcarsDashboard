@@ -80,4 +80,18 @@ class User extends Authenticatable implements FilamentUser
         return true;
     }
 
+	public function verifications()
+	{
+		return $this->hasMany(Verification::class);
+	}
+
+	public function isVerified(): bool
+	{
+		return $this->verifications()->where('status', 'verified')->where('verification_type', 'individual')->exists();
+	}
+
+	public function isVerifiedDealer(): bool
+	{
+		return $this->verifications()->where('status', 'verified')->where('verification_type', 'dealer')->exists();
+	}
 }

@@ -18,6 +18,7 @@ return new class extends Migration
 			$table->string('document_number')->nullable();
 			$table->string('document_front')->nullable();
 			$table->string('document_back')->nullable();
+			$table->enum('verification_type', ['dealer', 'individual'])->default('individual');
 			$table->string('selfie')->nullable();
 			$table->string('status')->default('pending');
 			$table->text('comment')->nullable();

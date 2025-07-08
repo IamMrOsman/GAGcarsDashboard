@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use Filament\Forms;
 use App\Models\Item;
+use App\Models\Country;
 use Filament\Tables;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -18,47 +19,49 @@ use App\Filament\Resources\ItemResource\RelationManagers;
 
 class ItemResource extends Resource
 {
-    protected static ?string $model = Item::class;
+	protected static ?string $model = Item::class;
 
 	protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationIcon = 'tabler-car-suv';
+	protected static ?string $navigationIcon = 'tabler-car-suv';
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('user_id')
+	public static function form(Form $form): Form
+	{
+		return $form
+			->schema([
+				Forms\Components\TextInput::make('user_id')
 					->hidden()
 					->default(auth()->id())
-                    ->maxLength(26),
+					->maxLength(26),
 				Forms\Components\Select::make('brand_id')
 					->required()
+					->label('Make')
 					->relationship('brand', 'name')
 					->preload()
 					->searchable(),
-                Forms\Components\Select::make('brand_model_id')
-                    ->required()
+				Forms\Components\Select::make('brand_model_id')
+					->required()
+					->label('Model')
 					->relationship('brandModel', 'name')
 					->preload()
 					->searchable(),
-                Forms\Components\Select::make('category_id')
+				Forms\Components\Select::make('category_id')
 					->columnSpanFull()
-                    ->required()
+					->required()
 					->relationship('category', 'name')
 					->preload()
 					->searchable(),
-                Forms\Components\TextInput::make('name')
-                    ->required()
+				Forms\Components\TextInput::make('name')
+					->required()
 					->live()
-					->afterStateUpdated(fn (Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('slug')
-                    ->required()
+					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
+					->maxLength(255),
+				Forms\Components\TextInput::make('slug')
+					->required()
 					->unique()
 					->disabled()
 					->dehydrated()
-                    ->maxLength(255),
+					->maxLength(255),
 				Forms\Components\Textarea::make('description')
 					->columnSpanFull()
 					->maxLength(255),
@@ -111,11 +114,11 @@ class ItemResource extends Resource
 					->minValue(1)
 					->maxValue(100)
 					->default(1),
-                Forms\Components\FileUpload::make('images')
+				Forms\Components\FileUpload::make('images')
 					->columnSpanFull()
-                    ->multiple()
-                    ->image(),
-                Forms\Components\KeyValue::make('location')
+					->multiple()
+					->image(),
+				Forms\Components\KeyValue::make('location')
 					->columnSpanFull()
 					->default([
 						'longitude' => '',
@@ -136,130 +139,152 @@ class ItemResource extends Resource
 					])
 					->addable(false)
 					->deletable(false),
-                Forms\Components\TextInput::make('serial_number')
+				Forms\Components\TextInput::make('serial_number')
 					->columnSpanFull()
-                    ->maxLength(255),
-                Forms\Components\Select::make('condition')
-                    ->required()
+					->maxLength(255),
+				Forms\Components\Select::make('condition')
+					->required()
 					->native(false)
 					->options([
 						'new' => 'BrandNew',
 						'used' => 'Used',
 					])
-                    ->default('new'),
-                Forms\Components\Select::make('status')
-                    ->required()
+					->default('new'),
+				Forms\Components\Select::make('status')
+					->required()
 					->native(false)
 					->options([
 						'0' => 'Inactive',
 						'1' => 'Active',
 					])
-                    ->default(0),
-                Forms\Components\TextInput::make('price')
+					->default(0),
+				Forms\Components\Select::make('country_id')
+					->required()
+					->label('Country')
+					->relationship('country', 'name')
+					->preload()
+					->searchable()
+					->reactive(),
+				Forms\Components\TextInput::make('price')
+					->numeric()
+					->prefix(function ($get) {
+						$countryId = $get('country_id');
+						if ($countryId) {
+							$country = Country::find($countryId);
+							return $country ? $country->currency_symbol : 'GHC';
+						}
+						return 'GHC';
+					})
+					->minValue(0)
+					->step(0.01),
+				Forms\Components\TextInput::make('mileage')
 					->columnSpanFull()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('mileage')
-					->columnSpanFull()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('warranty')
-                    ->maxLength(255),
-                Forms\Components\DatePicker::make('warranty_expiration'),
-            ]);
-    }
+					->maxLength(255),
+				Forms\Components\TextInput::make('warranty')
+					->maxLength(255),
+				Forms\Components\DatePicker::make('warranty_expiration'),
+			]);
+	}
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
+	public static function table(Table $table): Table
+	{
+		return $table
+			->columns([
+				Tables\Columns\TextColumn::make('id')
+					->label('ID')
 					->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('user.name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('brandModel.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('brand.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('category.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('slug')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('description')
-                    ->searchable()
+					->searchable(),
+				Tables\Columns\TextColumn::make('user.name')
+					->searchable(),
+				Tables\Columns\TextColumn::make('brandModel.name')
+					->numeric()
+					->sortable(),
+				Tables\Columns\TextColumn::make('brand.name')
+					->numeric()
+					->sortable(),
+				Tables\Columns\TextColumn::make('category.name')
+					->numeric()
+					->sortable(),
+				Tables\Columns\TextColumn::make('name')
+					->searchable(),
+				Tables\Columns\TextColumn::make('slug')
+					->searchable(),
+				Tables\Columns\TextColumn::make('description')
+					->searchable()
 					->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('location')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('serial_number')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('condition')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('price')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('mileage')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('warranty')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('warranty_expiration')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                Tables\Filters\TrashedFilter::make(),
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                ]),
-            ]);
-    }
+				Tables\Columns\TextColumn::make('location')
+					->searchable(),
+				Tables\Columns\TextColumn::make('serial_number')
+					->searchable(),
+				Tables\Columns\TextColumn::make('condition')
+					->searchable(),
+				Tables\Columns\TextColumn::make('status')
+					->searchable(),
+				Tables\Columns\TextColumn::make('price')
+					->formatStateUsing(function ($state, $record) {
+						if ($record && $record->country && $state) {
+							return $record->country->currency_symbol . ' ' . number_format((float)$state, 2);
+						}
+						return $state ? 'GHC ' . number_format((float)$state, 2) : '';
+					})
+					->searchable(),
+				Tables\Columns\TextColumn::make('mileage')
+					->searchable(),
+				Tables\Columns\TextColumn::make('warranty')
+					->searchable(),
+				Tables\Columns\TextColumn::make('warranty_expiration')
+					->searchable(),
+				Tables\Columns\TextColumn::make('deleted_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+				Tables\Columns\TextColumn::make('created_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+				Tables\Columns\TextColumn::make('updated_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+			])
+			->filters([
+				Tables\Filters\TrashedFilter::make(),
+			])
+			->actions([
+				Tables\Actions\ViewAction::make(),
+				Tables\Actions\EditAction::make(),
+			])
+			->bulkActions([
+				Tables\Actions\BulkActionGroup::make([
+					Tables\Actions\DeleteBulkAction::make(),
+					Tables\Actions\ForceDeleteBulkAction::make(),
+					Tables\Actions\RestoreBulkAction::make(),
+				]),
+			]);
+	}
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+	public static function getRelations(): array
+	{
+		return [
+			//
+		];
+	}
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListItems::route('/'),
-            // 'create' => Pages\CreateItem::route('/create'),
-            // 'view' => Pages\ViewItem::route('/{record}'),
-            // 'edit' => Pages\EditItem::route('/{record}/edit'),
-        ];
-    }
+	public static function getPages(): array
+	{
+		return [
+			'index' => Pages\ListItems::route('/'),
+			// 'create' => Pages\CreateItem::route('/create'),
+			// 'view' => Pages\ViewItem::route('/{record}'),
+			// 'edit' => Pages\EditItem::route('/{record}/edit'),
+		];
+	}
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-    }
+	public static function getEloquentQuery(): Builder
+	{
+		return parent::getEloquentQuery()
+			->withoutGlobalScopes([
+				SoftDeletingScope::class,
+			]);
+	}
 }
