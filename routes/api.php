@@ -15,6 +15,11 @@ Route::post('/otp/verify', [AuthController::class, 'verifyOtp']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::get('/user', [AuthController::class, 'user']);
+	Route::post('/logout', [AuthController::class, 'logout']);
+	Route::post('/logout-all', [AuthController::class, 'logoutAll']);
+	Route::post('/change-password', [AuthController::class, 'changePassword']);
+	Route::post('/send-reset-password-otp', [AuthController::class, 'sendResetPasswordOtp']);
+	Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 	Route::prefix('my')->group(function () {
 		Route::get('/listings', [UserResourcesController::class, 'myListings']);

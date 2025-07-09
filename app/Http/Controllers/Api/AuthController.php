@@ -155,4 +155,107 @@ class AuthController extends Controller
 	{
 		return $request->user();
 	}
+
+	/**
+	 * Logout user
+	 */
+	public function logout(Request $request)
+	{
+		$request->user()->currentAccessToken()->delete();
+	}
+
+	/**
+	 * Logout all user's tokens
+	 */
+	public function logoutAll(Request $request)
+	{
+		$request->user()->tokens()->delete();
+	}
+
+	/**
+	 * change password
+	 */
+	public function changePassword(Request $request)
+	{
+		$request->validate([
+			'old_password' => 'required|string|min:8',
+			'new_password' => 'required|string|min:8',
+		]);
+
+		$user = User::where('phone', $request->phone)->first();
+
+		if (!$user) {
+			throw ValidationException::withMessages([
+				'phone' => ['User not found.'],
+			]);
+		}
+
+		$user->update([
+			'password' => Hash::make($request->password),
+		]);
+
+		return response()->json([
+			'message' => 'Password reset successfully',
+		], 200);
+	}
+
+	/**
+	 * send reset password otp
+	 */
+	public function sendResetPasswordOtp(Request $request)
+	{
+		$request->validate([
+			'phone' => 'required|string',
+		]);
+
+		$user = User::where('phone', $request->phone)->first();
+
+		if (!$user) {
+			throw ValidationException::withMessages([
+				'phone' => ['User not found.'],
+			]);
+		}
+
+		$phoneOtp = Otp::generate($user->phone);
+
+		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
+		$smsDriver->send($user->phone, "Your OTP is: {$phoneOtp}");
+
+		return response()->json([
+			'message' => 'OTP sent successfully'
+		], 200);
+	}
+
+	/**
+	 * reset password
+	 */
+	public function resetPassword(Request $request)
+	{
+		$request->validate([
+			'phone' => 'required|string',
+			'otp' => 'required|string|size:6',
+			'password' => 'required|string|min:8',
+		]);
+
+		$user = User::where('phone', $request->phone)->first();
+
+		if (!$user) {
+			throw ValidationException::withMessages([
+				'phone' => ['User not found.'],
+			]);
+		}
+
+		$token = $user->createToken($request->device_name)->plainTextToken;
+
+		$user->update([
+			'password' => Hash::make($request->password),
+		]);
+
+		return response()->json([
+			'message' => 'Password reset successfully',
+			'user' => $user,
+			'token' => $token
+		], 200);
+	}
+
 }
