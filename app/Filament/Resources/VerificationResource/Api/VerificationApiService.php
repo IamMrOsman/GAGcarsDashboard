@@ -16,7 +16,7 @@ class VerificationApiService extends ApiService
             Handlers\CreateHandler::class,
             Handlers\UpdateHandler::class,
             Handlers\DeleteHandler::class,
-            Handlers\PaginationHandler::class,
+            // Handlers\PaginationHandler::class,
             Handlers\DetailHandler::class
         ];
 

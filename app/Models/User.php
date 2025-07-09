@@ -94,4 +94,14 @@ class User extends Authenticatable implements FilamentUser
 	{
 		return $this->verifications()->where('status', 'verified')->where('verification_type', 'dealer')->exists();
 	}
+
+	public function promotions()
+	{
+		return $this->hasMany(Promotion::class);
+	}
+
+	public function specialOffers()
+	{
+		return $this->hasMany(SpecialOffer::class);
+	}
 }

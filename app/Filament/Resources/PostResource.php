@@ -26,6 +26,12 @@ class PostResource extends Resource
 			->schema([
 				Forms\Components\Hidden::make('user_id')
 					->default(auth()->user()->id),
+				Forms\Components\Select::make('country_id')
+					->relationship('country', 'name')
+					->preload()
+					->searchable()
+					->reactive()
+					->required(),
 				Forms\Components\TextInput::make('title')
 					->required()
 					->maxLength(255)

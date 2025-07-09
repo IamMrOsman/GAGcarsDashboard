@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->ulid('id')->primary();
 			$table->foreignUlid('user_id')->constrained('users');
+			$table->foreignUlid('country_id')->constrained('countries');
 			$table->string('title');
 			$table->string('slug');
 			$table->text('description')->nullable();
