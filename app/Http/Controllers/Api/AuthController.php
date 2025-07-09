@@ -31,7 +31,7 @@ class AuthController extends Controller
 			'password' => Hash::make($request->password),
 		]);
 
-		$token = $user->createToken($request->device_name)->plainTextToken;
+		$token = $user->createToken($request->phone)->plainTextToken;
 
 		return response()->json([
 			// 'token' => $token,
@@ -58,7 +58,7 @@ class AuthController extends Controller
 			]);
 		}
 
-		$token = $user->createToken($request->device_name)->plainTextToken;
+		$token = $user->createToken($request->phone)->plainTextToken;
 
 		return response()->json([
 			'token' => $token,
@@ -139,7 +139,7 @@ class AuthController extends Controller
 		}
 
 		// Generate token
-		$token = $user->createToken($request->device_name)->plainTextToken;
+		$token = $user->createToken($request->phone)->plainTextToken;
 
 		return response()->json([
 			'message' => 'OTP verified successfully',
@@ -245,7 +245,7 @@ class AuthController extends Controller
 			]);
 		}
 
-		$token = $user->createToken($request->device_name)->plainTextToken;
+		$token = $user->createToken($request->phone)->plainTextToken;
 
 		$user->update([
 			'password' => Hash::make($request->password),
