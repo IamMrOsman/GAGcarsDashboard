@@ -11,6 +11,10 @@ class Category extends Model
 
 	protected $guarded = [];
 
+	protected $casts = [
+		'features' => 'array',
+	];
+
 	public function items()
 	{
 		return $this->hasMany(Item::class);

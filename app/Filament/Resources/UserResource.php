@@ -49,12 +49,12 @@ class UserResource extends Resource
 					->relationship('country', 'name')
 					->preload()
 					->searchable(),
-                Forms\Components\Select::make('state_id')
-					->columnSpanFull()
-                    ->required()
-					->relationship('state', 'name')
-					->preload()
-					->searchable(),
+                // Forms\Components\Select::make('state_id')
+				// 	->columnSpanFull()
+                //     ->required()
+				// 	->relationship('state', 'name')
+				// 	->preload()
+				// 	->searchable(),
             ]);
     }
 
@@ -96,9 +96,9 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('country.name')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('state.name')
-                    ->numeric()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('state.name')
+                //     ->numeric()
+                //     ->sortable(),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),

@@ -31,6 +31,7 @@ class PackageResource extends Resource
 				Forms\Components\Select::make('country_id')
 					->relationship('country', 'name')
 					->preload()
+					->required()
 					->searchable()
 					->reactive(),
 				Forms\Components\Textarea::make('description')
@@ -47,6 +48,7 @@ class PackageResource extends Resource
 						}
 						return 'GHC';
 					})
+					->required()
 					->minValue(0)
 					->step(0.01),
 				Forms\Components\TextInput::make('number_of_listings')

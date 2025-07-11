@@ -36,15 +36,11 @@ class CategoryResource extends Resource
 					->required()
 					->columnSpanFull()
 					->live()
-					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
 					->maxLength(255),
-				Forms\Components\TextInput::make('slug')
+				Forms\Components\Hidden::make('slug')
 					->required()
-					->unique()
-					->disabled()
-					->dehydrated()
-					->columnSpanFull()
-					->maxLength(255),
+					->default(fn(Get $get): string => Str::slug($get('name')))
+					->reactive(),
 				Forms\Components\Select::make('parent_id')
 					->label('Parent Category')
 					->columnSpanFull()
@@ -65,6 +61,11 @@ class CategoryResource extends Resource
 					->getOptionLabelFromRecordUsing(function ($record) {
 						return $record->label . ' (' . $record->type . ', ' . ($record->required ? 'required' : 'nullable') . ')';
 					}),
+				Forms\Components\TagsInput::make('features')
+					->columnSpanFull()
+					->label('Features')
+					->placeholder('Feature name')
+					->helperText('Enter the features that are available for items in this category. You can add more than one feature by typing and pressing enter.'),
 				Forms\Components\FileUpload::make('image')
 					->columnSpanFull()
 					->image(),

@@ -15,6 +15,12 @@ class Item extends Model
 
 	protected $guarded = [];
 
+	protected $casts = [
+		'features' => 'array',
+		'images' => 'array',
+		'color' => 'array',
+	];
+
 	public function brand()
 	{
 		return $this->belongsTo(Brand::class);

@@ -33,112 +33,73 @@ class ItemResource extends Resource
 					->hidden()
 					->default(auth()->id())
 					->maxLength(26),
-				Forms\Components\Select::make('brand_id')
+				Forms\Components\Select::make('category_id')
+					->columnSpanFull()
 					->required()
+					->live()
+					->relationship('category', 'name')
+					->preload()
+					->searchable(),
+				Forms\Components\Select::make('brand_id')
+					// ->required()
 					->label('Make')
 					->relationship('brand', 'name')
 					->preload()
 					->searchable(),
 				Forms\Components\Select::make('brand_model_id')
-					->required()
+					// ->required()
 					->label('Model')
 					->relationship('brandModel', 'name')
-					->preload()
-					->searchable(),
-				Forms\Components\Select::make('category_id')
-					->columnSpanFull()
-					->required()
-					->relationship('category', 'name')
 					->preload()
 					->searchable(),
 				Forms\Components\TextInput::make('name')
 					->required()
 					->live()
+					->columnSpanFull()
 					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
 					->maxLength(255),
-				Forms\Components\TextInput::make('slug')
+				Forms\Components\Hidden::make('slug')
+					->required(),
+				Forms\Components\Select::make('country_id')
 					->required()
-					->unique()
-					->disabled()
-					->dehydrated()
-					->maxLength(255),
+					->label('Country')
+					->relationship('country', 'name')
+					->preload()
+					->searchable()
+					->reactive(),
+				Forms\Components\TextInput::make('location')
+					->placeholder('Enter the location of the item'),
 				Forms\Components\Textarea::make('description')
 					->columnSpanFull()
 					->maxLength(255),
-				Forms\Components\TextInput::make('year')
-					->required()
-					->numeric()
-					->minValue(1900)
-					->maxValue(date('Y'))
-					->default(date('Y')),
-				Forms\Components\TextInput::make('engine_capacity')
-					->required()
-					->numeric()
-					->minValue(0)
-					->maxValue(10000)
-					->default(0),
-				Forms\Components\Select::make('transmission')
-					->required()
-					->native(false)
-					->options([
-						'manual' => 'Manual',
-						'automatic' => 'Automatic',
-					])
-					->default('manual'),
-				Forms\Components\Select::make('steer_position')
-					->required()
-					->native(false)
-					->options([
-						'left' => 'Left',
-						'right' => 'Right',
-					])
-					->default('left'),
-				Forms\Components\Select::make('build_type')
-					->required()
-					->native(false)
-					->options([
-						'sedan' => 'Sedan',
-						'hatchback' => 'Hatchback',
-						'suv' => 'SUV',
-						'mpv' => 'MPV',
-						'coupe' => 'Coupe',
-						'convertible' => 'Convertible',
-						'pickup' => 'Pickup',
-						'van' => 'Van',
-						'other' => 'Other',
-					])
-					->default('sedan'),
-				Forms\Components\TextInput::make('number_of_passengers')
-					->required()
-					->numeric()
-					->minValue(1)
-					->maxValue(100)
-					->default(1),
+				...self::getDynamicFields(),
 				Forms\Components\FileUpload::make('images')
 					->columnSpanFull()
 					->multiple()
 					->image(),
-				Forms\Components\KeyValue::make('location')
+				Forms\Components\CheckboxList::make('features')
 					->columnSpanFull()
-					->default([
-						'longitude' => '',
-						'latitude' => '',
-					])
-					->addable(false)
-					->deletable(false),
-				Forms\Components\KeyValue::make('features')
-					->columnSpanFull()
-					->default([
-						'air_conditioning' => '',
-						'dashboard_camera' => '',
-						'power_windows' => '',
-						'power_locks' => '',
-						'power_mirrors' => '',
-						'power_steering' => '',
-						'power_seats' => '',
-					])
-					->addable(false)
-					->deletable(false),
+					->options(function (Get $get) {
+						$categoryId = $get('category_id');
+						if (!$categoryId) {
+							return [];
+						}
+
+						$category = \App\Models\Category::find($categoryId);
+						if (!$category || !$category->features) {
+							return [];
+						}
+
+						// Convert the features array to a key-value format for checkboxes
+						$options = [];
+						foreach ($category->features as $feature) {
+							$options[$feature] = ucwords(str_replace('_', ' ', $feature));
+						}
+
+						return $options;
+					})
+					->visible(fn(Get $get): bool => (bool) $get('category_id'))
+					->columns(3),
 				Forms\Components\TextInput::make('serial_number')
 					->columnSpanFull()
 					->maxLength(255),
@@ -158,13 +119,6 @@ class ItemResource extends Resource
 						'1' => 'Active',
 					])
 					->default(0),
-				Forms\Components\Select::make('country_id')
-					->required()
-					->label('Country')
-					->relationship('country', 'name')
-					->preload()
-					->searchable()
-					->reactive(),
 				Forms\Components\TextInput::make('price')
 					->numeric()
 					->prefix(function ($get) {
@@ -175,14 +129,15 @@ class ItemResource extends Resource
 						}
 						return 'GHC';
 					})
+					->columnSpanFull()
 					->minValue(0)
 					->step(0.01),
-				Forms\Components\TextInput::make('mileage')
-					->columnSpanFull()
-					->maxLength(255),
-				Forms\Components\TextInput::make('warranty')
-					->maxLength(255),
-				Forms\Components\DatePicker::make('warranty_expiration'),
+				Forms\Components\Toggle::make('warranty')
+					->label('Warranty')
+					->live()
+					->default(false),
+				Forms\Components\DatePicker::make('warranty_expiration')
+					->visible(fn(Get $get): bool => (bool) $get('warranty')),
 			]);
 	}
 
@@ -286,5 +241,126 @@ class ItemResource extends Resource
 			->withoutGlobalScopes([
 				SoftDeletingScope::class,
 			]);
+	}
+
+	protected static function getDynamicFields(): array
+	{
+		return [
+			Forms\Components\Section::make('Item Information')
+				->schema(function (Get $get) {
+					$categoryId = $get('category_id');
+					if (!$categoryId) {
+						return [];
+					}
+
+					$category = \App\Models\Category::find($categoryId);
+					if (!$category) {
+						return [];
+					}
+
+					$fields = [];
+					foreach ($category->itemFields as $itemField) {
+						$field = self::createFormField($itemField);
+						if ($field) {
+							$fields[] = $field;
+						}
+					}
+
+					return $fields;
+				})
+				->visible(fn(Get $get): bool => (bool) $get('category_id'))
+				->collapsible()
+				->collapsed(false),
+		];
+	}
+
+	protected static function createFormField($itemField)
+	{
+		$fieldName = $itemField->name;
+		$label = $itemField->label;
+		$type = $itemField->type;
+		$required = $itemField->required;
+		$nullable = $itemField->nullable;
+		$options = $itemField->options;
+
+		$field = null;
+
+		switch ($type) {
+			case 'string':
+				$field = Forms\Components\TextInput::make($fieldName)
+					->label($label)
+					->required($required)
+					->nullable($nullable);
+				break;
+
+			case 'number':
+				$field = Forms\Components\TextInput::make($fieldName)
+					->label($label)
+					->numeric()
+					->required($required)
+					->nullable($nullable);
+				break;
+
+			case 'year':
+				$field = Forms\Components\TextInput::make($fieldName)
+					->label($label)
+					->numeric()
+					->minValue(1900)
+					->maxValue(date('Y'))
+					->default(date('Y'))
+					->required($required)
+					->nullable($nullable);
+				break;
+
+			case 'date':
+				$field = Forms\Components\DatePicker::make($fieldName)
+					->label($label)
+					->required($required)
+					->nullable($nullable);
+				break;
+
+			case 'enum':
+				if ($options && is_array($options)) {
+					$field = Forms\Components\Select::make($fieldName)
+						->label($label)
+						->options($options)
+						->native(false)
+						->required($required)
+						->nullable($nullable);
+				}
+				break;
+
+			case 'json':
+				if ($fieldName === 'images') {
+					$field = Forms\Components\FileUpload::make($fieldName)
+						->label($label)
+						->multiple()
+						->image()
+						->required($required)
+						->nullable($nullable);
+				} elseif ($fieldName === 'features' && $options && is_array($options)) {
+					$field = Forms\Components\CheckboxList::make($fieldName)
+						->label($label)
+						->options($options)
+						->columns(3)
+						->required($required)
+						->nullable($nullable);
+				} else {
+					$field = Forms\Components\Textarea::make($fieldName)
+						->label($label)
+						->required($required)
+						->nullable($nullable);
+				}
+				break;
+
+			default:
+				$field = Forms\Components\TextInput::make($fieldName)
+					->label($label)
+					->required($required)
+					->nullable($nullable);
+				break;
+		}
+
+		return $field;
 	}
 }

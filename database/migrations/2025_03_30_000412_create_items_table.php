@@ -19,11 +19,11 @@ return new class extends Migration
 			$table->foreignId('brand_id')->nullable()->constrained()->nullOnDelete();
 			$table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
 			$table->string('name');
-			$table->year('year');
+			$table->year('year')->nullable();
 			$table->string('slug')->unique();
 			$table->string('description')->nullable();
 			$table->json('images')->nullable();
-			$table->json('location')->nullable();
+			$table->string('location')->nullable();
 			$table->string('serial_number')->nullable();
 			$table->string('condition')->nullable();
 			$table->string('steer_position')->nullable();
@@ -36,7 +36,7 @@ return new class extends Migration
 			$table->string('status')->nullable();
 			$table->string('price')->nullable();
 			$table->string('mileage')->nullable();
-			$table->string('warranty')->nullable();
+			$table->boolean('warranty')->nullable();
 			$table->string('warranty_expiration')->nullable();
 			$table->softDeletes();
             $table->timestamps();

@@ -90,29 +90,12 @@ class ItemField extends Model
 		}
 
 		if ($col) {
-			if ($field->nullable) $col->nullable();
-			// Only add unique if it doesn't already exist
-			if ($field->unique && !static::uniqueIndexExists('items', $column)) {
-				$col->unique();
-			}
+			$col->nullable();
 			if ($change) $col->change();
 		}
 	}
 
-	protected static function uniqueIndexExists($table, $column)
-	{
-		$database = DB::getDatabaseName();
-		$result = DB::selectOne("
-			SELECT COUNT(*) as count
-			FROM information_schema.statistics
-			WHERE table_schema = ?
-			  AND table_name = ?
-			  AND column_name = ?
-			  AND non_unique = 0
-		", [$database, $table, $column]);
 
-		return $result && $result->count > 0;
-	}
 
 	protected static function dropColumn($field)
 	{

@@ -6,28 +6,29 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('item_fields', function (Blueprint $table) {
-            $table->id();
+	/**
+	 * Run the migrations.
+	 */
+	public function up(): void
+	{
+		Schema::create('item_fields', function (Blueprint $table) {
+			$table->id();
 			$table->string('name');
 			$table->string('label');
 			$table->string('type');
+			$table->boolean('required')->default(false);
 			$table->boolean('unique')->default(false);
 			$table->boolean('nullable')->default(false);
 			$table->json('options')->nullable();
-            $table->timestamps();
-        });
-    }
+			$table->timestamps();
+		});
+	}
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('item_fields');
-    }
+	/**
+	 * Reverse the migrations.
+	 */
+	public function down(): void
+	{
+		Schema::dropIfExists('item_fields');
+	}
 };
