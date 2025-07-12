@@ -183,8 +183,6 @@ class ItemResource extends Resource
 						return $state ? 'GHC ' . number_format((float)$state, 2) : '';
 					})
 					->searchable(),
-				Tables\Columns\TextColumn::make('mileage')
-					->searchable(),
 				Tables\Columns\TextColumn::make('warranty')
 					->searchable(),
 				Tables\Columns\TextColumn::make('warranty_expiration')
