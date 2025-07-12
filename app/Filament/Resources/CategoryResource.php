@@ -35,12 +35,11 @@ class CategoryResource extends Resource
 				Forms\Components\TextInput::make('name')
 					->required()
 					->columnSpanFull()
-					->live()
-					->maxLength(255),
+					->live(debounce: 500)
+					->maxLength(255)
+					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('name')))),
 				Forms\Components\Hidden::make('slug')
-					->required()
-					->default(fn(Get $get): string => Str::slug($get('name')))
-					->reactive(),
+					->required(),
 				Forms\Components\Select::make('parent_id')
 					->label('Parent Category')
 					->columnSpanFull()
@@ -76,11 +75,12 @@ class CategoryResource extends Resource
 	{
 		return $table
 			->columns([
-				Tables\Columns\TextColumn::make('parent.name')
-					->numeric()
-					->sortable(),
 				Tables\Columns\TextColumn::make('name')
 					->searchable(),
+				Tables\Columns\TextColumn::make('parent.name')
+					->label('Parent Category')
+					->numeric()
+					->sortable(),
 				Tables\Columns\TextColumn::make('slug')
 					->searchable(),
 				Tables\Columns\TextColumn::make('description')
