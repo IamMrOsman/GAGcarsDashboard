@@ -205,10 +205,13 @@ class AuthController extends Controller
 	public function sendResetPasswordOtp(Request $request)
 	{
 		$request->validate([
-			'phone' => 'required|string',
+			'phone' => 'required_without:email|string',
+			'email' => 'required_without:phone|email',
 		]);
 
-		$user = User::where('phone', $request->phone)->first();
+		$user = User::where('phone', $request->phone)
+			->orWhere('email', $request->email)
+			->first();
 
 		if (!$user) {
 			throw ValidationException::withMessages([
@@ -216,10 +219,16 @@ class AuthController extends Controller
 			]);
 		}
 
-		$phoneOtp = Otp::generate($user->phone);
+		$otp = Otp::generate($user->phone ?? $user->email);
 
 		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsDriver->send($user->phone, "Your OTP is: {$phoneOtp}");
+		$smsDriver->send($user->phone ?? $user->email, "Your OTP is: {$otp}");
+
+		// Send Email using Laravel's built-in mail
+		\Mail::raw("Your OTP is: {$otp}", function ($message) use ($user) {
+			$message->to($user->email)
+				->subject('Your OTP Code');
+		});
 
 		return response()->json([
 			'message' => 'OTP sent successfully'
@@ -232,12 +241,15 @@ class AuthController extends Controller
 	public function resetPassword(Request $request)
 	{
 		$request->validate([
-			'phone' => 'required|string',
+			'phone' => 'required_without:email|string',
+			'email' => 'required_without:phone|email',
 			'otp' => 'required|string|size:6',
 			'password' => 'required|string|min:8',
 		]);
 
-		$user = User::where('phone', $request->phone)->first();
+		$user = User::where('phone', $request->phone)
+			->orWhere('email', $request->email)
+			->first();
 
 		if (!$user) {
 			throw ValidationException::withMessages([
