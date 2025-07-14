@@ -77,6 +77,11 @@ class ItemResource extends Resource
 					->columnSpanFull()
 					->multiple()
 					->image(),
+				Forms\Components\Section::make()
+					->schema([])
+					->collapsible(false)
+					->collapsed(false)
+					->columnSpanFull(),
 				Forms\Components\CheckboxList::make('features')
 					->columnSpanFull()
 					->options(function (Get $get) {
@@ -121,6 +126,7 @@ class ItemResource extends Resource
 					->default(0),
 				Forms\Components\TextInput::make('price')
 					->numeric()
+					->required()
 					->prefix(function ($get) {
 						$countryId = $get('country_id');
 						if ($countryId) {
