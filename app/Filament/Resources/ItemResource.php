@@ -54,7 +54,7 @@ class ItemResource extends Resource
 					->searchable(),
 				Forms\Components\TextInput::make('name')
 					->required()
-					->live(debounce: 500)
+					->live(debounce: 1000)
 					->columnSpanFull()
 					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
 					->maxLength(255),

@@ -2,17 +2,19 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PostResource\Pages;
-use App\Filament\Resources\PostResource\RelationManagers;
-use App\Models\Post;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use App\Models\Post;
 use Filament\Tables;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use Filament\Resources\Resource;
+use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\PostResource\Pages;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\PostResource\RelationManagers;
 
 class PostResource extends Resource
 {
@@ -30,17 +32,17 @@ class PostResource extends Resource
 					->relationship('country', 'name')
 					->preload()
 					->searchable()
+					->columnSpanFull()
 					->reactive()
 					->required(),
 				Forms\Components\TextInput::make('title')
 					->required()
+					->columnSpanFull()
 					->maxLength(255)
-					->live(onBlur: true)
-					->afterStateUpdated(fn(string $state, callable $set) => $set('slug', Str::slug($state))),
-				Forms\Components\TextInput::make('slug')
-					->required()
-					->maxLength(255)
-					->unique(ignoreRecord: true),
+					->live(debounce: 1000)
+					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('title')))),
+				Forms\Components\Hidden::make('slug')
+					->required(),
 				Forms\Components\Textarea::make('description')
 					->rows(5)
 					->columnSpanFull(),

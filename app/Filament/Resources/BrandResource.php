@@ -40,7 +40,7 @@ class BrandResource extends Resource
                 Forms\Components\TextInput::make('name')
 					->columnSpanFull()
                     ->required()
-					->live()
+					->live(debounce: 1000)
 					->afterStateUpdated(fn (Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
                     ->maxLength(255),
                 Forms\Components\TextInput::make('slug')

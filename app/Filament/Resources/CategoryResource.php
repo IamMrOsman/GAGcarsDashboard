@@ -35,7 +35,7 @@ class CategoryResource extends Resource
 				Forms\Components\TextInput::make('name')
 					->required()
 					->columnSpanFull()
-					->live(debounce: 500)
+					->live(debounce: 1000)
 					->maxLength(255)
 					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('name')))),
 				Forms\Components\Hidden::make('slug')
