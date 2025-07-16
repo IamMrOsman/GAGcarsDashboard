@@ -11,29 +11,30 @@ use App\Filament\Resources\SpecialOfferResource\Api\Transformers\SpecialOfferTra
 
 class DetailHandler extends Handlers
 {
-    public static string | null $uri = '/{id}';
-    public static string | null $resource = SpecialOfferResource::class;
+	public static string | null $uri = '/{id}';
+	public static string | null $resource = SpecialOfferResource::class;
 
 
-    /**
-     * Show SpecialOffer
-     *
-     * @param Request $request
-     * @return SpecialOfferTransformer
-     */
-    public function handler(Request $request)
-    {
-        $id = $request->route('id');
-        
-        $query = static::getEloquentQuery();
+	/**
+	 * Show SpecialOffer
+	 *
+	 * @param Request $request
+	 * @return SpecialOfferTransformer
+	 */
+	public function handler(Request $request)
+	{
+		$id = $request->route('id');
 
-        $query = QueryBuilder::for(
-            $query->where(static::getKeyName(), $id)
-        )
-            ->first();
+		$query = static::getEloquentQuery();
 
-        if (!$query) return static::sendNotFoundResponse();
+		$query = QueryBuilder::for(
+			$query->where(static::getKeyName(), $id)
+		)
+			->with('item') // Load the item relationship
+			->first();
 
-        return new SpecialOfferTransformer($query);
-    }
+		if (!$query) return static::sendNotFoundResponse();
+
+		return new SpecialOfferTransformer($query);
+	}
 }
