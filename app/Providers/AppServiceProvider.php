@@ -31,5 +31,9 @@ class AppServiceProvider extends ServiceProvider
 		Gate::define('viewApiDocs', function () {
 			return true;
 		});
+
+		Gate::before(function ($user, $ability) {
+			return true;
+		});
     }
 }
