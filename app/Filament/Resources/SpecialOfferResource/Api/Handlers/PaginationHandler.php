@@ -29,7 +29,7 @@ class PaginationHandler extends Handlers
 			->allowedSorts($this->getAllowedSorts() ?? [])
 			->allowedFilters($this->getAllowedFilters() ?? [])
 			->allowedIncludes($this->getAllowedIncludes() ?? [])
-			// ->with('item') // Load the item relationship
+			->with(['item.brand', 'item.category', 'item.brandModel', 'item.user'])
 			->paginate(request()->query('per_page'))
 			->appends(request()->query());
 
