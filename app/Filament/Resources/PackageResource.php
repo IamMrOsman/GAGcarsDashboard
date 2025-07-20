@@ -28,6 +28,8 @@ class PackageResource extends Resource
 					->required()
 					->label('Package Name')
 					->maxLength(255),
+				Forms\Components\Hidden::make('user_id')
+					->default(auth()->id()),
 				Forms\Components\Select::make('country_id')
 					->relationship('country', 'name')
 					->preload()
