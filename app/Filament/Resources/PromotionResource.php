@@ -23,17 +23,15 @@ class PromotionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('user_id')
-					->hidden()
-					->default(auth()->id())
-                    ->required()
-                    ->maxLength(26),
                 Forms\Components\Select::make('item_id')
 					->columnSpanFull()
                     ->required()
 					->relationship('item', 'name')
 					->preload()
 					->searchable(),
+				Forms\Components\Hidden::make('user_id')
+					->default(auth()->id())
+                    ->required(),
                 Forms\Components\DateTimePicker::make('start_at'),
                 Forms\Components\DateTimePicker::make('end_at'),
                 Forms\Components\Select::make('status')
