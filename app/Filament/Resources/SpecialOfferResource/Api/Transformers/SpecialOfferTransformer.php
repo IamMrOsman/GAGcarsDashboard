@@ -29,10 +29,6 @@ class SpecialOfferTransformer extends JsonResource
 		// Include the related item object
 		if ($this->resource->relationLoaded('item') || $this->resource->item) {
 			$data['item'] = new ItemTransformer($this->resource->item);
-			$data['item']['brand'] = new BrandTransformer($this->resource->item->brand);
-			$data['item']['category'] = new CategoryTransformer($this->resource->item->category);
-			$data['item']['brandModel'] = new BrandModelTransformer($this->resource->item->brandModel);
-			$data['item']['user'] = new UserTransformer($this->resource->item->user);
 		}
 
 		return $data;
