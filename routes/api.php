@@ -26,5 +26,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/verifications', [UserResourcesController::class, 'myVerifications']);
 		Route::get('/promotions', [UserResourcesController::class, 'myPromotions']);
 		Route::get('/special-offers', [UserResourcesController::class, 'mySpecialOffers']);
+		Route::post('/wish-list/{item}', [UserResourcesController::class, 'addToWishList']);
+		Route::get('/wish-list', [UserResourcesController::class, 'wishList']);
 	});
 });

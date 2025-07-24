@@ -104,4 +104,9 @@ class User extends Authenticatable implements FilamentUser
 	{
 		return $this->hasMany(SpecialOffer::class);
 	}
+
+	public function wishList()
+	{
+		return $this->hasMany(WishList::class);
+	}
 }
