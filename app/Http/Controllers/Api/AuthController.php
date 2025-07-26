@@ -153,7 +153,11 @@ class AuthController extends Controller
 	 */
 	public function user(Request $request)
 	{
-		return $request->user();
+		$user = $request->user();
+
+		return response()->json([
+			'user' => $user,
+		]);
 	}
 
 	/**
@@ -269,5 +273,4 @@ class AuthController extends Controller
 			'token' => $token
 		], 200);
 	}
-
 }

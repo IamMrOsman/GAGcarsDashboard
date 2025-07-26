@@ -40,6 +40,8 @@ class ItemTransformer extends JsonResource
 			$data['user'] = new UserTransformer($this->resource->user);
 		}
 
+		$data['is_promoted'] = $this->resource->isPromoted();
+
 		return $data;
     }
 }

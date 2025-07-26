@@ -33,8 +33,8 @@ class BrandResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('user_id')
-					->hidden()
+                Forms\Components\Hidden::make('user_id')
+					->required()
 					->default(auth()->id())
                     ->maxLength(26),
                 Forms\Components\TextInput::make('name')

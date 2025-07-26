@@ -31,6 +31,16 @@ class Item extends Model
 		return $this->belongsTo(Category::class);
 	}
 
+	public function promotions()
+	{
+		return $this->hasMany(Promotion::class);
+	}
+
+	public function isPromoted()
+	{
+		return $this->promotions()->where('start_at', '<=', now())->where('end_at', '>=', now())->first();
+	}
+
 	public function brandModel()
 	{
 		return $this->belongsTo(BrandModel::class);

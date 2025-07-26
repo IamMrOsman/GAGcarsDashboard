@@ -2,48 +2,48 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 class UserResourcesController extends Controller
 {
 	/**
-	 * Get the listings uploaded by the authenticated user
+	 * Get the listings uploaded by the specified user
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	public function myListings()
+	public function userListings(User $user)
 	{
-		return response()->json(auth()->user()->items);
+		return response()->json($user->items);
 	}
 
 	/**
-	 * Get the verifications uploaded by the authenticated user
+	 * Get the verifications uploaded by the specified user
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	public function myVerifications()
+	public function userVerifications(User $user)
 	{
-		return response()->json(auth()->user()->verifications);
+		return response()->json($user->verifications);
 	}
 
 	/**
-	 * Get the promotions uploaded by the authenticated user
+	 * Get the promotions uploaded by the specified user
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	public function myPromotions()
+	public function userPromotions(User $user)
 	{
-		return response()->json(auth()->user()->promotions);
+		return response()->json($user->promotions);
 	}
 
 	/**
-	 * Get the special offers uploaded by the authenticated user
+	 * Get the special offers uploaded by the specified user
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	public function mySpecialOffers()
+	public function userSpecialOffers(User $user)
 	{
-		return response()->json(auth()->user()->specialOffers);
+		return response()->json($user->specialOffers);
 	}
 
 	/**

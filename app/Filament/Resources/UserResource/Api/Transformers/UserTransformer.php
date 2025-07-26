@@ -19,6 +19,11 @@ class UserTransformer extends JsonResource
 	 */
 	public function toArray($request)
 	{
-		return $this->resource->toArray();
+		$data = $this->resource->toArray();
+
+		$data['is_verified'] = $this->resource->isVerified();
+		$data['is_verified_dealer'] = $this->resource->isVerifiedDealer();
+
+		return $data;
 	}
 }

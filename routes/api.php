@@ -21,11 +21,14 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::post('/logout-all', [AuthController::class, 'logoutAll']);
 	Route::post('/change-password', [AuthController::class, 'changePassword']);
 
+	Route::prefix('user/{user}')->group(function () {
+		Route::get('/listings', [UserResourcesController::class, 'userListings']);
+		Route::get('/verifications', [UserResourcesController::class, 'userVerifications']);
+		Route::get('/promotions', [UserResourcesController::class, 'userPromotions']);
+		Route::get('/special-offers', [UserResourcesController::class, 'userSpecialOffers']);
+	});
+
 	Route::prefix('my')->group(function () {
-		Route::get('/listings', [UserResourcesController::class, 'myListings']);
-		Route::get('/verifications', [UserResourcesController::class, 'myVerifications']);
-		Route::get('/promotions', [UserResourcesController::class, 'myPromotions']);
-		Route::get('/special-offers', [UserResourcesController::class, 'mySpecialOffers']);
 		Route::post('/wish-list/{item}', [UserResourcesController::class, 'addToWishList']);
 		Route::get('/wish-list', [UserResourcesController::class, 'wishList']);
 	});
