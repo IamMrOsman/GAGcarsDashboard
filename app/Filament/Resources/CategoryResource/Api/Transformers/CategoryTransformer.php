@@ -18,9 +18,6 @@ class CategoryTransformer extends JsonResource
      */
     public function toArray($request)
     {
-		$data = $this->resource->toArray();
-		$data['fields'] = $this->resource->itemFields;
-
-        return $data;
+		return $this->resource->toArray();
     }
 }
