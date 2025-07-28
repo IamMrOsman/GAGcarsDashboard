@@ -20,8 +20,8 @@ class BrandTransformer extends JsonResource
 	public function toArray($request)
 	{
 		$data = $this->resource->toArray();
-		$data['brand_model'] = $this->resource->brandModel;
-		
+		$data['brand_model'] = $this->resource->brandModels;
+
 		return $data;
 	}
 }
