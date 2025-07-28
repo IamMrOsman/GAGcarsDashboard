@@ -24,13 +24,6 @@ class SpecialOfferTransformer extends JsonResource
 	 */
 	public function toArray($request)
 	{
-		$data = $this->resource->toArray();
-
-		// Include the related item object
-		if ($this->resource->relationLoaded('item') || $this->resource->item) {
-			$data['item'] = new ItemTransformer($this->resource->item);
-		}
-
-		return $data;
+		return $this->resource->toArray();
 	}
 }
