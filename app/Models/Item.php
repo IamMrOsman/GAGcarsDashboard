@@ -38,7 +38,7 @@ class Item extends Model
 
 	public function isPromoted()
 	{
-		return $this->promotions()->where('start_at', '<=', now())->where('end_at', '>=', now())->first();
+		return $this->promotions()->where('start_at', '<=', now())->where('end_at', '>=', now())->first() ? true : false;
 	}
 
 	public function brandModel()
