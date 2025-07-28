@@ -22,26 +22,6 @@ class ItemTransformer extends JsonResource
      */
     public function toArray($request)
     {
-        $data = $this->resource->toArray();
-
-		if ($this->resource->relationLoaded('brand') || $this->resource->brand) {
-			$data['brand'] = new BrandTransformer($this->resource->brand);
-		}
-
-		if ($this->resource->relationLoaded('category') || $this->resource->category) {
-			$data['category'] = new CategoryTransformer($this->resource->category);
-		}
-
-		if ($this->resource->relationLoaded('brandModel') || $this->resource->brandModel) {
-			$data['brandModel'] = new BrandModelTransformer($this->resource->brandModel);
-		}
-
-		if ($this->resource->relationLoaded('user') || $this->resource->user) {
-			$data['user'] = new UserTransformer($this->resource->user);
-		}
-
-		$data['is_promoted'] = $this->resource->isPromoted();
-
-		return $data;
+		return $this->resource->toArray();
     }
 }
