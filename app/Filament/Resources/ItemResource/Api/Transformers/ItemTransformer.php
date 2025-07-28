@@ -22,6 +22,10 @@ class ItemTransformer extends JsonResource
      */
     public function toArray($request)
     {
-		return $this->resource->toArray();
+        $data = $this->resource->toArray();
+
+		$data['is_promoted'] = $this->resource->isPromoted();
+
+		return $data;
     }
 }
