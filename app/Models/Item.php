@@ -21,6 +21,17 @@ class Item extends Model
 		'color' => 'array',
 	];
 
+	protected static function boot()
+	{
+		parent::boot();
+
+		static::creating(function ($item) {
+			if (auth()->check() && !$item->user_id) {
+				$item->user_id = auth()->id();
+			}
+		});
+	}
+
 	public function brand()
 	{
 		return $this->belongsTo(Brand::class);
