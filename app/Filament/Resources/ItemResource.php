@@ -30,7 +30,7 @@ class ItemResource extends Resource
 		return $form
 			->schema([
 				Forms\Components\Hidden::make('user_id')
-					->required()
+					// ->required()
 					->default(auth()->id())
 					->maxLength(26),
 				Forms\Components\Select::make('category_id')

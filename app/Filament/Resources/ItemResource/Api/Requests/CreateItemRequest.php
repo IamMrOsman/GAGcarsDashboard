@@ -22,23 +22,22 @@ class CreateItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'user_id' => 'required',
-			'brand_model_id' => 'required|integer',
-			'brand_id' => 'required|integer',
-			'category_id' => 'required|integer',
+			'user_id' => '',
+			'brand_model_id' => 'nullable',
+			'brand_id' => 'nullable',
+			'category_id' => 'nullable',
 			'name' => 'required',
 			'slug' => 'required',
-			'description' => 'required',
+			'description' => 'nullable',
 			'images' => 'required|string',
 			'location' => 'required',
-			'serial_number' => 'required',
-			'condition' => 'required',
-			'status' => 'required',
-			'price' => 'required',
-			'mileage' => 'required',
-			'warranty' => 'required',
-			'warranty_expiration' => 'required',
-			'deleted_at' => 'required'
+			'serial_number' => 'nullable',
+			'condition' => 'nullable',
+			'status' => 'nullable',
+			'price' => 'nullable',
+			'mileage' => 'nullable',
+			'warranty' => 'nullable',
+			'warranty_expiration' => 'nullable'
 		];
     }
 }
