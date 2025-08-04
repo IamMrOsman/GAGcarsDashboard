@@ -35,8 +35,7 @@ class BrandResource extends Resource
             ->schema([
                 Forms\Components\Hidden::make('user_id')
 					->required()
-					->default(auth()->id())
-                    ->maxLength(26),
+					->default(auth()->id()),
                 Forms\Components\TextInput::make('name')
 					->columnSpanFull()
                     ->required()

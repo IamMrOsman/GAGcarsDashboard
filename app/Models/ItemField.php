@@ -15,6 +15,16 @@ class ItemField extends Model
 		'options' => 'array',
 	];
 
+	protected $appends = ['options_keys'];
+
+	public function getOptionsKeysAttribute()
+	{
+		if ($this->options && is_array($this->options)) {
+			return array_keys($this->options);
+		}
+		return [];
+	}
+
 	protected static function booted()
 	{
 		static::created(function ($field) {
