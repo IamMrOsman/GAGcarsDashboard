@@ -273,4 +273,19 @@ class AuthController extends Controller
 			'token' => $token
 		], 200);
 	}
+
+	/**
+	 * update profile
+	 */
+	public function updateProfile(Request $request)
+	{
+		$user = $request->user();
+
+		$user->update($request->all());
+
+		return response()->json([
+			'message' => 'Profile updated successfully',
+			'user' => $user
+		], 200);
+	}
 }

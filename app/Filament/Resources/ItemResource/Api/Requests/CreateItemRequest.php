@@ -30,7 +30,7 @@ class CreateItemRequest extends FormRequest
 			'slug' => 'required',
 			'description' => 'nullable',
 			'images' => 'required|array',
-			'location' => 'required',
+			'location' => 'required|string',
 			'serial_number' => 'nullable',
 			'condition' => 'nullable',
 			'status' => 'nullable',
