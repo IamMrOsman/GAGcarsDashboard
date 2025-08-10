@@ -33,12 +33,8 @@ class WishListResource extends Resource
 	{
 		return $table
 			->columns([
-				Tables\Columns\TextColumn::make('user.name')
-					->url(fn(WishList $record): string => UserResource::getUrl('view', ['record' => $record->user_id]))
-					->openUrlInNewTab(),
-				Tables\Columns\TextColumn::make('item.name')
-					->url(fn(WishList $record): string => ItemResource::getUrl('view', ['record' => $record->item_id]))
-					->openUrlInNewTab(),
+				Tables\Columns\TextColumn::make('user.name'),
+				Tables\Columns\TextColumn::make('item.name'),
 			])
 			->filters([
 				//
