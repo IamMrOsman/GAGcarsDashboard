@@ -22,38 +22,41 @@ use Rupadana\ApiService\ApiServicePlugin;
 
 class WatchtowerPanelProvider extends PanelProvider
 {
-    public function panel(Panel $panel): Panel
-    {
-        return $panel
-            ->default()
-            ->id('watchtower')
-            ->path('watchtower')
-            ->login()
-            ->colors([
-                'primary' => Color::Red,
-            ])
+	public function panel(Panel $panel): Panel
+	{
+		return $panel
+			->default()
+			->id('watchtower')
+			->path('watchtower')
+			->login()
+			->colors([
+				'primary' => Color::Red,
+			])
 			->brandLogo(asset('img/gag-logo.png'))
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-                Pages\Dashboard::class,
-            ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-            ])
-            ->middleware([
-                EncryptCookies::class,
-                AddQueuedCookiesToResponse::class,
-                StartSession::class,
-                AuthenticateSession::class,
-                ShareErrorsFromSession::class,
-                VerifyCsrfToken::class,
-                SubstituteBindings::class,
-                DisableBladeIconComponents::class,
-                DispatchServingFilamentEvent::class,
-            ])
+			->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+			->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+			->pages([
+				Pages\Dashboard::class,
+			])
+			->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+			->widgets([
+				\App\Filament\Widgets\AccountWidget::class,
+				// Widgets\FilamentInfoWidget::class,
+				\App\Filament\Widgets\StatsOverview::class,
+				\App\Filament\Widgets\ItemsOverview::class,
+				\App\Filament\Widgets\LatestItems::class,
+			])
+			->middleware([
+				EncryptCookies::class,
+				AddQueuedCookiesToResponse::class,
+				StartSession::class,
+				AuthenticateSession::class,
+				ShareErrorsFromSession::class,
+				VerifyCsrfToken::class,
+				SubstituteBindings::class,
+				DisableBladeIconComponents::class,
+				DispatchServingFilamentEvent::class,
+			])
 			->userMenuItems([
 				'profile' => MenuItem::make()->url('/settings/profile'),
 			])
@@ -62,11 +65,11 @@ class WatchtowerPanelProvider extends PanelProvider
 				ApiServicePlugin::make()
 			])
 			->maxContentWidth('full')
-            ->unsavedChangesAlerts()
-            ->sidebarWidth('17rem')
+			->unsavedChangesAlerts()
+			->sidebarWidth('17rem')
 			->sidebarCollapsibleOnDesktop()
-            ->authMiddleware([
-                Authenticate::class,
-            ]);
-    }
+			->authMiddleware([
+				Authenticate::class,
+			]);
+	}
 }
