@@ -20,6 +20,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::post('/logout', [AuthController::class, 'logout']);
 	Route::post('/logout-all', [AuthController::class, 'logoutAll']);
 	Route::post('/change-password', [AuthController::class, 'changePassword']);
+	Route::post('/update-profile', [AuthController::class, 'updateProfile']);
 
 	Route::prefix('user/{user}')->group(function () {
 		Route::get('/listings', [UserResourcesController::class, 'userListings']);
