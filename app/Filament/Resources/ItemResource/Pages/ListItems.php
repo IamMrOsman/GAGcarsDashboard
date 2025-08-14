@@ -10,6 +10,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
 use Filament\Actions\Action;
+use App\Filament\Widgets\ItemSettingsWidget;
 
 class ListItems extends ListRecords
 {
@@ -21,6 +22,13 @@ class ListItems extends ListRecords
 			Actions\CreateAction::make(),
 			$this->createApprovalAction(),
 			$this->createPaymentAction(),
+		];
+	}
+
+	protected function getHeaderWidgets(): array
+	{
+		return [
+			ItemSettingsWidget::class,
 		];
 	}
 

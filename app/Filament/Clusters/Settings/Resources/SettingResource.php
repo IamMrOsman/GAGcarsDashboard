@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Clusters\Settings\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
@@ -17,15 +17,24 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\SettingResource\Pages;
+use App\Filament\Clusters\Settings\Resources\SettingResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\SettingResource\RelationManagers;
+use App\Filament\Clusters\Settings\Resources\SettingResource\RelationManagers;
+use App\Filament\Clusters\Settings;
 
 class SettingResource extends Resource
 {
 	protected static ?string $model = Setting::class;
 
 	protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+
+	protected static ?string $cluster = Settings::class;
+
+	protected static ?string $navigationLabel = 'All Other Settings';
+
+	protected static ?string $modelLabel = 'Setting';
+
+	protected static ?string $pluralModelLabel = 'Settings';
 
 	public static function form(Form $form): Form
 	{
@@ -102,7 +111,8 @@ class SettingResource extends Resource
 				Tables\Actions\BulkActionGroup::make([
 					Tables\Actions\DeleteBulkAction::make(),
 				]),
-			]);
+			])
+			->modifyQueryUsing(fn(Builder $query) => $query->where('key_slug', '!=', 'smtp'));
 	}
 
 	public static function getPages(): array
