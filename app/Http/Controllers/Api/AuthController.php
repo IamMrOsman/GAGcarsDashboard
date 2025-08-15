@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
+use Tzsk\Otp\Facades\Otp;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Tzsk\Otp\Facades\Otp;
 
 class AuthController extends Controller
 {
@@ -281,7 +282,31 @@ class AuthController extends Controller
 	{
 		$user = $request->user();
 
-		$user->update($request->all());
+		$request->validate([
+			'name' => 'required|string|max:255',
+			'email' => [
+				'required',
+				'string',
+				'email',
+				'max:255',
+				Rule::unique('users')->ignore($user->id),
+			],
+			'phone' => [
+				'nullable',
+				'string',
+				'max:255',
+				Rule::unique('users')->ignore($user->id),
+			],
+			'password' => 'nullable|string|min:8',
+			'device_name' => 'nullable',
+		]);
+
+		$user->update([
+			'name' => $request->name,
+			'email' => $request->email,
+			'phone' => $request->phone,
+			'password' => $request->password ? Hash::make($request->password) : $user->password,
+		]);
 
 		return response()->json([
 			'message' => 'Profile updated successfully',
