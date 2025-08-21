@@ -14,4 +14,9 @@ class Faq extends Model
 	protected $casts = [
 		'tags' => 'array',
 	];
+
+	public function category()
+	{
+		return $this->belongsTo(FaqCategory::class);
+	}
 }

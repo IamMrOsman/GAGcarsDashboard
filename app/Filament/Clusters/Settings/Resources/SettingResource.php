@@ -45,7 +45,7 @@ class SettingResource extends Resource
 					->required()
 					->columnSpanFull()
 					->unique(ignoreRecord: true)
-					->live(debounce: 500)
+					->live(debounce: 1000)
 					->afterStateUpdated(function (Set $set, $state) {
 						if (filled($state)) {
 							$set('key_slug', Str::slug($state));

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Clusters\Faq as FaqCluster;
 use App\Filament\Resources\FaqResource\Pages;
 use App\Filament\Resources\FaqResource\RelationManagers;
 use App\Models\Faq;
@@ -17,6 +18,8 @@ class FaqResource extends Resource
 {
     protected static ?string $model = Faq::class;
 
+	protected static ?string $cluster = FaqCluster::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-question-mark-circle';
 
     public static function form(Form $form): Form
@@ -25,6 +28,12 @@ class FaqResource extends Resource
             ->schema([
                 Forms\Components\Hidden::make('user_id')
                     ->default(auth()->user()->id),
+				Forms\Components\Select::make('category_id')
+					->relationship('category', 'name')
+					->preload()
+					->required()
+					->columnSpanFull()
+					->searchable(),
                 Forms\Components\TextInput::make('question')
                     ->required()
 					->columnSpanFull()
@@ -52,6 +61,7 @@ class FaqResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('question'),
+				Tables\Columns\TextColumn::make('category.name'),
                 Tables\Columns\TextColumn::make('status'),
                 Tables\Columns\TextColumn::make('created_at'),
                 Tables\Columns\TextColumn::make('updated_at'),

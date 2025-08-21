@@ -27,6 +27,7 @@ class PaginationHandler extends Handlers {
         ->allowedSorts($this->getAllowedSorts() ?? [])
         ->allowedFilters($this->getAllowedFilters() ?? [])
         ->allowedIncludes($this->getAllowedIncludes() ?? [])
+		->with(['item'])
         ->paginate(request()->query('per_page'))
         ->appends(request()->query());
 
