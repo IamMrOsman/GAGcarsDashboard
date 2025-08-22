@@ -22,7 +22,7 @@ class CreateVerificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'user_id' => 'required',
+			'user_id' => 'nullable',
 			'document_type' => 'required',
 			'document_number' => 'required',
 			'document_front' => 'required',
