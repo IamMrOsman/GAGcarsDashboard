@@ -299,6 +299,7 @@ class AuthController extends Controller
 			],
 			'password' => 'nullable|string|min:8',
 			'device_name' => 'nullable',
+			'profile_photo' => 'nullable|string',
 		]);
 
 		$user->update([
@@ -306,6 +307,7 @@ class AuthController extends Controller
 			'email' => $request->email,
 			'phone' => $request->phone,
 			'password' => $request->password ? Hash::make($request->password) : $user->password,
+			'profile_photo' => $request->profile_photo,
 		]);
 
 		return response()->json([
