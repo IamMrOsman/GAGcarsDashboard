@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 class UserResourcesController extends Controller
 {
 	/**
-	 * Get the listings uploaded by the specified user
+	 * User's Listings
 	 * @return \Illuminate\Http\JsonResponse
 	 */
 	public function userListings(User $user)
@@ -20,16 +20,16 @@ class UserResourcesController extends Controller
 	}
 
 	/**
-	 * Get the verifications uploaded by the specified user
+	 * My Verifications
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	public function userVerifications(User $user)
+	public function myVerifications()
 	{
-		return response()->json($user->verifications);
+		return response()->json(auth()->user()->verifications);
 	}
 
 	/**
-	 * Get the promotions uploaded by the specified user
+	 * User's Promotions
 	 * @return \Illuminate\Http\JsonResponse
 	 */
 	public function userPromotions(User $user)
@@ -38,7 +38,7 @@ class UserResourcesController extends Controller
 	}
 
 	/**
-	 * Get the special offers uploaded by the specified user
+	 * User's Special Offers
 	 * @return \Illuminate\Http\JsonResponse
 	 */
 	public function userSpecialOffers(User $user)
@@ -47,7 +47,7 @@ class UserResourcesController extends Controller
 	}
 
 	/**
-	 * Add an item to the authenticated user's wishlist
+	 * Add to Wishlist
 	 * @param Item $item
 	 * @return JsonResponse
 	 */
@@ -105,7 +105,7 @@ class UserResourcesController extends Controller
 	}
 
 	/**
-	 * Get the wishlist of the authenticated user
+	 * My Wishlist
 	 * @return JsonResponse
 	 */
 	public function wishList()
@@ -114,7 +114,7 @@ class UserResourcesController extends Controller
 	}
 
 	/**
-	 * Get the authenticated user's listings
+	 * My Listings
 	 * @return \Illuminate\Http\JsonResponse
 	 */
 	public function myListings()

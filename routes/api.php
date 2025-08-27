@@ -24,12 +24,12 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
 	Route::prefix('user/{user}')->group(function () {
 		Route::get('/listings', [UserResourcesController::class, 'userListings']);
-		Route::get('/verifications', [UserResourcesController::class, 'userVerifications']);
 		Route::get('/promotions', [UserResourcesController::class, 'userPromotions']);
 		Route::get('/special-offers', [UserResourcesController::class, 'userSpecialOffers']);
 	});
 
 	Route::prefix('my')->group(function () {
+		Route::get('/verifications', [UserResourcesController::class, 'userVerifications']);
 		Route::get('/listings', [UserResourcesController::class, 'myListings']);
 		Route::post('/wish-list/{item}', [UserResourcesController::class, 'addToWishList']);
 		Route::get('/wish-list', [UserResourcesController::class, 'wishList']);
