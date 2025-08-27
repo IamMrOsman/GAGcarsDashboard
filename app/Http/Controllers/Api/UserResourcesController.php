@@ -112,4 +112,13 @@ class UserResourcesController extends Controller
 	{
 		return response()->json(auth()->user()->wishList()->with('item')->get());
 	}
+
+	/**
+	 * Get the authenticated user's listings
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function myListings()
+	{
+		return response()->json(auth()->user()->items);
+	}
 }

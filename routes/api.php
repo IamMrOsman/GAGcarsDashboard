@@ -30,6 +30,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	});
 
 	Route::prefix('my')->group(function () {
+		Route::get('/listings', [AuthController::class, 'myListings']);
 		Route::post('/wish-list/{item}', [UserResourcesController::class, 'addToWishList']);
 		Route::get('/wish-list', [UserResourcesController::class, 'wishList']);
 	});
