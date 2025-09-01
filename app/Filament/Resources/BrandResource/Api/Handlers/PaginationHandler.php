@@ -28,6 +28,7 @@ class PaginationHandler extends Handlers {
         ->allowedFilters($this->getAllowedFilters() ?? [])
         ->allowedIncludes($this->getAllowedIncludes() ?? [])
 		->with(['brandModels'])
+		->withCount('items')
         ->paginate(request()->query('per_page'))
         ->appends(request()->query());
 
