@@ -2,8 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\UserResourcesController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AppResourceController;
+use App\Http\Controllers\Api\UserResourcesController;
 
 Route::post('/sanctum/register', [AuthController::class, 'register']);
 
@@ -33,5 +34,14 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/listings', [UserResourcesController::class, 'myListings']);
 		Route::post('/wish-list/{item}', [UserResourcesController::class, 'addToWishList']);
 		Route::get('/wish-list', [UserResourcesController::class, 'wishList']);
+	});
+
+	Route::prefix('app')->group(function () {
+		Route::get('/similar-items-by-category/{category}/{item}', [AppResourceController::class, 'getSimilarItemsByCategory']);
+		Route::get('/similar-items-by-brand/{brand}/{item}', [AppResourceController::class, 'getSimilarItemsByBrand']);
+		Route::get('/similar-items-by-brand-model/{brandModel}/{item}', [AppResourceController::class, 'getSimilarItemsByBrandModel']);
+		Route::get('/category-items/{category}', [AppResourceController::class, 'getCategoryItems']);
+		Route::get('/brand-items/{brand}', [AppResourceController::class, 'getBrandItems']);
+		Route::get('/brand-model-items/{brandModel}', [AppResourceController::class, 'getBrandModelItems']);
 	});
 });
