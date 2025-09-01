@@ -43,5 +43,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/category-items/{category}', [AppResourceController::class, 'getCategoryItems']);
 		Route::get('/brand-items/{brand}', [AppResourceController::class, 'getBrandItems']);
 		Route::get('/brand-model-items/{brandModel}', [AppResourceController::class, 'getBrandModelItems']);
+		Route::post('/search-items', [AppResourceController::class, 'searchItems']);
 	});
 });

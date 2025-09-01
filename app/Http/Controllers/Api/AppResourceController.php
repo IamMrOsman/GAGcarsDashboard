@@ -12,17 +12,17 @@ use App\Models\ItemPriceNotification;
 
 class AppResourceController extends Controller
 {
-    public function priceNotification(Item $item)
-    {
-        $user = auth()->user();
+	public function priceNotification(Item $item)
+	{
+		$user = auth()->user();
 
-        if (!$item) {
-            return response()->json(['message' => 'Item not found'], 404);
-        }
+		if (!$item) {
+			return response()->json(['message' => 'Item not found'], 404);
+		}
 
 		$existingNotification = $item->usersToNotifyOnPriceChange()->where('user_id', $user->id)->first();
 
-		if($existingNotification) {
+		if ($existingNotification) {
 			$existingNotification->delete();
 		} else {
 			$itemPriceNotification = ItemPriceNotification::firstOrCreate([
@@ -33,13 +33,13 @@ class AppResourceController extends Controller
 		}
 
 		return response()->json(['message' => 'Price notification updated successfully'], 201);
-    }
+	}
 
 	public function sendPriceNotifications(Item $item)
 	{
 		$usersToNotify = $item->usersToNotifyOnPriceChange()->get();
 
-		foreach($usersToNotify as $userToNotify) {
+		foreach ($usersToNotify as $userToNotify) {
 			$userToNotify->send();
 		}
 	}
@@ -105,5 +105,38 @@ class AppResourceController extends Controller
 	public function getBrandModelItems(BrandModel $brandModel)
 	{
 		return response()->json($brandModel->items);
+	}
+
+	public function searchItems(Request $request)
+	{
+		$query = $request->query('query');
+
+		// Search for items by name
+		$itemsByName = Item::where('name', 'like', '%' . $query . '%');
+
+		// Search for items by category name
+		$itemsByCategory = Item::whereHas('category', function ($q) use ($query) {
+			$q->where('name', 'like', '%' . $query . '%');
+		});
+
+		// Search for items by brand name
+		$itemsByBrand = Item::whereHas('brand', function ($q) use ($query) {
+			$q->where('name', 'like', '%' . $query . '%');
+		});
+
+		// Search for items by brand model name
+		$itemsByBrandModel = Item::whereHas('brandModel', function ($q) use ($query) {
+			$q->where('name', 'like', '%' . $query . '%');
+		});
+
+		// Combine all queries and get unique results
+		$results = $itemsByName
+			->union($itemsByCategory)
+			->union($itemsByBrand)
+			->union($itemsByBrandModel)
+			->get()
+			->unique('id');
+
+		return response()->json($results);
 	}
 }
