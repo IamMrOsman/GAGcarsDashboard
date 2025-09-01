@@ -107,6 +107,11 @@ class AppResourceController extends Controller
 		return response()->json($brandModel->items);
 	}
 
+	/**
+	 * Search Items
+	 * @param Request $request
+	 * @return \Illuminate\Http\JsonResponse
+	 */
 	public function searchItems(Request $request)
 	{
 		$query = $request->query('query');
