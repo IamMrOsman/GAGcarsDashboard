@@ -43,8 +43,7 @@ class PostCategoryResource extends Resource
                 Forms\Components\Textarea::make('description')
                     ->maxLength(65535),
                 Forms\Components\FileUpload::make('image')
-                    ->image()
-                    ->required(),
+                    ->image(),
                 Forms\Components\Select::make('parent_id')
                     ->relationship('parent', 'name')
                     ->preload()
