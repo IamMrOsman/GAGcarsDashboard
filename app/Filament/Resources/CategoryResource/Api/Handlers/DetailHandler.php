@@ -24,12 +24,13 @@ class DetailHandler extends Handlers
     public function handler(Request $request)
     {
         $id = $request->route('id');
-        
+
         $query = static::getEloquentQuery();
 
         $query = QueryBuilder::for(
             $query->where(static::getKeyName(), $id)
         )
+            ->with(['itemFields', 'highlightedFields'])
             ->first();
 
         if (!$query) return static::sendNotFoundResponse();

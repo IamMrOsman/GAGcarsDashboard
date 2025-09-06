@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    use HasFactory;
+	use HasFactory;
 
 	protected $guarded = [];
 
@@ -27,6 +27,11 @@ class Category extends Model
 
 	public function itemFields()
 	{
-		return $this->belongsToMany(ItemField::class);
+		return $this->belongsToMany(ItemField::class)->withPivot('highlight');
+	}
+
+	public function highlightedFields()
+	{
+		return $this->belongsToMany(ItemField::class)->wherePivot('highlight', true);
 	}
 }

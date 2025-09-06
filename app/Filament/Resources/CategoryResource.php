@@ -55,10 +55,56 @@ class CategoryResource extends Resource
 					->multiple()
 					->preload()
 					->searchable()
+					->live()
+					->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+						// Get currently highlighted fields
+						$currentHighlights = $get('highlightedFields') ?? [];
+
+						// Only keep highlights for fields that are still available
+						$newHighlights = array_intersect($currentHighlights, $state ?? []);
+
+						// Update the highlighted fields to only include those still available
+						$set('highlightedFields', $newHighlights);
+					})
 					->helperText('Select the fields that should be available for items in this category')
 					->getOptionLabelFromRecordUsing(function ($record) {
 						return $record->label . ' (' . $record->type . ', ' . ($record->required ? 'required' : 'nullable') . ')';
 					}),
+				Forms\Components\CheckboxList::make('highlightedFields')
+					->columnSpanFull()
+					->label('Highlighted Fields')
+					->columns(3)
+					->options(function (Get $get, $record) {
+						// Get the selected item field IDs from the form or existing record
+						$selectedItemFieldIds = $get('itemFields') ?? ($record ? $record->itemFields()->pluck('item_fields.id')->toArray() : []);
+
+						// Return only the selected item fields as options
+						return \App\Models\ItemField::whereIn('id', $selectedItemFieldIds)
+							->pluck('label', 'id');
+					})
+					->helperText('Select which of the available fields should be highlighted for this category')
+					->afterStateHydrated(function (Forms\Components\CheckboxList $component, $state, $record) {
+						if ($record) {
+							$highlightedIds = $record->itemFields()->wherePivot('highlight', true)->pluck('item_fields.id')->toArray();
+							$component->state($highlightedIds);
+						}
+					})
+					->dehydrated(false)
+					->afterStateUpdated(function ($state, $record) {
+						if ($record) {
+							// First, set all existing relationships to highlight = false
+							$record->itemFields()->updateExistingPivot(
+								$record->itemFields()->pluck('item_fields.id')->toArray(),
+								['highlight' => false]
+							);
+
+							// Then set the selected ones to highlight = true
+							if ($state) {
+								$record->itemFields()->updateExistingPivot($state, ['highlight' => true]);
+							}
+						}
+					})
+					->live(),
 				Forms\Components\TagsInput::make('features')
 					->columnSpanFull()
 					->label('Features')

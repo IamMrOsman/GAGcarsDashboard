@@ -15,10 +15,13 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PostResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PostResource\RelationManagers;
+use App\Filament\Clusters\Post as PostCluster;
 
 class PostResource extends Resource
 {
 	protected static ?string $model = Post::class;
+
+	protected static ?string $cluster = PostCluster::class;
 
 	protected static ?string $navigationIcon = 'heroicon-o-pencil';
 
@@ -30,6 +33,13 @@ class PostResource extends Resource
 					->default(auth()->user()->id),
 				Forms\Components\Select::make('country_id')
 					->relationship('country', 'name')
+					->preload()
+					->searchable()
+					->columnSpanFull()
+					->reactive()
+					->required(),
+				Forms\Components\Select::make('category_id')
+					->relationship('category', 'name')
 					->preload()
 					->searchable()
 					->columnSpanFull()
@@ -71,6 +81,10 @@ class PostResource extends Resource
 				Tables\Columns\TextColumn::make('slug')
 					->searchable()
 					->limit(30),
+				Tables\Columns\TextColumn::make('category.name')
+					->label('Category')
+					->sortable()
+					->searchable(),
 				Tables\Columns\TextColumn::make('description')
 					->limit(50)
 					->searchable()
@@ -93,7 +107,10 @@ class PostResource extends Resource
 					->toggleable(isToggledHiddenByDefault: true),
 			])
 			->filters([
-				//
+				Tables\Filters\SelectFilter::make('category_id')
+					->relationship('category', 'name')
+					->preload()
+					->searchable(),
 			])
 			->actions([
 				Tables\Actions\EditAction::make(),

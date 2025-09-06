@@ -21,6 +21,11 @@ class Post extends Model
 		return $this->belongsTo(Country::class);
 	}
 
+	public function category()
+	{
+		return $this->belongsTo(PostCategory::class);
+	}
+
 	protected $casts = [
 		'tags' => 'array',
 	];
