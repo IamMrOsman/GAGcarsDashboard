@@ -65,6 +65,13 @@ class PostResource extends Resource
 					->image()
 					->required()
 					->imageEditor(),
+				Forms\Components\Select::make('status')
+					->options([
+						'draft' => 'Draft',
+						'published' => 'Published',
+					])
+					->native(false)
+					->default('draft'),
 			]);
 	}
 
