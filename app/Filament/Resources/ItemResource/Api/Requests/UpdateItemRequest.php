@@ -22,23 +22,23 @@ class UpdateItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'user_id' => 'required',
-			'brand_model_id' => 'required|integer',
-			'brand_id' => 'required|integer',
-			'category_id' => 'required|integer',
-			'name' => 'required',
-			'slug' => 'required',
-			'description' => 'required',
-			'images' => 'required|string',
-			'location' => 'required',
-			'serial_number' => 'required',
-			'condition' => 'required',
-			'status' => 'required',
-			'price' => 'required',
-			'mileage' => 'required',
-			'warranty' => 'required',
-			'warranty_expiration' => 'required',
-			'deleted_at' => 'required'
+			'user_id' => 'nullable',
+			'brand_model_id' => 'nullable|integer',
+			'brand_id' => 'nullable|integer',
+			'category_id' => 'nullable|integer',
+			'name' => 'nullable',
+			'slug' => 'nullable',
+			'description' => 'nullable',
+			'images' => 'nullable|string',
+			'location' => 'nullable',
+			'serial_number' => 'nullable',
+			'condition' => 'nullable',
+			'status' => 'nullable',
+			'price' => 'nullable',
+			'mileage' => 'nullable',
+			'warranty' => 'nullable',
+			'warranty_expiration' => 'nullable',
+			'deleted_at' => 'nullable'
 		];
     }
 }

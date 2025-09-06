@@ -22,7 +22,7 @@ class CreateItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'user_id' => '',
+			'user_id' => 'nullable',
 			'brand_model_id' => 'nullable',
 			'brand_id' => 'nullable',
 			'category_id' => 'nullable',
