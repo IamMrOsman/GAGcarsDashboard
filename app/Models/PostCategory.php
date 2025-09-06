@@ -7,12 +7,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PostCategory extends Model
 {
-    use HasFactory;
+	use HasFactory;
 
-    protected $guarded = [];
+	protected $guarded = [];
 
-    public function posts()
+	public function posts()
 	{
 		return $this->hasMany(Post::class);
+	}
+
+	public function parent()
+	{
+		return $this->belongsTo(PostCategory::class, 'parent_id');
+	}
+
+	public function children()
+	{
+		return $this->hasMany(PostCategory::class, 'parent_id');
 	}
 }
