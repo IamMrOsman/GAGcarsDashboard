@@ -29,7 +29,7 @@ class UpdateItemRequest extends FormRequest
 			'name' => 'nullable',
 			'slug' => 'nullable',
 			'description' => 'nullable',
-			'images' => 'nullable|string',
+			'images' => 'nullable|array',
 			'location' => 'nullable',
 			'serial_number' => 'nullable',
 			'condition' => 'nullable',
