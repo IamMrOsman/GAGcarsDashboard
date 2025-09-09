@@ -22,7 +22,7 @@ class CreatePromotionRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'user_id' => 'required',
+			'user_id' => 'nullable',
 			'item_id' => 'required',
 			'start_at' => 'required',
 			'end_at' => 'required',
