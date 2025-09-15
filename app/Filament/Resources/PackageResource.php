@@ -34,6 +34,12 @@ class PackageResource extends Resource
 					->required()
 					->searchable()
 					->reactive(),
+				Forms\Components\Select::make('category_id')
+					->relationship('category', 'name')
+					->preload()
+					->required()
+					->searchable()
+					->reactive(),
 				Forms\Components\Textarea::make('description')
 					->maxLength(65535)
 					->columnSpanFull(),
@@ -65,6 +71,7 @@ class PackageResource extends Resource
 				Tables\Columns\TextColumn::make('name')
 					->searchable(),
 				Tables\Columns\TextColumn::make('country.name'),
+				Tables\Columns\TextColumn::make('category.name'),
 				Tables\Columns\TextColumn::make('description')
 					->limit(50)
 					->searchable(),

@@ -2,9 +2,11 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Category;
 use App\Models\Country;
 use App\Models\Setting;
 use Filament\Widgets\Widget;
+use Illuminate\Support\Str;
 
 class ItemSettingsWidget extends Widget
 {
@@ -16,6 +18,8 @@ class ItemSettingsWidget extends Widget
 	{
 		$approvalSettings = [];
 		$paymentSettings = [];
+		$approvalSettingsByCategory = [];
+		$paymentSettingsByCategory = [];
 
 		// Get global settings
 		$globalApproval = Setting::where('key_slug', 'require_listing_approval_for_all')->first();
@@ -37,9 +41,24 @@ class ItemSettingsWidget extends Widget
 			$paymentSettings[$country->name] = $paymentSetting ? $paymentSetting->value === 'true' : false;
 		}
 
+		// Get category-specific settings
+		$categories = Category::all();
+		foreach ($categories as $category) {
+			$approvalKey = "require_listing_approval_for_category_" . Str::slug($category->name);
+			$paymentKey = "require_payment_for_category_" . Str::slug($category->name);
+
+			$approvalSetting = Setting::where('key_slug', $approvalKey)->first();
+			$paymentSetting = Setting::where('key_slug', $paymentKey)->first();
+
+			$approvalSettingsByCategory[$category->name] = $approvalSetting ? $approvalSetting->value === 'true' : false;
+			$paymentSettingsByCategory[$category->name] = $paymentSetting ? $paymentSetting->value === 'true' : false;
+		}
+
 		return [
 			'approvalSettings' => $approvalSettings,
 			'paymentSettings' => $paymentSettings,
+			'approvalSettingsByCategory' => $approvalSettingsByCategory,
+			'paymentSettingsByCategory' => $paymentSettingsByCategory,
 		];
 	}
 }
