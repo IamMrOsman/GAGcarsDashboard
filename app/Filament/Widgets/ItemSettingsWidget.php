@@ -43,6 +43,10 @@ class ItemSettingsWidget extends Widget
 
 		// Get category-specific settings
 		$categories = Category::all();
+
+		// Include Global for categories (maps to the same global keys)
+		$approvalSettingsByCategory['Global'] = $globalApproval ? $globalApproval->value === 'true' : false;
+		$paymentSettingsByCategory['Global'] = $globalPayment ? $globalPayment->value === 'true' : false;
 		foreach ($categories as $category) {
 			$approvalKey = "require_listing_approval_for_category_" . Str::slug($category->name);
 			$paymentKey = "require_payment_for_category_" . Str::slug($category->name);

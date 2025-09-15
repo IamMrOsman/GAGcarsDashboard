@@ -8,7 +8,7 @@
 						name="heroicon-o-check-circle"
 						class="h-5 w-5 text-primary-500"
 					/>
-					<span class="text-sm font-medium text-gray-900">Listing Approval Settings:</span>
+					<span class="text-sm font-medium text-gray-900">Listing Approval By Country:</span>
 				</div>
 				<div class="flex flex-wrap gap-2">
 					@foreach($approvalSettings as $target => $enabled)
@@ -44,7 +44,7 @@
 						name="heroicon-o-credit-card"
 						class="h-5 w-5 text-warning-500"
 					/>
-					<span class="text-sm font-medium text-gray-900">Payment Requirement Settings:</span>
+					<span class="text-sm font-medium text-gray-900">Payment Requirement By Country:</span>
 				</div>
 				<div class="flex flex-wrap gap-2">
 					@foreach($paymentSettings as $target => $enabled)

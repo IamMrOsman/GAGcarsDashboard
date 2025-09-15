@@ -5,12 +5,14 @@ namespace App\Filament\Resources\ItemResource\Pages;
 use App\Filament\Resources\ItemResource;
 use App\Models\Item;
 use App\Models\Country;
+use App\Models\Category;
 use App\Models\Setting;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
 use Filament\Actions\Action;
 use App\Filament\Widgets\ItemSettingsWidget;
+use Illuminate\Support\Str;
 
 class ListItems extends ListRecords
 {
@@ -66,32 +68,58 @@ class ListItems extends ListRecords
 			->color('primary')
 			->outlined()
 			->modalHeading('Toggle Listing Approval')
-			->modalDescription('Select a country and toggle approval requirement for listings.')
+			->modalDescription('Select a country and/or a category to toggle approval requirement for listings.')
 			->modalWidth('md')
 			->form([
-				\Filament\Forms\Components\Select::make('target')
-					->label('Target')
+				\Filament\Forms\Components\Select::make('country')
+					->label('Country')
 					->options([
+						'' => '— No Country —',
 						'all' => 'All Countries (Global)',
 						...Country::pluck('name', 'name')->toArray(),
 					])
-					->required()
-					->default('all'),
+					->native(false)
+					->nullable()
+					->default(''),
+				\Filament\Forms\Components\Select::make('category')
+					->label('Category (optional)')
+					->native(false)
+					->options([
+						'' => '— No Category —',
+						'all' => 'All Categories (Global)',
+						...\App\Models\Category::pluck('name', 'name')->toArray(),
+					])
+					->nullable()
+					->default(''),
 				\Filament\Forms\Components\Toggle::make('require_approval')
 					->label('Require Approval')
 					->helperText('Enable this to require approval for new listings in the selected target.')
-					->default(function () {
-						$target = request()->get('target', 'all');
-						$settingKey = "require_listing_approval_for_" . strtolower($target);
-						$currentSetting = Setting::where('key_slug', $settingKey)->first();
-						return $currentSetting ? $currentSetting->value === 'true' : false;
-					}),
+					->default(false),
 			])
 			->action(function (array $data) {
-				$target = $data['target'];
-				$settingKey = "require_listing_approval_for_" . strtolower($target);
-				$settingName = "Require Listing Approval For " . ucfirst($target);
+				$country = $data['country'];
+				$category = $data['category'] ?? '';
 				$requireApproval = $data['require_approval'];
+
+				if (empty($country) && empty($category)) {
+					throw \Illuminate\Validation\ValidationException::withMessages([
+						'country' => 'Please select a country or category.',
+					]);
+				}
+
+				if (!empty($category)) {
+					if ($category === 'all') {
+						$settingKey = 'require_listing_approval_for_all';
+						$settingName = 'Require Listing Approval For All';
+					} else {
+						$slug = Str::slug($category);
+						$settingKey = 'require_listing_approval_for_category_' . $slug;
+						$settingName = 'Require Listing Approval For Category ' . $category;
+					}
+				} else {
+					$settingKey = 'require_listing_approval_for_' . strtolower($country);
+					$settingName = 'Require Listing Approval For ' . ucfirst($country);
+				}
 
 				Setting::updateOrCreate(
 					['key_slug' => $settingKey],
@@ -101,10 +129,9 @@ class ListItems extends ListRecords
 					]
 				);
 
-				// Use Filament's notification system
 				\Filament\Notifications\Notification::make()
-					->title("Approval settings updated for " . ucfirst($target))
-					->body("Approval requirement " . ($requireApproval ? 'enabled' : 'disabled'))
+					->title('Approval settings updated')
+					->body('Approval requirement ' . ($requireApproval ? 'enabled' : 'disabled'))
 					->success()
 					->send();
 			});
@@ -118,32 +145,58 @@ class ListItems extends ListRecords
 			->color('warning')
 			->outlined()
 			->modalHeading('Toggle Payment Requirement')
-			->modalDescription('Select a country and toggle payment requirement for listings.')
+			->modalDescription('Select a country and/or a category to toggle payment requirement for listings.')
 			->modalWidth('md')
 			->form([
-				\Filament\Forms\Components\Select::make('target')
-					->label('Target')
+				\Filament\Forms\Components\Select::make('country')
+					->label('Country')
 					->options([
+						'' => '— No Country —',
 						'all' => 'All Countries (Global)',
 						...Country::pluck('name', 'name')->toArray(),
 					])
-					->required()
-					->default('all'),
+					->native(false)
+					->nullable()
+					->default(''),
+				\Filament\Forms\Components\Select::make('category')
+					->label('Category (optional)')
+					->native(false)
+					->options([
+						'' => '— No Category —',
+						'all' => 'All Categories (Global)',
+						...\App\Models\Category::pluck('name', 'name')->toArray(),
+					])
+					->nullable()
+					->default(''),
 				\Filament\Forms\Components\Toggle::make('require_payment')
 					->label('Require Payment')
 					->helperText('Enable this to require payment for new listings in the selected target.')
-					->default(function () {
-						$target = request()->get('target', 'all');
-						$settingKey = "require_payment_for_" . strtolower($target);
-						$currentSetting = Setting::where('key_slug', $settingKey)->first();
-						return $currentSetting ? $currentSetting->value === 'true' : false;
-					}),
+					->default(false),
 			])
 			->action(function (array $data) {
-				$target = $data['target'];
-				$settingKey = "require_payment_for_" . strtolower($target);
-				$settingName = "Require Payment For " . ucfirst($target);
+				$country = $data['country'];
+				$category = $data['category'] ?? '';
 				$requirePayment = $data['require_payment'];
+
+				if (empty($country) && empty($category)) {
+					throw \Illuminate\Validation\ValidationException::withMessages([
+						'country' => 'Please select a country or category.',
+					]);
+				}
+
+				if (!empty($category)) {
+					if ($category === 'all') {
+						$settingKey = 'require_payment_for_all';
+						$settingName = 'Require Payment For All';
+					} else {
+						$slug = Str::slug($category);
+						$settingKey = 'require_payment_for_category_' . $slug;
+						$settingName = 'Require Payment For Category ' . $category;
+					}
+				} else {
+					$settingKey = 'require_payment_for_' . strtolower($country);
+					$settingName = 'Require Payment For ' . ucfirst($country);
+				}
 
 				Setting::updateOrCreate(
 					['key_slug' => $settingKey],
@@ -153,10 +206,9 @@ class ListItems extends ListRecords
 					]
 				);
 
-				// Use Filament's notification system
 				\Filament\Notifications\Notification::make()
-					->title("Payment settings updated for " . ucfirst($target))
-					->body("Payment requirement " . ($requirePayment ? 'enabled' : 'disabled'))
+					->title('Payment settings updated')
+					->body('Payment requirement ' . ($requirePayment ? 'enabled' : 'disabled'))
 					->success()
 					->send();
 			});

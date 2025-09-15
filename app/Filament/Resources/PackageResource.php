@@ -27,7 +27,7 @@ class PackageResource extends Resource
 				Forms\Components\TextInput::make('name')
 					->required()
 					->label('Package Name')
-					->maxLength(255),
+					->columnSpanFull(),
 				Forms\Components\Select::make('country_id')
 					->relationship('country', 'name')
 					->preload()
