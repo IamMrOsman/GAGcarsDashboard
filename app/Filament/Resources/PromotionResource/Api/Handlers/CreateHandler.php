@@ -31,6 +31,8 @@ class CreateHandler extends Handlers {
 
         $model->fill($request->all());
 
+		$model->user_id = $request->user_id ?? auth()->id();
+
         $model->save();
 
         return static::sendSuccessResponse($model, "Successfully Create Resource");
