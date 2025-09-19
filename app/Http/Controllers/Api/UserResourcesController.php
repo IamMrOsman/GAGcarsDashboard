@@ -7,16 +7,17 @@ use App\Models\Item;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use App\Filament\Resources\ItemResource\Api\Transformers\ItemTransformer;
 
 class UserResourcesController extends Controller
 {
 	/**
 	 * User's Listings
-	 * @return \Illuminate\Http\JsonResponse
+	 * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
 	 */
 	public function userListings(User $user)
 	{
-		return response()->json($user->items);
+		return ItemTransformer::collection($user->items);
 	}
 
 	/**
@@ -115,10 +116,10 @@ class UserResourcesController extends Controller
 
 	/**
 	 * My Listings
-	 * @return \Illuminate\Http\JsonResponse
+	 * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
 	 */
 	public function myListings()
 	{
-		return response()->json(auth()->user()->items);
+		return ItemTransformer::collection(auth()->user()->items);
 	}
 }
