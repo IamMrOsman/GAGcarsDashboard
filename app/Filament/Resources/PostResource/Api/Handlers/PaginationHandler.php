@@ -28,6 +28,7 @@ class PaginationHandler extends Handlers {
         ->allowedFilters($this->getAllowedFilters() ?? [])
         ->allowedIncludes($this->getAllowedIncludes() ?? [])
         ->paginate(request()->query('per_page'))
+		->with(['category'])
         ->appends(request()->query());
 
         return PostTransformer::collection($query);
