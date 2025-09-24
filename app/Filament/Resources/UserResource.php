@@ -36,15 +36,15 @@ class UserResource extends Resource
                     ->email()
                     ->required()
                     ->maxLength(255),
+				Forms\Components\Hidden::make('password')
+					->default(Str::random(10))
+					->password()
+					->required()
+					->maxLength(255),
                 Forms\Components\TextInput::make('phone')
                     ->tel()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('password')
-					->hidden()
-					->default(Str::random(10))
-                    ->password()
-                    ->required()
-                    ->maxLength(255),
+                
                 Forms\Components\Select::make('country_id')
 					->columnSpanFull()
                     ->required()
