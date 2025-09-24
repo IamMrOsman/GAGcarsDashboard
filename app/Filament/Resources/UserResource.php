@@ -41,8 +41,7 @@ class UserResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Hidden::make('password')
 					->default(Str::random(10))
-                    ->required()
-                    ->maxLength(255),
+                    ->required(),
                 Forms\Components\Select::make('country_id')
 					->columnSpanFull()
                     ->required()
