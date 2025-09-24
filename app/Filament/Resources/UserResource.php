@@ -39,11 +39,8 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('phone')
                     ->tel()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('password')
-					->hidden()
+                Forms\Components\Hidden::make('password')
 					->default(Str::random(10))
-                    ->password()
-					->dehydrated()
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('country_id')
