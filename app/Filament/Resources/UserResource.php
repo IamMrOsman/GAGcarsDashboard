@@ -20,6 +20,8 @@ class UserResource extends Resource
 
 	protected static ?string $recordTitleAttribute = 'name';
 
+	protected static ?string $navigationGroup = 'User';
+
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function form(Form $form): Form
@@ -47,6 +49,13 @@ class UserResource extends Resource
 					->columnSpanFull()
                     ->required()
 					->relationship('country', 'name')
+					->preload()
+					->searchable(),
+				Forms\Components\Select::make('roles')
+					->columnSpanFull()
+					->required()
+					->relationship('roles', 'name')
+					->multiple()
 					->preload()
 					->searchable(),
                 // Forms\Components\Select::make('state_id')
