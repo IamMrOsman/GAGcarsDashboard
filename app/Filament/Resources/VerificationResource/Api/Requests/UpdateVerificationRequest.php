@@ -22,18 +22,18 @@ class UpdateVerificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'user_id' => 'required',
-			'document_type' => 'required',
-			'document_number' => 'required',
-			'document_front' => 'required',
-			'document_back' => 'required',
-			'selfie' => 'required',
-			'status' => 'required',
-			'comment' => 'required|string',
-			'verified_by' => 'required',
-			'rejected_by' => 'required',
-			'approved_at' => 'required',
-			'rejected_at' => 'required'
+			'user_id' => 'nullable',
+			'document_type' => 'nullable',
+			'document_number' => 'nullable',
+			'document_front' => 'nullable',
+			'document_back' => 'nullable',
+			'selfie' => 'nullable',
+			'status' => 'nullable',
+			'comment' => 'nullable|string',
+			'verified_by' => 'nullable',
+			'rejected_by' => 'nullable',
+			'approved_at' => 'nullable',
+			'rejected_at' => 'nullable'
 		];
     }
 }
