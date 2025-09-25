@@ -24,3 +24,4 @@ class SettingTransformer extends JsonResource
 		return $data;
 	}
 }
+

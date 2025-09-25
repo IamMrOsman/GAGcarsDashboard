@@ -36,3 +36,4 @@ class DetailHandler extends Handlers
 		return new SettingTransformer($query);
 	}
 }
+

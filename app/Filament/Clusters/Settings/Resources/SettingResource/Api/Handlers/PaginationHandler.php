@@ -33,3 +33,4 @@ class PaginationHandler extends Handlers {
         return SettingTransformer::collection($query);
     }
 }
+
