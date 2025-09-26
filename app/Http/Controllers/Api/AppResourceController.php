@@ -9,6 +9,8 @@ use App\Models\BrandModel;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\ItemPriceNotification;
+use App\Models\Setting;
+use App\Services\PaymentRequirementService;
 
 class AppResourceController extends Controller
 {
@@ -143,5 +145,32 @@ class AppResourceController extends Controller
 			->unique('id');
 
 		return response()->json($results);
+	}
+
+
+	/**
+	 * Can Upload
+	 * @param Request $request
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function canUpload(Request $request)
+	{
+		$user = auth()->user();
+		$categorySlug = $request->input('category_slug');
+
+		$paymentRequirementService = new PaymentRequirementService();
+		$paymentCheck = $paymentRequirementService->checkPaymentRequirementForUser($user, $categorySlug);
+
+		// If payment is required, check if user has uploads left
+		if ($paymentCheck['require_payment']) {
+			if ($user->uploads_left <= 0) {
+				return response()->json(['can_upload' => false, 'reason' => 'You have no uploads left'], 200);
+			}
+		}
+
+		return response()->json([
+			'can_upload' => true, 
+			'reason' => $paymentCheck['reason']
+		], 200);
 	}
 }

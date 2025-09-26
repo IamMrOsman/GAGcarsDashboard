@@ -33,7 +33,7 @@ return new class extends Migration
 			$table->string('build_type')->nullable();
 			$table->integer('number_of_passengers')->nullable();
 			$table->json('features')->nullable();
-			$table->string('status')->nullable();
+			$table->string('status')->nullable()->default('active');
 			$table->string('price')->nullable();
 			$table->string('mileage')->nullable();
 			$table->boolean('warranty')->nullable();

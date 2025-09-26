@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->ulid();
 			$table->foreignUlid('user_id')->constrained('users');
-			$table->ulidMorphs('transactionable');
-			$table->foreignId('country_id')->constrained('countries');
+			$table->foreignUlid('package_id')->constrained('packages');
+			$table->foreignUlid('item_id')->nullable()->constrained('items');
 			$table->decimal('amount', 10, 2);
 			$table->string('payment_channel');
+			$table->string('status');
             $table->timestamps();
         });
     }

@@ -31,7 +31,26 @@ class TransactionResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('package.package_type')
+                    ->label('Transaction Type'),
+                Tables\Columns\TextColumn::make('package.name')
+                    ->label('Package Name'),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User Name'),
+                Tables\Columns\TextColumn::make('item.name')
+                    ->label('Item Name'),
+                Tables\Columns\TextColumn::make('amount')
+                    ->label('Amount'),
+                Tables\Columns\TextColumn::make('payment_channel')
+                    ->label('Payment Channel'),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status'),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->dateTime(),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Updated At')
+                    ->dateTime(),
             ])
             ->filters([
                 //

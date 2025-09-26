@@ -13,8 +13,18 @@ class Transaction extends Model
 
 	protected $guarded = [];
 
-	public function transactionable()
+	public function package()
 	{
-		return true;
+		return $this->belongsTo(Package::class);
+	}
+
+	public function user()
+	{
+		return $this->belongsTo(User::class);
+	}
+
+	public function item()
+	{
+		return $this->belongsTo(Item::class);
 	}
 }
