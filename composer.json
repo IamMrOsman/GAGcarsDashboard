@@ -17,6 +17,7 @@
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.1.1",
         "livewire/volt": "^1.7.0",
+        "munafio/chatify": "^1.6",
         "rupadana/filament-api-service": "^3.4",
         "secondnetwork/blade-tabler-icons": "^3.31",
         "tzsk/otp": "^9.0"

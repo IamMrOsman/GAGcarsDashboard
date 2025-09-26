@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('packages', function (Blueprint $table) {
-            $table->string('package_type')->enum('upload', 'promotion')->after('number_of_listings');
+            $table->string('package_type')->enum('upload', 'promotion');
             $table->integer('number_of_listings')->nullable()->change();
         });
     }
