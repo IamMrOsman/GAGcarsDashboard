@@ -31,8 +31,8 @@ class VerificationResource extends Resource
 					->preload(),
 				Forms\Components\Select::make('verification_type')
 					->options([
-						'user' => 'User',
-						'dealership' => 'Dealership',
+						'individual' => 'Individual',
+						'dealer' => 'Dealer',
 					])
 					->native(false)
 					->columnSpan(2)
@@ -40,7 +40,7 @@ class VerificationResource extends Resource
 				Forms\Components\TextInput::make('dealership_name')
 					->columnSpan(2)
 					->maxLength(255)
-					->visible(fn($get) => $get('verification_type') === 'dealership'),
+					->visible(fn($get) => $get('verification_type') === 'dealer'),
 				Forms\Components\TextInput::make('address')
 					->columnSpan(2)
 					->maxLength(255),
@@ -53,7 +53,7 @@ class VerificationResource extends Resource
 						'1:1',
 					])
 					->columnSpan(2)
-					->visible(fn($get) => $get('verification_type') === 'dealership'),
+					->visible(fn($get) => $get('verification_type') === 'dealer'),
 				Forms\Components\Select::make('document_type')
 					->options([
 						'passport' => 'Passport',
