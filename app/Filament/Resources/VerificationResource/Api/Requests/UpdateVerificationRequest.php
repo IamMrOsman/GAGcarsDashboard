@@ -23,6 +23,10 @@ class UpdateVerificationRequest extends FormRequest
     {
         return [
 			'user_id' => 'nullable',
+			'verification_type' => 'nullable',
+			'dealership_name' => 'nullable',
+			'address' => 'nullable',
+			'dealership_registration_document' => 'nullable',
 			'document_type' => 'nullable',
 			'document_number' => 'nullable',
 			'document_front' => 'nullable',

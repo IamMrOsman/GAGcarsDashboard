@@ -29,6 +29,31 @@ class VerificationResource extends Resource
 					->searchable()
 					->columnSpan(2)
 					->preload(),
+				Forms\Components\Select::make('verification_type')
+					->options([
+						'user' => 'User',
+						'dealership' => 'Dealership',
+					])
+					->native(false)
+					->columnSpan(2)
+					->required(),
+				Forms\Components\TextInput::make('dealership_name')
+					->columnSpan(2)
+					->maxLength(255)
+					->visible(fn($get) => $get('verification_type') === 'dealership'),
+				Forms\Components\TextInput::make('address')
+					->columnSpan(2)
+					->maxLength(255),
+				Forms\Components\FileUpload::make('dealership_registration_document')
+					->image()
+					->imageEditor()
+					->imageEditorAspectRatios([
+						'16:9',
+						'4:3',
+						'1:1',
+					])
+					->columnSpan(2)
+					->visible(fn($get) => $get('verification_type') === 'dealership'),
 				Forms\Components\Select::make('document_type')
 					->options([
 						'passport' => 'Passport',
@@ -104,6 +129,14 @@ class VerificationResource extends Resource
 		return $table
 			->columns([
 				Tables\Columns\TextColumn::make('user.name')
+					->searchable(),
+				Tables\Columns\TextColumn::make('verification_type')
+					->searchable(),
+				Tables\Columns\TextColumn::make('dealership_name')
+					->searchable(),
+				Tables\Columns\TextColumn::make('address')
+					->searchable(),
+				Tables\Columns\ImageColumn::make('dealership_registration_document')
 					->searchable(),
 				Tables\Columns\TextColumn::make('document_type')
 					->searchable(),

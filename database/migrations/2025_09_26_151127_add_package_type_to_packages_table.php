@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('packages', function (Blueprint $table) {
             $table->string('package_type')->enum('upload', 'promotion');
+            $table->integer('promotion_days')->nullable();
             $table->integer('number_of_listings')->nullable()->change();
         });
     }
@@ -24,6 +25,7 @@ return new class extends Migration
     {
         Schema::table('packages', function (Blueprint $table) {
             $table->dropColumn('package_type');
+            $table->dropColumn('promotion_days');
             $table->integer('number_of_listings')->nullable(false)->change();
         });
     }

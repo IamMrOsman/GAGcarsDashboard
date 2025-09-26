@@ -28,6 +28,13 @@ class PackageResource extends Resource
 					->required()
 					->label('Package Name')
 					->columnSpanFull(),
+				Forms\Components\Select::make('package_type')
+					->required()
+					->native(false)
+					->options([
+						'upload' => 'Upload',
+						'promotion' => 'Promotion',
+					]),
 				Forms\Components\Select::make('country_id')
 					->relationship('country', 'name')
 					->preload()
@@ -60,7 +67,13 @@ class PackageResource extends Resource
 				Forms\Components\TextInput::make('number_of_listings')
 					->required()
 					->numeric()
-					->minValue(1),
+					->minValue(1)
+					->visible(fn($get) => $get('package_type') === 'upload'),
+				Forms\Components\TextInput::make('promotion_days')
+					->required()
+					->numeric()
+					->minValue(1)
+					->visible(fn($get) => $get('package_type') === 'promotion'),
 			]);
 	}
 
