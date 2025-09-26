@@ -23,6 +23,7 @@ class PaginationHandler extends Handlers {
         $query = static::getEloquentQuery();
 
         $query = QueryBuilder::for($query)
+        ->where('end_at', '>=', now())
         ->allowedFields($this->getAllowedFields() ?? [])
         ->allowedSorts($this->getAllowedSorts() ?? [])
         ->allowedFilters($this->getAllowedFilters() ?? [])
