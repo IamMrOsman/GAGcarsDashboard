@@ -24,6 +24,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::post('/update-profile', [AuthController::class, 'updateProfile']);
 
 	Route::prefix('user/{user}')->group(function () {
+		Route::get('/details', [UserResourcesController::class, 'userDetails']);
 		Route::get('/listings', [UserResourcesController::class, 'userListings']);
 		Route::get('/promotions', [UserResourcesController::class, 'userPromotions']);
 		Route::get('/special-offers', [UserResourcesController::class, 'userSpecialOffers']);

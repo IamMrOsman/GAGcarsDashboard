@@ -158,6 +158,8 @@ class AuthController extends Controller
 
 		return response()->json([
 			'user' => $user,
+			'verified' => $user->isVerified(),
+			'verified_dealer' => $user->isVerifiedDealer()
 		]);
 	}
 

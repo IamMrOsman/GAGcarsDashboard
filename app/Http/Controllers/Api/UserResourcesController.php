@@ -21,6 +21,18 @@ class UserResourcesController extends Controller
 	}
 
 	/**
+	 * User details
+	 */
+	public function userDetails(User $user)
+	{
+		return response()->json([
+			'user' => $user,
+			'verified' => $user->isVerified(),
+			'verified_dealer' => $user->isVerifiedDealer()
+		]);
+	}
+
+	/**
 	 * My Verifications
 	 * @return \Illuminate\Http\JsonResponse
 	 */
