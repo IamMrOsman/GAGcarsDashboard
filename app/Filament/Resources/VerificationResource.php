@@ -154,6 +154,7 @@ class VerificationResource extends Resource
 						'pending' => 'warning',
 						'verified' => 'success',
 						'rejected' => 'danger',
+						default => 'gray',
 					})
 					->searchable(),
 				Tables\Columns\TextColumn::make('verified_by')
