@@ -1,5 +1,5 @@
 <?php
-namespace App\Filament\Clusters\Faq\Resources\CountryResource\Api;
+namespace App\Filament\Resources\CountryResource\Api;
 
 use Rupadana\ApiService\ApiService;
 use App\Filament\Resources\CountryResource;

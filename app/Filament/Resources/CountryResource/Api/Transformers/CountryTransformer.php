@@ -1,5 +1,5 @@
 <?php
-namespace App\Filament\Clusters\Faq\Resources\CountryResource\Api\Transformers;
+namespace App\Filament\Resources\CountryResource\Api\Transformers;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 

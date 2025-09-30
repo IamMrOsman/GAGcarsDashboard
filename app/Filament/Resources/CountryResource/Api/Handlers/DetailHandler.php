@@ -1,10 +1,10 @@
 <?php
-namespace App\Filament\Clusters\Faq\Resources\CountryResource\Api\Handlers;
+namespace App\Filament\Resources\CountryResource\Api\Handlers;
 
 use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\CountryResource;
-use App\Filament\Clusters\Faq\Resources\CountryResource\Api\Transformers\CountryTransformer;
+use App\Filament\Resources\CountryResource\Api\Transformers\CountryTransformer;
 
 class DetailHandler extends Handlers {
     public static string | null $uri = '/{id}';
