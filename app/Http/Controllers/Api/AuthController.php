@@ -23,6 +23,8 @@ class AuthController extends Controller
 			'phone' => 'nullable|string|max:255|unique:users',
 			'password' => 'required|string|min:8',
 			'device_name' => 'nullable',
+			'country_id' => 'nullable|exists:countries,id',
+			'state_id' => 'nullable|exists:states,id',
 		]);
 
 		$user = User::create([
@@ -30,6 +32,8 @@ class AuthController extends Controller
 			'email' => $request->email,
 			'phone' => $request->phone,
 			'password' => Hash::make($request->password),
+			'country_id' => $request->country_id,
+			'state_id' => $request->state_id,
 		]);
 
 		$token = $user->createToken($request->phone)->plainTextToken;
@@ -302,6 +306,8 @@ class AuthController extends Controller
 			'password' => 'nullable|string|min:8',
 			'device_name' => 'nullable',
 			'profile_photo' => 'nullable|string',
+			'country_id' => 'nullable|exists:countries,id',
+			'state_id' => 'nullable|exists:states,id',
 		]);
 
 		$user->update([
@@ -310,6 +316,8 @@ class AuthController extends Controller
 			'phone' => $request->phone,
 			'password' => $request->password ? Hash::make($request->password) : $user->password,
 			'profile_photo' => $request->profile_photo,
+			'country_id' => $request->country_id,
+			'state_id' => $request->state_id,
 		]);
 
 		return response()->json([
