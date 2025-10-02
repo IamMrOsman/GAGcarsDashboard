@@ -155,22 +155,23 @@ class AppResourceController extends Controller
 	 */
 	public function canUpload(Request $request)
 	{
-		$user = auth()->user();
-		$categorySlug = $request->input('category_slug');
+		// $user = auth()->user();
+		// $categorySlug = $request->input('category_slug');
 
-		$paymentRequirementService = new PaymentRequirementService();
-		$paymentCheck = $paymentRequirementService->checkPaymentRequirementForUser($user, $categorySlug);
+		// $paymentRequirementService = new PaymentRequirementService();
+		// $paymentCheck = $paymentRequirementService->checkPaymentRequirementForUser($user, $categorySlug);
 
-		// If payment is required, check if user has uploads left
-		if ($paymentCheck['require_payment']) {
-			if ($user->uploads_left <= 0) {
-				return response()->json(['can_upload' => false, 'reason' => 'You have no uploads left'], 200);
-			}
-		}
+		// // If payment is required, check if user has uploads left
+		// if ($paymentCheck['require_payment']) {
+		// 	if ($user->uploads_left <= 0) {
+		// 		return response()->json(['can_upload' => false, 'reason' => 'You have no uploads left'], 200);
+		// 	}
+		// }
 
 		return response()->json([
-			'can_upload' => true, 
-			'reason' => $paymentCheck['reason']
+			'can_upload' => true,
+			// 'reason' => $paymentCheck['reason']
+			'reason' => 'Payment not required for this category'
 		], 200);
 	}
 }
