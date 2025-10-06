@@ -155,8 +155,8 @@ class AppResourceController extends Controller
 	 */
 	public function canUpload(Request $request)
 	{
-		// $user = auth()->user();
-		// $categorySlug = $request->input('category_slug');
+		$user = auth()->user();
+		$categorySlug = $request->input('category_slug');
 
 		// $paymentRequirementService = new PaymentRequirementService();
 		// $paymentCheck = $paymentRequirementService->checkPaymentRequirementForUser($user, $categorySlug);
