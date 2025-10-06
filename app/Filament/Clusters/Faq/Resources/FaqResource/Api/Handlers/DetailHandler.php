@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\FaqResource\Api\Handlers;
+namespace App\Filament\Clusters\Faq\Resources\FaqResource\Api\Handlers;
 
 use App\Filament\Resources\SettingResource;
-use App\Filament\Resources\FaqResource;
+use App\Filament\Clusters\Faq\Resources\FaqResource;
 use Rupadana\ApiService\Http\Handlers;
 use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\Http\Request;
-use App\Filament\Resources\FaqResource\Api\Transformers\FaqTransformer;
+use App\Filament\Clusters\Faq\Resources\FaqResource\Api\Transformers\FaqTransformer;
 
 class DetailHandler extends Handlers
 {
@@ -24,7 +24,7 @@ class DetailHandler extends Handlers
     public function handler(Request $request)
     {
         $id = $request->route('id');
-
+        
         $query = static::getEloquentQuery();
 
         $query = QueryBuilder::for(

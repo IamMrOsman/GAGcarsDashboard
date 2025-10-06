@@ -1,13 +1,13 @@
 <?php
-namespace App\Filament\Resources\FaqResource\Api\Transformers;
+namespace App\Filament\Clusters\Faq\Resources\FaqCategoryResource\Api\Transformers;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Models\Faq;
+use App\Models\FaqCategory;
 
 /**
- * @property Faq $resource
+ * @property FaqCategory $resource
  */
-class FaqTransformer extends JsonResource
+class FaqCategoryTransformer extends JsonResource
 {
 
     /**

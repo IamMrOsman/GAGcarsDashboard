@@ -134,4 +134,13 @@ class UserResourcesController extends Controller
 	{
 		return ItemTransformer::collection(auth()->user()->items);
 	}
+
+	/**
+	 * My Notifications
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function notifications()
+	{
+		return response()->json(auth()->user()->notifications);
+	}
 }

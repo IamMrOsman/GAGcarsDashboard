@@ -1,11 +1,11 @@
 <?php
-namespace App\Filament\Resources\FaqResource\Api\Handlers;
+namespace App\Filament\Clusters\Faq\Resources\FaqResource\Api\Handlers;
 
 use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
 use Spatie\QueryBuilder\QueryBuilder;
-use App\Filament\Resources\FaqResource;
-use App\Filament\Resources\FaqResource\Api\Transformers\FaqTransformer;
+use App\Filament\Clusters\Faq\Resources\FaqResource;
+use App\Filament\Clusters\Faq\Resources\FaqResource\Api\Transformers\FaqTransformer;
 
 class PaginationHandler extends Handlers {
     public static string | null $uri = '/';

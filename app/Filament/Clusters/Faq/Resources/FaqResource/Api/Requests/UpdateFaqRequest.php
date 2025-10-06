@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\FaqResource\Api\Requests;
+namespace App\Filament\Clusters\Faq\Resources\FaqResource\Api\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -26,7 +26,8 @@ class UpdateFaqRequest extends FormRequest
 			'question' => 'required',
 			'answer' => 'required|string',
 			'status' => 'required',
-			'tags' => 'required'
+			'tags' => 'required',
+			'image' => 'required'
 		];
     }
 }

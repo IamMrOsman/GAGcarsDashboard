@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Filament\Resources\FaqResource\Api\Requests;
+namespace App\Filament\Clusters\Faq\Resources\FaqCategoryResource\Api\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateFaqRequest extends FormRequest
+class UpdateFaqCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,11 +22,10 @@ class CreateFaqRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'user_id' => 'required',
-			'question' => 'required',
-			'answer' => 'required|string',
-			'status' => 'required',
-			'tags' => 'required'
+			'name' => 'required',
+			'slug' => 'required',
+			'description' => 'required',
+			'status' => 'required'
 		];
     }
 }

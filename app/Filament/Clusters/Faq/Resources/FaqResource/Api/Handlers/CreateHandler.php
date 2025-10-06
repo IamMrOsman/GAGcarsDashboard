@@ -1,10 +1,10 @@
 <?php
-namespace App\Filament\Resources\FaqResource\Api\Handlers;
+namespace App\Filament\Clusters\Faq\Resources\FaqResource\Api\Handlers;
 
 use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
-use App\Filament\Resources\FaqResource;
-use App\Filament\Resources\FaqResource\Api\Requests\CreateFaqRequest;
+use App\Filament\Clusters\Faq\Resources\FaqResource;
+use App\Filament\Clusters\Faq\Resources\FaqResource\Api\Requests\CreateFaqRequest;
 
 class CreateHandler extends Handlers {
     public static string | null $uri = '/';

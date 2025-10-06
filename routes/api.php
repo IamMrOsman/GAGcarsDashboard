@@ -35,6 +35,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/listings', [UserResourcesController::class, 'myListings']);
 		Route::post('/wish-list/{item}', [UserResourcesController::class, 'addToWishList']);
 		Route::get('/wish-list', [UserResourcesController::class, 'wishList']);
+		Route::get('/notifications', [UserResourcesController::class, 'notifications']);
 	});
 
 	Route::prefix('app')->group(function () {
@@ -46,5 +47,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/brand-model-items/{brandModel}', [AppResourceController::class, 'getBrandModelItems']);
 		Route::post('/search-items', [AppResourceController::class, 'searchItems']);
 		Route::post('/can-upload', [AppResourceController::class, 'canUpload']);
+		Route::get('/category-faqs/{faqCategory}', [AppResourceController::class, 'getCategoryFaqs']);
 	});
 });

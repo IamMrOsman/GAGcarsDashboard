@@ -1,13 +1,13 @@
 <?php
-namespace App\Filament\Resources\FaqResource\Api\Handlers;
+namespace App\Filament\Clusters\Faq\Resources\FaqCategoryResource\Api\Handlers;
 
 use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
-use App\Filament\Resources\FaqResource;
+use App\Filament\Clusters\Faq\Resources\FaqCategoryResource;
 
 class DeleteHandler extends Handlers {
     public static string | null $uri = '/{id}';
-    public static string | null $resource = FaqResource::class;
+    public static string | null $resource = FaqCategoryResource::class;
 
     public static function getMethod()
     {
@@ -19,7 +19,7 @@ class DeleteHandler extends Handlers {
     }
 
     /**
-     * Delete Faq
+     * Delete FaqCategory
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse

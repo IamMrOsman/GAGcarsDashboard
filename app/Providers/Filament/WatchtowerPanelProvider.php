@@ -67,6 +67,7 @@ class WatchtowerPanelProvider extends PanelProvider
 			    FilamentShieldPlugin::make(),
 				ApiServicePlugin::make()
 			])
+			->databaseNotifications()
 			->maxContentWidth('full')
 			->unsavedChangesAlerts()
 			->sidebarWidth('17rem')

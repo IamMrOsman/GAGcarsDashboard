@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Item;
 use App\Models\Brand;
+use App\Models\Setting;
 use App\Models\Category;
 use App\Models\BrandModel;
+use App\Models\FaqCategory;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\ItemPriceNotification;
-use App\Models\Setting;
 use App\Services\PaymentRequirementService;
 
 class AppResourceController extends Controller
@@ -147,6 +148,15 @@ class AppResourceController extends Controller
 		return response()->json($results);
 	}
 
+	/**
+	 * Get Category Faqs
+	 * @param FaqCategory $faqCategory
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function getCategoryFaqs(FaqCategory $faqCategory)
+	{
+		return response()->json($faqCategory->faqs);
+	}
 
 	/**
 	 * Can Upload

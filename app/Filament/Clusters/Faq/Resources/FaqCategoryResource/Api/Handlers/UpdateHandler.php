@@ -1,14 +1,14 @@
 <?php
-namespace App\Filament\Resources\FaqResource\Api\Handlers;
+namespace App\Filament\Clusters\Faq\Resources\FaqCategoryResource\Api\Handlers;
 
 use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
-use App\Filament\Resources\FaqResource;
-use App\Filament\Resources\FaqResource\Api\Requests\UpdateFaqRequest;
+use App\Filament\Clusters\Faq\Resources\FaqCategoryResource;
+use App\Filament\Clusters\Faq\Resources\FaqCategoryResource\Api\Requests\UpdateFaqCategoryRequest;
 
 class UpdateHandler extends Handlers {
     public static string | null $uri = '/{id}';
-    public static string | null $resource = FaqResource::class;
+    public static string | null $resource = FaqCategoryResource::class;
 
     public static function getMethod()
     {
@@ -21,12 +21,12 @@ class UpdateHandler extends Handlers {
 
 
     /**
-     * Update Faq
+     * Update FaqCategory
      *
-     * @param UpdateFaqRequest $request
+     * @param UpdateFaqCategoryRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function handler(UpdateFaqRequest $request)
+    public function handler(UpdateFaqCategoryRequest $request)
     {
         $id = $request->route('id');
 
