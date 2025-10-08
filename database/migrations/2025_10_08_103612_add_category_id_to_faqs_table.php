@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('faqs', function (Blueprint $table) {
-            $table->dropColumn('category_id');
             $table->foreignId('category_id')->nullable()->constrained('faq_categories');
         });
     }
