@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('faqs', function (Blueprint $table) {
-            $table->foreignId('category_id')->nullable()->constrained('faq_categories');
+            // $table->foreignId('category_id')->nullable()->constrained('faq_categories');
+			$table->foreign('category_id')->references('id')->on('faq_categories')->cascadeOnDelete();
         });
     }
 
