@@ -38,19 +38,19 @@ class CreateHandler extends Handlers {
         $model->save();
 
         //if approval is required before upload, set status to pending_approval
-        $approvalRequirementService = new ApprovalRequirementService();
-        $approvalCheck = $approvalRequirementService->checkApprovalRequirementForItem($model);
-        if ($approvalCheck['require_approval']) {
-            $model->update(['status' => 'pending_approval']);
-        }
+        // $approvalRequirementService = new ApprovalRequirementService();
+        // $approvalCheck = $approvalRequirementService->checkApprovalRequirementForItem($model);
+        // if ($approvalCheck['require_approval']) {
+        //     $model->update(['status' => 'pending_approval']);
+        // }
 
         //if payment is required before upload, decrement user's uploads_left
-        $paymentRequirementService = new PaymentRequirementService();
-        $paymentCheck = $paymentRequirementService->checkPaymentRequirementForItem($model);
-        if ($paymentCheck['require_payment']) {
-            $user = $model->user;
-            $user->decrement('uploads_left', 1);
-        }
+        // $paymentRequirementService = new PaymentRequirementService();
+        // $paymentCheck = $paymentRequirementService->checkPaymentRequirementForItem($model);
+        // if ($paymentCheck['require_payment']) {
+        //     $user = $model->user;
+        //     $user->decrement('uploads_left', 1);
+        // }
 
         return static::sendSuccessResponse($model, "Successfully Create Resource");
     }
