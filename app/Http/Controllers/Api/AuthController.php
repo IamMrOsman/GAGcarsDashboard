@@ -9,6 +9,9 @@ use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Services\SmtpSettingsService;
+use Illuminate\Support\Facades\Config;
+use App\Mail\OtpMail;
 
 class AuthController extends Controller
 {
@@ -82,7 +85,7 @@ class AuthController extends Controller
 		]);
 
 		$user = User::where('phone', $request->phone)
-			// ->orWhere('email', $request->email)
+			->orWhere('email', $request->email)
 			->first();
 
 		if (!$user) {
@@ -95,7 +98,7 @@ class AuthController extends Controller
 		$phoneOtp = Otp::generate($user->phone);
 
 		// Generate OTP for email
-		// $emailOtp = Otp::generate($user->email);
+		$emailOtp = Otp::generate($user->email);
 
 		// Send SMS via Arkesel
 		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
@@ -106,6 +109,8 @@ class AuthController extends Controller
 		// 	$message->to($user->email)
 		// 		->subject('Your OTP Code');
 		// });
+
+		$this->sendEmailWithSmtpSettings($user->email, $emailOtp, $user->name);
 
 		return response()->json([
 			'message' => 'OTP sent successfully to phone',
@@ -236,10 +241,12 @@ class AuthController extends Controller
 		$smsDriver->send($user->phone ?? $user->email, "Your OTP is: {$otp}");
 
 		// Send Email using Laravel's built-in mail
-		\Mail::raw("Your OTP is: {$otp}", function ($message) use ($user) {
-			$message->to($user->email)
-				->subject('Your OTP Code');
-		});
+		// \Mail::raw("Your OTP is: {$otp}", function ($message) use ($user) {
+		// 	$message->to($user->email)
+		// 		->subject('Your OTP Code');
+		// });
+
+		$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
 
 		return response()->json([
 			'message' => 'OTP sent successfully'
@@ -324,5 +331,27 @@ class AuthController extends Controller
 			'message' => 'Profile updated successfully',
 			'user' => $user
 		], 200);
+	}
+
+	/**
+	 * Send email using SMTP settings from database
+	 */
+	private function sendEmailWithSmtpSettings(string $to, string $otp, string $userName = ''): void
+	{
+		// Check if SMTP is configured in database
+		if (SmtpSettingsService::isSmtpConfigured()) {
+			// Get SMTP configuration from database
+			$smtpConfig = SmtpSettingsService::getSmtpConfig();
+
+			// Temporarily update mail configuration
+			Config::set('mail.mailers.smtp', $smtpConfig['mailers']['smtp']);
+			Config::set('mail.from', $smtpConfig['from']);
+
+			// Send email using Mailable
+			\Mail::to($to)->send(new OtpMail($otp, $userName));
+		} else {
+			// Fallback to default mail configuration
+			\Mail::to($to)->send(new OtpMail($otp, $userName));
+		}
 	}
 }
