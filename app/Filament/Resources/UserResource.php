@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\UserResource\RelationManagers;
+use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
@@ -40,7 +41,7 @@ class UserResource extends Resource
                     ->tel()
                     ->maxLength(255),
                 Forms\Components\Hidden::make('password')
-					->default(Str::random(10))
+					->default(Hash::make('password'))
                     ->required(),
                 Forms\Components\Select::make('country_id')
 					->columnSpanFull()
