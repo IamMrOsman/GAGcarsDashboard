@@ -44,13 +44,11 @@ class UserResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('country_id')
 					->columnSpanFull()
-                    ->required()
 					->relationship('country', 'name')
 					->preload()
 					->searchable(),
 				Forms\Components\Select::make('roles')
 					->columnSpanFull()
-					->required()
 					->relationship('roles', 'name')
 					->multiple()
 					->preload()
