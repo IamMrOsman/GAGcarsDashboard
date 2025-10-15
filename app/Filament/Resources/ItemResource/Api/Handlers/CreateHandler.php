@@ -5,8 +5,7 @@ use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemResource\Api\Requests\CreateItemRequest;
-use App\Services\ApprovalRequirementService;
-use App\Services\PaymentRequirementService;
+use App\Models\CategoryRequirement;
 
 class CreateHandler extends Handlers {
     public static string | null $uri = '/';
@@ -37,20 +36,28 @@ class CreateHandler extends Handlers {
 
         $model->save();
 
-        //if approval is required before upload, set status to pending_approval
-        // $approvalRequirementService = new ApprovalRequirementService();
-        // $approvalCheck = $approvalRequirementService->checkApprovalRequirementForItem($model);
-        // if ($approvalCheck['require_approval']) {
-        //     $model->update(['status' => 'pending_approval']);
-        // }
+        // Check if approval is required for this category in the user's country
+        $approvalRequired = CategoryRequirement::where('category_id', $model->category_id)
+            ->where('country_id', $model->user->country_id)
+            ->where('require_approval', true)
+            ->exists();
 
-        //if payment is required before upload, decrement user's uploads_left
-        // $paymentRequirementService = new PaymentRequirementService();
-        // $paymentCheck = $paymentRequirementService->checkPaymentRequirementForItem($model);
-        // if ($paymentCheck['require_payment']) {
-        //     $user = $model->user;
-        //     $user->decrement('uploads_left', 1);
-        // }
+        // If approval is required, set status to pending_approval
+        if ($approvalRequired) {
+            $model->update(['status' => 'pending_approval']);
+        }
+
+        // Check if payment is required for this category in the user's country
+        $paymentRequired = CategoryRequirement::where('category_id', $model->category_id)
+            ->where('country_id', $model->user->country_id)
+            ->where('require_payment', true)
+            ->exists();
+
+        // If payment is required, decrement user's uploads_left
+        if ($paymentRequired) {
+            $user = $model->user;
+            $user->decrement('uploads_left', 1);
+        }
 
         return static::sendSuccessResponse($model, "Successfully Create Resource");
     }

@@ -28,6 +28,7 @@ class PaginationHandler extends Handlers {
         ->allowedFilters($this->getAllowedFilters() ?? [])
         ->allowedIncludes($this->getAllowedIncludes() ?? [])
 		->with(['brand', 'category', 'brandModel', 'user'])
+        ->whereNotIn('status', ['sold', 'pending_approval'])
         ->paginate(request()->query('per_page'))
         ->appends(request()->query());
 
