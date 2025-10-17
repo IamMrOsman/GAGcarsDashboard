@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\Category;
 use App\Models\BrandModel;
 use App\Models\FaqCategory;
+use App\Models\CategoryRequirement;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\ItemPriceNotification;
@@ -166,22 +167,24 @@ class AppResourceController extends Controller
 	public function canUpload(Request $request)
 	{
 		$user = auth()->user();
-		$categorySlug = $request->input('category_slug');
+		$categoryId = $request->input('category_id');
 
-		// $paymentRequirementService = new PaymentRequirementService();
-		// $paymentCheck = $paymentRequirementService->checkPaymentRequirementForUser($user, $categorySlug);
+		// Check if payment is required for this category in the user's country
+		$paymentRequired = CategoryRequirement::where('category_id', $categoryId)
+			->where('country_id', $user->country_id)
+			->where('require_payment', true)
+			->exists();
 
-		// // If payment is required, check if user has uploads left
-		// if ($paymentCheck['require_payment']) {
-		// 	if ($user->uploads_left <= 0) {
-		// 		return response()->json(['can_upload' => false, 'reason' => 'You have no uploads left'], 200);
-		// 	}
-		// }
+		// If payment is required, check if user has uploads left
+		if ($paymentRequired) {
+			if ($user->uploads_left <= 0) {
+				return response()->json(['can_upload' => false, 'reason' => 'You have no uploads left'], 200);
+			}
+		}
 
 		return response()->json([
 			'can_upload' => true,
-			// 'reason' => $paymentCheck['reason']
-			'reason' => 'Payment not required for this category'
+			'reason' => $paymentRequired ? 'Payment required but you have ' . $user->uploads_left . ' uploads left' : 'Payment not required for this category'
 		], 200);
 	}
 }

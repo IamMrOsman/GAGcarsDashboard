@@ -6,7 +6,7 @@ use App\Filament\Resources\ItemResource;
 use App\Models\Item;
 use App\Models\Country;
 use App\Models\Category;
-use App\Models\Setting;
+use App\Models\CategoryRequirement;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
@@ -24,13 +24,6 @@ class ListItems extends ListRecords
 			Actions\CreateAction::make(),
 			$this->createApprovalAction(),
 			$this->createPaymentAction(),
-		];
-	}
-
-	protected function getHeaderWidgets(): array
-	{
-		return [
-			ItemSettingsWidget::class,
 		];
 	}
 
@@ -68,70 +61,102 @@ class ListItems extends ListRecords
 			->color('primary')
 			->outlined()
 			->modalHeading('Toggle Listing Approval')
-			->modalDescription('Select a country and/or a category to toggle approval requirement for listings.')
-			->modalWidth('md')
+			->modalDescription('Select a country and categories to toggle approval requirement for listings.')
+			->modalWidth('lg')
 			->form([
-				\Filament\Forms\Components\Select::make('country')
+				\Filament\Forms\Components\Select::make('country_id')
 					->label('Country')
-					->options([
-						'' => '— No Country —',
-						'all' => 'All Countries (Global)',
-						...Country::pluck('name', 'name')->toArray(),
-					])
+					->options(Country::pluck('name', 'id')->toArray())
 					->native(false)
-					->nullable()
-					->default(''),
-				\Filament\Forms\Components\Select::make('category')
-					->label('Category (optional)')
+					->required()
+					->searchable()
+					->live()
+					->afterStateUpdated(function ($state, callable $set) {
+						if ($state) {
+							// Get existing category requirements for this country
+							$existingRequirements = CategoryRequirement::where('country_id', $state)
+								->where('require_approval', true)
+								->pluck('category_id')
+								->toArray();
+							$set('category_ids', $existingRequirements);
+						} else {
+							$set('category_ids', []);
+						}
+					}),
+				\Filament\Forms\Components\Select::make('category_ids')
+					->label('Categories')
+					->options(function (callable $get) {
+						$countryId = $get('country_id');
+						if (!$countryId) {
+							return [];
+						}
+						return Category::pluck('name', 'id')->toArray();
+					})
 					->native(false)
-					->options([
-						'' => '— No Category —',
-						'all' => 'All Categories (Global)',
-						...\App\Models\Category::pluck('name', 'name')->toArray(),
-					])
-					->nullable()
-					->default(''),
+					->multiple()
+					->searchable()
+					->placeholder('Select categories...')
+					->helperText('Select multiple categories to apply approval requirements. Previously selected categories will be shown when you select a country.'),
 				\Filament\Forms\Components\Toggle::make('require_approval')
 					->label('Require Approval')
-					->helperText('Enable this to require approval for new listings in the selected target.')
-					->default(false),
+					->helperText('Enable this to require approval for new listings in the selected country and categories.')
+					->default(true),
 			])
 			->action(function (array $data) {
-				$country = $data['country'];
-				$category = $data['category'] ?? '';
+				$countryId = $data['country_id'];
+				$categoryIds = $data['category_ids'] ?? [];
 				$requireApproval = $data['require_approval'];
 
-				if (empty($country) && empty($category)) {
+				if (empty($categoryIds)) {
 					throw \Illuminate\Validation\ValidationException::withMessages([
-						'country' => 'Please select a country or category.',
+						'category_ids' => 'Please select at least one category.',
 					]);
 				}
 
-				if (!empty($category)) {
-					if ($category === 'all') {
-						$settingKey = 'require_listing_approval_for_all';
-						$settingName = 'Require Listing Approval For All';
-					} else {
-						$slug = Str::slug($category);
-						$settingKey = 'require_listing_approval_for_category_' . $slug;
-						$settingName = 'Require Listing Approval For Category ' . $category;
-					}
-				} else {
-					$settingKey = 'require_listing_approval_for_' . strtolower($country);
-					$settingName = 'Require Listing Approval For ' . ucfirst($country);
+				$country = Country::find($countryId);
+				$updatedCategories = [];
+				$removedCategories = [];
+
+				// Get existing requirements for this country
+				$existingRequirements = CategoryRequirement::where('country_id', $countryId)
+					->where('require_approval', true)
+					->pluck('category_id')
+					->toArray();
+
+				// Update or create records for selected categories
+				foreach ($categoryIds as $categoryId) {
+					CategoryRequirement::updateOrCreate(
+						[
+							'country_id' => $countryId,
+							'category_id' => $categoryId,
+						],
+						[
+							'require_approval' => $requireApproval,
+						]
+					);
+					$updatedCategories[] = Category::find($categoryId)->name;
 				}
 
-				Setting::updateOrCreate(
-					['key_slug' => $settingKey],
-					[
-						'key_name' => $settingName,
-						'value' => $requireApproval ? 'true' : 'false'
-					]
-				);
+				// Remove approval requirement from categories that were previously selected but are no longer selected
+				$categoriesToRemove = array_diff($existingRequirements, $categoryIds);
+				foreach ($categoriesToRemove as $categoryId) {
+					CategoryRequirement::where('country_id', $countryId)
+						->where('category_id', $categoryId)
+						->update(['require_approval' => false]);
+					$removedCategories[] = Category::find($categoryId)->name;
+				}
+
+				$message = "Approval requirement " . ($requireApproval ? 'enabled' : 'disabled') . " for {$country->name}";
+				if (!empty($updatedCategories)) {
+					$message .= " - Categories: " . implode(', ', $updatedCategories);
+				}
+				if (!empty($removedCategories)) {
+					$message .= " - Removed from: " . implode(', ', $removedCategories);
+				}
 
 				\Filament\Notifications\Notification::make()
 					->title('Approval settings updated')
-					->body('Approval requirement ' . ($requireApproval ? 'enabled' : 'disabled'))
+					->body($message)
 					->success()
 					->send();
 			});
@@ -145,70 +170,102 @@ class ListItems extends ListRecords
 			->color('warning')
 			->outlined()
 			->modalHeading('Toggle Payment Requirement')
-			->modalDescription('Select a country and/or a category to toggle payment requirement for listings.')
-			->modalWidth('md')
+			->modalDescription('Select a country and categories to toggle payment requirement for listings.')
+			->modalWidth('lg')
 			->form([
-				\Filament\Forms\Components\Select::make('country')
+				\Filament\Forms\Components\Select::make('country_id')
 					->label('Country')
-					->options([
-						'' => '— No Country —',
-						'all' => 'All Countries (Global)',
-						...Country::pluck('name', 'name')->toArray(),
-					])
+					->options(Country::pluck('name', 'id')->toArray())
 					->native(false)
-					->nullable()
-					->default(''),
-				\Filament\Forms\Components\Select::make('category')
-					->label('Category (optional)')
+					->required()
+					->searchable()
+					->live()
+					->afterStateUpdated(function ($state, callable $set) {
+						if ($state) {
+							// Get existing category requirements for this country
+							$existingRequirements = CategoryRequirement::where('country_id', $state)
+								->where('require_payment', true)
+								->pluck('category_id')
+								->toArray();
+							$set('category_ids', $existingRequirements);
+						} else {
+							$set('category_ids', []);
+						}
+					}),
+				\Filament\Forms\Components\Select::make('category_ids')
+					->label('Categories')
+					->options(function (callable $get) {
+						$countryId = $get('country_id');
+						if (!$countryId) {
+							return [];
+						}
+						return Category::pluck('name', 'id')->toArray();
+					})
 					->native(false)
-					->options([
-						'' => '— No Category —',
-						'all' => 'All Categories (Global)',
-						...\App\Models\Category::pluck('name', 'name')->toArray(),
-					])
-					->nullable()
-					->default(''),
+					->multiple()
+					->searchable()
+					->placeholder('Select categories...')
+					->helperText('Select multiple categories to apply payment requirements. Previously selected categories will be shown when you select a country.'),
 				\Filament\Forms\Components\Toggle::make('require_payment')
 					->label('Require Payment')
-					->helperText('Enable this to require payment for new listings in the selected target.')
-					->default(false),
+					->helperText('Enable this to require payment for new listings in the selected country and categories.')
+					->default(true),
 			])
 			->action(function (array $data) {
-				$country = $data['country'];
-				$category = $data['category'] ?? '';
+				$countryId = $data['country_id'];
+				$categoryIds = $data['category_ids'] ?? [];
 				$requirePayment = $data['require_payment'];
 
-				if (empty($country) && empty($category)) {
+				if (empty($categoryIds)) {
 					throw \Illuminate\Validation\ValidationException::withMessages([
-						'country' => 'Please select a country or category.',
+						'category_ids' => 'Please select at least one category.',
 					]);
 				}
 
-				if (!empty($category)) {
-					if ($category === 'all') {
-						$settingKey = 'require_payment_for_all';
-						$settingName = 'Require Payment For All';
-					} else {
-						$slug = Str::slug($category);
-						$settingKey = 'require_payment_for_category_' . $slug;
-						$settingName = 'Require Payment For Category ' . $category;
-					}
-				} else {
-					$settingKey = 'require_payment_for_' . strtolower($country);
-					$settingName = 'Require Payment For ' . ucfirst($country);
+				$country = Country::find($countryId);
+				$updatedCategories = [];
+				$removedCategories = [];
+
+				// Get existing requirements for this country
+				$existingRequirements = CategoryRequirement::where('country_id', $countryId)
+					->where('require_payment', true)
+					->pluck('category_id')
+					->toArray();
+
+				// Update or create records for selected categories
+				foreach ($categoryIds as $categoryId) {
+					CategoryRequirement::updateOrCreate(
+						[
+							'country_id' => $countryId,
+							'category_id' => $categoryId,
+						],
+						[
+							'require_payment' => $requirePayment,
+						]
+					);
+					$updatedCategories[] = Category::find($categoryId)->name;
 				}
 
-				Setting::updateOrCreate(
-					['key_slug' => $settingKey],
-					[
-						'key_name' => $settingName,
-						'value' => $requirePayment ? 'true' : 'false'
-					]
-				);
+				// Remove payment requirement from categories that were previously selected but are no longer selected
+				$categoriesToRemove = array_diff($existingRequirements, $categoryIds);
+				foreach ($categoriesToRemove as $categoryId) {
+					CategoryRequirement::where('country_id', $countryId)
+						->where('category_id', $categoryId)
+						->update(['require_payment' => false]);
+					$removedCategories[] = Category::find($categoryId)->name;
+				}
+
+				$message = "Payment requirement " . ($requirePayment ? 'enabled' : 'disabled') . " for {$country->name}";
+				if (!empty($updatedCategories)) {
+					$message .= " - Categories: " . implode(', ', $updatedCategories);
+				}
+				if (!empty($removedCategories)) {
+					$message .= " - Removed from: " . implode(', ', $removedCategories);
+				}
 
 				\Filament\Notifications\Notification::make()
 					->title('Payment settings updated')
-					->body('Payment requirement ' . ($requirePayment ? 'enabled' : 'disabled'))
+					->body($message)
 					->success()
 					->send();
 			});
