@@ -120,7 +120,7 @@ class ItemResource extends Resource
 					->native(false)
 					->options([
 						'pending_approval' => 'Pending Approval',
-						'approved' => 'Approved',
+						'active' => 'Active',
 						'rejected' => 'Rejected',
 						'sold' => 'Sold',
 					])
