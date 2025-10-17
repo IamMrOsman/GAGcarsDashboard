@@ -119,10 +119,12 @@ class ItemResource extends Resource
 					->required()
 					->native(false)
 					->options([
-						'0' => 'Inactive',
-						'1' => 'Active',
+						'pending_approval' => 'Pending Approval',
+						'approved' => 'Approved',
+						'rejected' => 'Rejected',
+						'sold' => 'Sold',
 					])
-					->default(0),
+					->default('pending_approval'),
 				Forms\Components\TextInput::make('price')
 					->numeric()
 					->required()
@@ -168,6 +170,7 @@ class ItemResource extends Resource
 				Tables\Columns\TextColumn::make('name')
 					->searchable(),
 				Tables\Columns\TextColumn::make('slug')
+					->toggleable(isToggledHiddenByDefault: true)
 					->searchable(),
 				Tables\Columns\TextColumn::make('description')
 					->searchable()
@@ -175,6 +178,7 @@ class ItemResource extends Resource
 				Tables\Columns\TextColumn::make('location')
 					->searchable(),
 				Tables\Columns\TextColumn::make('serial_number')
+					->toggleable(isToggledHiddenByDefault: true)
 					->searchable(),
 				Tables\Columns\TextColumn::make('condition')
 					->searchable(),
@@ -189,11 +193,14 @@ class ItemResource extends Resource
 					})
 					->searchable(),
 				Tables\Columns\TextColumn::make('warranty')
+					->toggleable(isToggledHiddenByDefault: true)
 					->searchable(),
 				Tables\Columns\TextColumn::make('warranty_expiration')
+					->toggleable(isToggledHiddenByDefault: true)
 					->searchable(),
 				Tables\Columns\TextColumn::make('deleted_at')
 					->dateTime()
+					->toggleable(isToggledHiddenByDefault: true)
 					->sortable()
 					->toggleable(isToggledHiddenByDefault: true),
 				Tables\Columns\TextColumn::make('created_at')
