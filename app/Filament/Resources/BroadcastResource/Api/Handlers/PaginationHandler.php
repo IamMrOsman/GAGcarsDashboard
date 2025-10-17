@@ -36,4 +36,3 @@ class PaginationHandler extends Handlers
 		return BroadcastTransformer::collection($query);
 	}
 }
-
