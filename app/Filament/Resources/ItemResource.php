@@ -75,7 +75,8 @@ class ItemResource extends Resource
 				Forms\Components\FileUpload::make('images')
 					->columnSpanFull()
 					->multiple()
-					->image(),
+					->image()
+					->disabledOn('edit'),
 				Forms\Components\Section::make()
 					->schema([])
 					->collapsible(false)
