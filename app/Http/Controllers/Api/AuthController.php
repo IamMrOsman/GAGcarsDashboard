@@ -354,4 +354,16 @@ class AuthController extends Controller
 			\Mail::to($to)->send(new OtpMail($otp, $userName));
 		}
 	}
+
+	/**
+	 * Delete account
+	 */
+	public function deleteAccount()
+	{
+		auth()->user()->delete();
+
+		return response()->json([
+			'message' => 'Account deleted successfully'
+		], 200);
+	}
 }
