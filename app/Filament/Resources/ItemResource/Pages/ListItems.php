@@ -48,6 +48,19 @@ class ListItems extends ListRecords
 				}));
 		}
 
+		$tabs['pending_approval'] = Tab::make('Pending Approval')
+			->badge(Item::where('status', 'pending_approval')->count())
+			->modifyQueryUsing(fn($query) => $query->where('status', 'pending_approval'));
+		$tabs['active'] = Tab::make('Active')
+			->badge(Item::where('status', 'active')->count())
+			->modifyQueryUsing(fn($query) => $query->where('status', 'active'));
+		$tabs['rejected'] = Tab::make('Rejected')
+			->badge(Item::where('status', 'rejected')->count())
+			->modifyQueryUsing(fn($query) => $query->where('status', 'rejected'));
+		$tabs['sold'] = Tab::make('Sold')
+			->badge(Item::where('status', 'sold')->count())
+			->modifyQueryUsing(fn($query) => $query->where('status', 'sold'));
+
 		return $tabs;
 	}
 
