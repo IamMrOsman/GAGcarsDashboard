@@ -26,7 +26,7 @@ class UserResourcesController extends Controller
 	public function userDetails(User $user)
 	{
 		return response()->json([
-			'user' => $user,
+			'user' => $user->withCount('items')->first(),
 			'verified' => $user->isVerified(),
 			'verified_dealer' => $user->isVerifiedDealer()
 		]);
