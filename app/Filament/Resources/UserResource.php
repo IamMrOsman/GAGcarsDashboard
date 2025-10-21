@@ -35,10 +35,12 @@ class UserResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
                     ->email()
+					->unique()
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
                     ->tel()
+					->unique()
                     ->maxLength(255),
                 Forms\Components\Hidden::make('password')
 					->default(Hash::make('password'))
@@ -74,10 +76,8 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
-                    ->searchable()
-					->unique(),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('phone')
-					->unique()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email_verified_at')
 					->toggleable(isToggledHiddenByDefault: true)
