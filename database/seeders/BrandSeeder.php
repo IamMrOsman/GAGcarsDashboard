@@ -1560,13 +1560,13 @@ class BrandSeeder extends Seeder
 		];
 
 		foreach ($brandsData as $brandData) {
-			$brand = Brand::create([
+			$brand = Brand::firstOrCreate([
 				'name' => $brandData['brand'],
 				'slug' => Str::slug($brandData['brand']),
 			]);
 
 			foreach ($brandData['models'] as $modelName) {
-				$brand->brandModels()->create([
+				$brand->brandModels()->firstOrCreate([
 					'name' => $modelName,
 					'slug' => Str::slug($modelName),
 				]);
