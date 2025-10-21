@@ -45,6 +45,8 @@ class CreateHandler extends Handlers {
         // If approval is required, set status to pending_approval
         if ($approvalRequired) {
             $model->update(['status' => 'pending_approval']);
+        } else {
+            $model->update(['status' => 'active']);
         }
 
         // Check if payment is required for this category in the user's country
