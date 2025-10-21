@@ -1568,7 +1568,7 @@ class BrandSeeder extends Seeder
 			foreach ($brandData['models'] as $modelName) {
 				$brand->brandModels()->firstOrCreate([
 					'name' => $modelName,
-					'slug' => Str::slug($modelName),
+					'slug' => Str::slug($brandData['brand'] . '-' . $modelName),
 				]);
 			}
 		}
