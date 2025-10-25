@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AppResourceController;
 use App\Http\Controllers\Api\UserResourcesController;
+use App\Http\Controllers\vendor\Chatify\Api\MessagesController;
 
 Route::post('/sanctum/register', [AuthController::class, 'register']);
 
@@ -49,5 +50,22 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::post('/search-items', [AppResourceController::class, 'searchItems']);
 		Route::post('/can-upload', [AppResourceController::class, 'canUpload']);
 		Route::get('/category-faqs/{faqCategory}', [AppResourceController::class, 'getCategoryFaqs']);
+	});
+
+	Route::prefix('chat')->group(function () {
+		Route::post('/sendMessage', [MessagesController::class, 'send']);
+		Route::post('/fetchMessages', [MessagesController::class, 'fetch']);
+		Route::get('/search', [MessagesController::class, 'search']);
+		// Route::post('/deleteConversation', [MessagesController::class, 'deleteConversation']);
+		// Route::post('/auth', [MessagesController::class, 'pusherAuth']);
+		// Route::post('/idInfo', [MessagesController::class, 'idFetchData']);
+		// Route::get('/download/{fileName}', [MessagesController::class, 'download']);
+		// Route::post('/makeSeen', [MessagesController::class, 'seen']);
+		// Route::get('/getContacts', [MessagesController::class, 'getContacts']);
+		// Route::post('/star', [MessagesController::class, 'favorite']);
+		// Route::post('/favorites', [MessagesController::class, 'getFavorites']);
+		// Route::post('/shared', [MessagesController::class, 'sharedPhotos']);
+		// Route::post('/updateSettings', [MessagesController::class, 'updateSettings']);
+		// Route::post('/setActiveStatus', [MessagesController::class, 'setActiveStatus']);
 	});
 });
