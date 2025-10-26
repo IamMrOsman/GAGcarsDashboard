@@ -123,7 +123,7 @@ class UserResourcesController extends Controller
 	 */
 	public function wishList()
 	{
-		return response()->json(auth()->user()->wishList()->with('item')->get());
+		return response()->json(auth()->user()->wishList()->with('item.category')->get());
 	}
 
 	/**
@@ -132,7 +132,7 @@ class UserResourcesController extends Controller
 	 */
 	public function myListings()
 	{
-		return ItemTransformer::collection(auth()->user()->items);
+		return ItemTransformer::collection(auth()->user()->items->with('category')->get());
 	}
 
 	/**
