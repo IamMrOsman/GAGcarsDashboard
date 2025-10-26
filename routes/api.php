@@ -50,6 +50,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::post('/search-items', [AppResourceController::class, 'searchItems']);
 		Route::post('/can-upload', [AppResourceController::class, 'canUpload']);
 		Route::get('/category-faqs/{faqCategory}', [AppResourceController::class, 'getCategoryFaqs']);
+		Route::get('packages-by-category/{category}', [AppResourceController::class, 'getPackagesByCategory']);
 	});
 
 	Route::prefix('chat')->group(function () {

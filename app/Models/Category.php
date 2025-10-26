@@ -34,4 +34,9 @@ class Category extends Model
 	{
 		return $this->belongsToMany(ItemField::class)->wherePivot('highlight', true);
 	}
+
+	public function packages()
+	{
+		return $this->hasMany(Package::class);
+	}
 }

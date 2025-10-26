@@ -187,4 +187,14 @@ class AppResourceController extends Controller
 			'reason' => $paymentRequired ? 'Payment required but you have ' . $user->uploads_left . ' uploads left' : 'Payment not required for this category'
 		], 200);
 	}
+
+	/**
+	 * Get Packages by Category
+	 * @param Category $category
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function getPackagesByCategory(Category $category)
+	{
+		return response()->json($category->packages);
+	}
 }
