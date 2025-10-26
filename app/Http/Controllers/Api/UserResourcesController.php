@@ -132,7 +132,7 @@ class UserResourcesController extends Controller
 	 */
 	public function myListings()
 	{
-		return ItemTransformer::collection(auth()->user()->items->with('category')->get());
+		return ItemTransformer::collection(auth()->user()->items()->with('category')->get());
 	}
 
 	/**
