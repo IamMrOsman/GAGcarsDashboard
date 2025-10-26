@@ -17,7 +17,7 @@ class UserResourcesController extends Controller
 	 */
 	public function userListings(User $user)
 	{
-		return ItemTransformer::collection($user->items);
+		return ItemTransformer::collection($user->items()->with('category')->get());
 	}
 
 	/**
