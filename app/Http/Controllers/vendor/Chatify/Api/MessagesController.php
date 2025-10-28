@@ -99,7 +99,7 @@ class MessagesController extends Controller
 	{
 		// Validate request parameters
 		$request->validate([
-			'to_id' => 'required|integer',
+			'to_id' => 'required|string',
 			'message' => 'required|string',
 			'temporaryMsgId' => 'nullable|string',
 		]);
