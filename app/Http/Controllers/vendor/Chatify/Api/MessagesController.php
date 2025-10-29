@@ -99,7 +99,7 @@ class MessagesController extends Controller
 	{
 		// Validate request parameters
 		$request->validate([
-			'to_id' => 'required|integer',
+			'to_id' => 'required|string',
 			'message' => 'required|string',
 			'temporaryMsgId' => 'nullable|string',
 		]);
@@ -152,16 +152,16 @@ class MessagesController extends Controller
 			]);
 
 			// fetch message to send it with the response
-			$messageData = Chatify::parseMessage($message);
+			// $messageData = Chatify::parseMessage($message);
 
 			// send to user using pusher
-			if (Auth::user()->id != $request['id']) {
-				Chatify::push("private-chatify." . $request['to_id'], 'messaging', [
-					'from_id' => Auth::user()->id,
-					'to_id' => $request['to_id'],
-					'message' => $messageData
-				]);
-			}
+			// if (Auth::user()->id != $request['id']) {
+			// 	Chatify::push("private-chatify." . $request['to_id'], 'messaging', [
+			// 		'from_id' => Auth::user()->id,
+			// 		'to_id' => $request['to_id'],
+			// 		'message' => $messageData
+			// 	]);
+			// }
 		}
 
 		// send the response
