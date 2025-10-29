@@ -57,12 +57,12 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::post('/sendMessage', [MessagesController::class, 'send']);
 		Route::post('/fetchMessages', [MessagesController::class, 'fetch']);
 		Route::get('/search', [MessagesController::class, 'search']);
+		Route::get('/getContacts', [MessagesController::class, 'getContacts']);
 		// Route::post('/deleteConversation', [MessagesController::class, 'deleteConversation']);
 		// Route::post('/auth', [MessagesController::class, 'pusherAuth']);
 		// Route::post('/idInfo', [MessagesController::class, 'idFetchData']);
 		// Route::get('/download/{fileName}', [MessagesController::class, 'download']);
 		// Route::post('/makeSeen', [MessagesController::class, 'seen']);
-		// Route::get('/getContacts', [MessagesController::class, 'getContacts']);
 		// Route::post('/star', [MessagesController::class, 'favorite']);
 		// Route::post('/favorites', [MessagesController::class, 'getFavorites']);
 		// Route::post('/shared', [MessagesController::class, 'sharedPhotos']);

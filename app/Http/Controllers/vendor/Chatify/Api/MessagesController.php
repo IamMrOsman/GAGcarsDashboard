@@ -225,6 +225,10 @@ class MessagesController extends Controller
 	 */
 	public function getContacts(Request $request)
 	{
+		$request->validate([
+			'per_page' => 'nullable|integer|min:1|max:100'
+		]);
+		
 		// get all users that received/sent message from/to [Auth user]
 		$users = Message::join('users',  function ($join) {
 			$join->on('ch_messages.from_id', '=', 'users.id')
