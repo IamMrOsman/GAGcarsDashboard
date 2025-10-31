@@ -190,7 +190,8 @@ class MessagesController extends Controller
 
 		// $query = Chatify::fetchMessagesQuery(auth()->id())->latest();
 		$userId = Auth::user()->id;
-		$query = Message::with(['from', 'to'])
+		$query = Message::query()
+			->with(['from', 'to'])
 			->where(function ($q) use ($userId) {
 				$q->where('from_id', $userId)
 					->orWhere('to_id', $userId);
