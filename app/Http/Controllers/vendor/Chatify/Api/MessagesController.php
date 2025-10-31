@@ -193,7 +193,7 @@ class MessagesController extends Controller
 		$query = Message::where(function ($q) use ($userId) {
 			$q->where('from_id', $userId)
 				->orWhere('to_id', $userId);
-		})->latest();
+		})->with(['from', 'to'])->latest();
 		$messages = $query->paginate($request->per_page ?? $this->perPage);
 		$totalMessages = $messages->total();
 		$lastPage = $messages->lastPage();
