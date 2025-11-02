@@ -189,6 +189,11 @@ class MessagesController extends Controller
 			'per_page' => 'nullable|integer|min:1|max:100'
 		]);
 
+		// $userId = Auth::user()->id;
+		// $query = Message::where(function ($q) use ($userId) {
+		// 	$q->where('from_id', $userId)
+		// 		->orWhere('to_id', $userId);
+		// })->latest();
 		$query = Chatify::fetchMessagesQuery($request->contact_id)->latest();
 		$messages = $query->paginate($request->per_page ?? $this->perPage);
 		$totalMessages = $messages->total();
