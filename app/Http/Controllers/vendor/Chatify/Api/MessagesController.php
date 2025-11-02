@@ -185,11 +185,10 @@ class MessagesController extends Controller
 	public function fetch(Request $request)
 	{
 		$request->validate([
-			'contact_id' => 'required|integer',
 			'per_page' => 'nullable|integer|min:1|max:100'
 		]);
 
-		$query = Chatify::fetchMessagesQuery($request->contact_id)->latest();
+		$query = Chatify::fetchMessagesQuery(auth()->id())->latest();
 		$messages = $query->paginate($request->per_page ?? $this->perPage);
 		$totalMessages = $messages->total();
 		$lastPage = $messages->lastPage();
