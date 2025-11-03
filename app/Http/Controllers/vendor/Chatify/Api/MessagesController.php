@@ -189,18 +189,18 @@ class MessagesController extends Controller
 			'per_page' => 'nullable|integer|min:1|max:100'
 		]);
 
-		// $query = Chatify::fetchMessagesQuery($request->contact_id)->latest();
-		$userId = Auth::user()->id;
-		$contactId = $request->contact_id;
-		$query = Message::where(function ($q) use ($userId, $contactId) {
-			$q->where(function ($subQ) use ($userId, $contactId) {
-				$subQ->where('from_id', $userId)
-					->where('to_id', $contactId);
-			})->orWhere(function ($subQ) use ($userId, $contactId) {
-				$subQ->where('from_id', $contactId)
-					->where('to_id', $userId);
-			});
-		})->latest();
+		$query = Chatify::fetchMessagesQuery($request->contact_id)->latest();
+		// $userId = Auth::user()->id;
+		// $contactId = $request->contact_id;
+		// $query = Message::where(function ($q) use ($userId, $contactId) {
+		// 	$q->where(function ($subQ) use ($userId, $contactId) {
+		// 		$subQ->where('from_id', $userId)
+		// 			->where('to_id', $contactId);
+		// 	})->orWhere(function ($subQ) use ($userId, $contactId) {
+		// 		$subQ->where('from_id', $contactId)
+		// 			->where('to_id', $userId);
+		// 	});
+		// })->latest();
 		$messages = $query->paginate($request->per_page ?? $this->perPage);
 		$totalMessages = $messages->total();
 		$lastPage = $messages->lastPage();
