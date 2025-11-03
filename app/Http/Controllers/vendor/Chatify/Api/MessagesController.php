@@ -185,7 +185,7 @@ class MessagesController extends Controller
 	public function fetch(Request $request)
 	{
 		$request->validate([
-			'contact_id' => 'required|integer',
+			'contact_id' => 'required|string',
 			'per_page' => 'nullable|integer|min:1|max:100'
 		]);
 
