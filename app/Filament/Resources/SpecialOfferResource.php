@@ -25,8 +25,7 @@ class SpecialOfferResource extends Resource
             ->schema([
                 Forms\Components\Hidden::make('user_id')
 					->required()
-					->default(auth()->id())
-                    ->maxLength(26),
+					->default(auth()->id()),
                 Forms\Components\Select::make('item_id')
 					->columnSpanFull()
                     ->required()

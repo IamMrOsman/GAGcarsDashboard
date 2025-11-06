@@ -56,7 +56,7 @@ class AppResourceController extends Controller
 	 */
 	public function getSimilarItemsByCategory(Category $category, Item $item)
 	{
-		return response()->json($category->items()->where('id', '!=', $item->id)->get());
+		return response()->json($category->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->get());
 	}
 
 	/**
@@ -67,7 +67,7 @@ class AppResourceController extends Controller
 	 */
 	public function getSimilarItemsByBrand(Brand $brand, Item $item)
 	{
-		return response()->json($brand->items()->where('id', '!=', $item->id)->get());
+		return response()->json($brand->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->get());
 	}
 
 	/**
@@ -78,7 +78,7 @@ class AppResourceController extends Controller
 	 */
 	public function getSimilarItemsByBrandModel(BrandModel $brandModel, Item $item)
 	{
-		return response()->json($brandModel->items()->where('id', '!=', $item->id)->get());
+		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->get());
 	}
 
 	/**
