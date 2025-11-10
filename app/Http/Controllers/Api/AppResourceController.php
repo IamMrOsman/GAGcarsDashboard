@@ -199,6 +199,10 @@ class AppResourceController extends Controller
 		return response()->json($category->packages);
 	}
 
+	/**
+	 * Get Countries
+	 * @return \Illuminate\Http\JsonResponse
+	 */
 	public function getCountries()
 	{
 		return response()->json(Country::all());
