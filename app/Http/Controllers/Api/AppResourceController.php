@@ -49,7 +49,7 @@ class AppResourceController extends Controller
 	}
 
 	/**
-	 * Get Similar Items by Category
+ * Get Similar Items by Category
 	 * @param Category $category
 	 * @param Item $item
 	 * @return \Illuminate\Http\JsonResponse
@@ -98,7 +98,7 @@ class AppResourceController extends Controller
 	 */
 	public function getBrandItems(Brand $brand)
 	{
-		return response()->json($brand->items);
+		return response()->json($brand->items()->with('brand', 'category', 'brandModel', 'user')->get());
 	}
 
 	/**
