@@ -17,6 +17,8 @@ Route::post('/otp/verify', [AuthController::class, 'verifyOtp']);
 Route::post('/send-reset-password-otp', [AuthController::class, 'sendResetPasswordOtp']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
+Route::get('/app/countries', [AppResourceController::class, 'getCountries']);
+
 Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::get('/user', [AuthController::class, 'user']);
 	Route::post('/logout', [AuthController::class, 'logout']);

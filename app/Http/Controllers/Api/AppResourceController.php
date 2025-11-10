@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\ItemPriceNotification;
 use App\Services\PaymentRequirementService;
+use App\Models\Country;
 
 class AppResourceController extends Controller
 {
@@ -196,5 +197,10 @@ class AppResourceController extends Controller
 	public function getPackagesByCategory(Category $category)
 	{
 		return response()->json($category->packages);
+	}
+
+	public function getCountries()
+	{
+		return response()->json(Country::all());
 	}
 }
