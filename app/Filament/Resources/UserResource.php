@@ -36,6 +36,7 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('email')
                     ->email()
 					->unique()
+					->ignore(auth()->id())
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
@@ -44,6 +45,7 @@ class UserResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Hidden::make('password')
 					->default(Hash::make('password'))
+					->disabledOn('edit')
                     ->required(),
                 Forms\Components\Select::make('country_id')
 					->columnSpanFull()
