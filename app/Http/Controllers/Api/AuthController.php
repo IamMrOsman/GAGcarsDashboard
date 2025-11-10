@@ -43,7 +43,7 @@ class AuthController extends Controller
 
 		return response()->json([
 			// 'token' => $token,
-			'user' => $user
+			'user' => $user->load('country', 'state'),
 		], 201);
 	}
 
@@ -70,7 +70,7 @@ class AuthController extends Controller
 
 		return response()->json([
 			'token' => $token,
-			'user' => $user
+			'user' => $user->load('country', 'state'),
 		], 200);
 	}
 
@@ -154,7 +154,7 @@ class AuthController extends Controller
 		return response()->json([
 			'message' => 'OTP verified successfully',
 			'token' => $token,
-			'user' => $user
+			'user' => $user->load('country', 'state'),
 		], 200);
 	}
 
@@ -166,7 +166,7 @@ class AuthController extends Controller
 		$user = $request->user();
 
 		return response()->json([
-			'user' => $user,
+			'user' => $user->load('country', 'state'),
 			'verified' => $user->isVerified(),
 			'verified_dealer' => $user->isVerifiedDealer()
 		]);
@@ -329,7 +329,7 @@ class AuthController extends Controller
 
 		return response()->json([
 			'message' => 'Profile updated successfully',
-			'user' => $user
+			'user' => $user->load('country', 'state')
 		], 200);
 	}
 
