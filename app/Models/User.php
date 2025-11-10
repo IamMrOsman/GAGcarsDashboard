@@ -29,6 +29,8 @@ class User extends Authenticatable implements FilamentUser
 		parent::boot();
 
 		static::deleting(function ($user) {
+			$userId = $user->getKey();
+
 			// Manually delete role and permission relationships with proper ULID handling
 			$tableNames = config('permission.table_names');
 			$columnNames = config('permission.column_names');
@@ -36,14 +38,42 @@ class User extends Authenticatable implements FilamentUser
 
 			// Delete from model_has_roles
 			DB::table($tableNames['model_has_roles'])
-				->where($modelMorphKey, $user->getKey())
+				->where($modelMorphKey, $userId)
 				->where('model_type', static::class)
 				->delete();
 
 			// Delete from model_has_permissions
 			DB::table($tableNames['model_has_permissions'])
-				->where($modelMorphKey, $user->getKey())
+				->where($modelMorphKey, $userId)
 				->where('model_type', static::class)
+				->delete();
+
+			// Delete messages where user is sender or receiver
+			DB::table('ch_messages')
+				->where(function ($query) use ($userId) {
+					$query->where('from_id', $userId)
+						->orWhere('to_id', $userId);
+				})
+				->delete();
+
+			// Delete chat favorites
+			DB::table('ch_favorites')
+				->where('user_id', $userId)
+				->delete();
+
+			// Delete posts (if no cascade)
+			DB::table('posts')
+				->where('user_id', $userId)
+				->delete();
+
+			// Delete broadcasts (if no cascade)
+			DB::table('broadcasts')
+				->where('user_id', $userId)
+				->delete();
+
+			// Delete FAQs (if no cascade)
+			DB::table('faqs')
+				->where('user_id', $userId)
 				->delete();
 		});
 	}
