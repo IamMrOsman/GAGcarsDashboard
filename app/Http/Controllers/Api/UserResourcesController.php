@@ -25,7 +25,9 @@ class UserResourcesController extends Controller
 	 */
 	public function userDetails(User $user)
 	{
-		$user->loadCount('items');
+		$user->loadCount(['items' => function ($query) {
+			$query->whereNull('deleted_at')->where('status', 'active');
+		}]);
 
 		return response()->json([
 			'user' => $user,
