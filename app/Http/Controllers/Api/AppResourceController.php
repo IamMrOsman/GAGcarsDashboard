@@ -50,7 +50,7 @@ class AppResourceController extends Controller
 	}
 
 	/**
- * Get Similar Items by Category
+	 * Get Similar Items by Category
 	 * @param Category $category
 	 * @param Item $item
 	 * @return \Illuminate\Http\JsonResponse
@@ -122,22 +122,26 @@ class AppResourceController extends Controller
 		$query = $request->query('query');
 
 		// Search for items by name
-		$itemsByName = Item::where('name', 'like', '%' . $query . '%');
+		$itemsByName = Item::where('name', 'like', '%' . $query . '%')
+			->where('status', 'active');
 
 		// Search for items by category name
 		$itemsByCategory = Item::whereHas('category', function ($q) use ($query) {
 			$q->where('name', 'like', '%' . $query . '%');
-		});
+		})
+			->where('status', 'active');
 
 		// Search for items by brand name
 		$itemsByBrand = Item::whereHas('brand', function ($q) use ($query) {
 			$q->where('name', 'like', '%' . $query . '%');
-		});
+		})
+			->where('status', 'active');
 
 		// Search for items by brand model name
 		$itemsByBrandModel = Item::whereHas('brandModel', function ($q) use ($query) {
 			$q->where('name', 'like', '%' . $query . '%');
-		});
+		})
+			->where('status', 'active');
 
 		// Combine all queries and get unique results
 		$results = $itemsByName
@@ -145,7 +149,8 @@ class AppResourceController extends Controller
 			->union($itemsByBrand)
 			->union($itemsByBrandModel)
 			->get()
-			->unique('id');
+			->unique('id')
+			->load('brand', 'category', 'brandModel', 'user');
 
 		return response()->json($results);
 	}
