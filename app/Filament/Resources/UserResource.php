@@ -17,35 +17,36 @@ use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
-    protected static ?string $model = User::class;
+	protected static ?string $model = User::class;
 
 	protected static ?string $recordTitleAttribute = 'name';
 
 	protected static ?string $navigationGroup = 'User';
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+	protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
+	public static function form(Form $form): Form
+	{
+		return $form
+			->schema([
+				Forms\Components\TextInput::make('name')
 					->columnSpanFull()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('email')
-                    ->email()
-					->unique()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('phone')
-                    ->tel()
-					->unique()
-                    ->maxLength(255),
-                Forms\Components\Hidden::make('password')
+					->required()
+					->maxLength(255),
+				Forms\Components\TextInput::make('email')
+					->email()
+					->unique(ignoreRecord: true)
+					->required()
+					->maxLength(255),
+				Forms\Components\TextInput::make('phone')
+					->tel()
+					->unique(ignoreRecord: true)
+					->maxLength(255),
+				Forms\Components\Hidden::make('password')
 					->default(Hash::make('password'))
-                    ->required(),
-                Forms\Components\Select::make('country_id')
+					->disabledOn('edit')
+					->required(),
+				Forms\Components\Select::make('country_id')
 					->columnSpanFull()
 					->relationship('country', 'name')
 					->preload()
@@ -56,95 +57,95 @@ class UserResource extends Resource
 					->multiple()
 					->preload()
 					->searchable(),
-                // Forms\Components\Select::make('state_id')
+				// Forms\Components\Select::make('state_id')
 				// 	->columnSpanFull()
-                //     ->required()
+				//     ->required()
 				// 	->relationship('state', 'name')
 				// 	->preload()
 				// 	->searchable(),
-            ]);
-    }
+			]);
+	}
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('id')
+	public static function table(Table $table): Table
+	{
+		return $table
+			->columns([
+				Tables\Columns\TextColumn::make('id')
 					->toggleable(isToggledHiddenByDefault: true)
-                    ->label('ID')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('phone')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email_verified_at')
+					->label('ID')
+					->searchable(),
+				Tables\Columns\TextColumn::make('name')
+					->searchable(),
+				Tables\Columns\TextColumn::make('email')
+					->searchable(),
+				Tables\Columns\TextColumn::make('phone')
+					->searchable(),
+				Tables\Columns\TextColumn::make('email_verified_at')
 					->toggleable(isToggledHiddenByDefault: true)
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('two_factor_confirmed_at')
+					->dateTime()
+					->sortable(),
+				Tables\Columns\TextColumn::make('two_factor_confirmed_at')
 					->toggleable(isToggledHiddenByDefault: true)
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('profile_photo_path')
+					->dateTime()
+					->sortable(),
+				Tables\Columns\TextColumn::make('profile_photo_path')
 					->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
-                Tables\Columns\IconColumn::make('paid_seller')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('country.name')
-                    ->numeric()
-                    ->sortable(),
-                // Tables\Columns\TextColumn::make('state.name')
-                //     ->numeric()
-                //     ->sortable(),
-            ])
-            ->filters([
-                Tables\Filters\TrashedFilter::make(),
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                ]),
-            ]);
-    }
+					->searchable(),
+				Tables\Columns\IconColumn::make('paid_seller')
+					->boolean(),
+				Tables\Columns\TextColumn::make('created_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+				Tables\Columns\TextColumn::make('updated_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+				Tables\Columns\TextColumn::make('country.name')
+					->numeric()
+					->sortable(),
+				// Tables\Columns\TextColumn::make('state.name')
+				//     ->numeric()
+				//     ->sortable(),
+			])
+			->filters([
+				Tables\Filters\TrashedFilter::make(),
+			])
+			->actions([
+				Tables\Actions\ViewAction::make(),
+				Tables\Actions\EditAction::make(),
+			])
+			->bulkActions([
+				Tables\Actions\BulkActionGroup::make([
+					Tables\Actions\DeleteBulkAction::make(),
+					Tables\Actions\ForceDeleteBulkAction::make(),
+					Tables\Actions\RestoreBulkAction::make(),
+				]),
+			]);
+	}
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+	public static function getRelations(): array
+	{
+		return [
+			//
+		];
+	}
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListUsers::route('/'),
-            // 'create' => Pages\CreateUser::route('/create'),
-            // 'view' => Pages\ViewUser::route('/{record}'),
-            // 'edit' => Pages\EditUser::route('/{record}/edit'),
-        ];
-    }
+	public static function getPages(): array
+	{
+		return [
+			'index' => Pages\ListUsers::route('/'),
+			// 'create' => Pages\CreateUser::route('/create'),
+			// 'view' => Pages\ViewUser::route('/{record}'),
+			// 'edit' => Pages\EditUser::route('/{record}/edit'),
+		];
+	}
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-    }
+	public static function getEloquentQuery(): Builder
+	{
+		return parent::getEloquentQuery()
+			->withoutGlobalScopes([
+				SoftDeletingScope::class,
+			]);
+	}
 }
