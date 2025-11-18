@@ -31,6 +31,7 @@ class PaginationHandler extends Handlers
 			->allowedIncludes($this->getAllowedIncludes() ?? [])
 			->with(['brand', 'category', 'brandModel', 'user', 'promotions'])
 			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id)
 			->paginate(request()->query('per_page'))
 			->appends(request()->query());
 

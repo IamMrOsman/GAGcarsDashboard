@@ -123,25 +123,29 @@ class AppResourceController extends Controller
 
 		// Search for items by name
 		$itemsByName = Item::where('name', 'like', '%' . $query . '%')
-			->where('status', 'active');
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
 
 		// Search for items by category name
 		$itemsByCategory = Item::whereHas('category', function ($q) use ($query) {
 			$q->where('name', 'like', '%' . $query . '%');
 		})
-			->where('status', 'active');
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
 
 		// Search for items by brand name
 		$itemsByBrand = Item::whereHas('brand', function ($q) use ($query) {
 			$q->where('name', 'like', '%' . $query . '%');
 		})
-			->where('status', 'active');
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
 
 		// Search for items by brand model name
 		$itemsByBrandModel = Item::whereHas('brandModel', function ($q) use ($query) {
 			$q->where('name', 'like', '%' . $query . '%');
 		})
-			->where('status', 'active');
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
 
 		// Combine all queries and get unique results
 		$results = $itemsByName
