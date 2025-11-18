@@ -103,7 +103,34 @@ class ItemFieldSeeder extends Seeder
 				'unique' => false,
 				'nullable' => true,
 				'options' => null,
-			]
+			],
+			[
+				'name' => 'vin_number',
+				'label' => 'VIN No.',
+				'type' => 'string',
+				'required' => false,
+				'unique' => true,
+				'nullable' => true,
+				'options' => null,
+			],
+			[
+				'name' => 'engine_horsepower',
+				'label' => 'Engine HP',
+				'type' => 'number',
+				'required' => false,
+				'unique' => false,
+				'nullable' => true,
+				'options' => null,
+			],
+			[
+				'name' => 'model_number',
+				'label' => 'Model No.',
+				'type' => 'string',
+				'required' => false,
+				'unique' => false,
+				'nullable' => true,
+				'options' => null,
+			],
 		];
 
 		foreach ($fields as $field) {
