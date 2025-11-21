@@ -34,6 +34,8 @@ class CreateHandler extends Handlers {
 
 		$model->user_id = $request->user_id ?? auth()->id();
 
+		$model->country_id = $request->country_id ?? auth()->user()->country_id;
+
         $model->save();
 
         // Check if approval is required for this category in the user's country

@@ -24,6 +24,7 @@ class CreateItemRequest extends FormRequest
         return [
 			'user_id' => 'nullable',
 			'brand_model_id' => 'nullable',
+			'country_id' => 'nullable|exists:countries,id',
 			'brand_id' => 'nullable',
 			'category_id' => 'nullable',
 			'name' => 'required',
