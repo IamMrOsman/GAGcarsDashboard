@@ -32,6 +32,7 @@ class PaginationHandler extends Handlers
 			->with(['brand', 'category.itemFields', 'brandModel', 'user', 'promotions'])
 			->where('status', 'active')
 			->where('country_id', auth()->user()->country_id)
+			->select(['user_id', 'id', 'name', 'price', 'country_id', 'location', 'category_id', 'brand_id', 'brand_model_id', 'condition', 'description', 'images', 'serial_number', 'status', 'warranty', 'transmission', 'mileage'])
 			->paginate(request()->query('per_page'))
 			->appends(request()->query());
 
