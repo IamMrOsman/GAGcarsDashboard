@@ -29,7 +29,7 @@ class PaginationHandler extends Handlers
 			->allowedSorts($this->getAllowedSorts() ?? [])
 			->allowedFilters($this->getAllowedFilters() ?? [])
 			->allowedIncludes($this->getAllowedIncludes() ?? [])
-			->with(['brand', 'category', 'brandModel', 'user', 'promotions'])
+			->with(['brand', 'category.itemFields', 'brandModel', 'user', 'promotions'])
 			->where('status', 'active')
 			->where('country_id', auth()->user()->country_id)
 			->paginate(request()->query('per_page'))
