@@ -30,7 +30,7 @@ class DetailHandler extends Handlers
         $query = QueryBuilder::for(
             $query->where(static::getKeyName(), $id)
         )
-			->with(['brand', 'category', 'brandModel', 'user'])
+			->with(['brand', 'category.itemFields', 'brandModel', 'user'])
             ->first();
 
         if (!$query) return static::sendNotFoundResponse();
