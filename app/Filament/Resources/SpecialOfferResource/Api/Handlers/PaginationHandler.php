@@ -24,14 +24,20 @@ class PaginationHandler extends Handlers
 	{
 		$query = static::getEloquentQuery();
 
+		// Filter by user's country_id - only show special offers for items in the same country
+		if (auth()->check() && auth()->user()->country_id) {
+			$query->whereHas('item', function ($q) {
+				$q->where('status', 'active');
+				$q->where('country_id', auth()->user()->country_id);
+			});
+		}
+
 		$query = QueryBuilder::for($query)
 			->allowedFields($this->getAllowedFields() ?? [])
 			->allowedSorts($this->getAllowedSorts() ?? [])
 			->allowedFilters($this->getAllowedFilters() ?? [])
 			->allowedIncludes($this->getAllowedIncludes() ?? [])
-			->with(['brand', 'category.itemFields', 'brandModel', 'user', 'promotions'])
-			->where('status', 'active')
-			->where('country_id', auth()->user()->country_id)
+			->with(['item.user'])
 			->paginate(request()->query('per_page'))
 			->appends(request()->query());
 
