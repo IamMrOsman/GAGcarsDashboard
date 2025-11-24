@@ -198,13 +198,7 @@ class AuthController extends Controller
 			'new_password' => 'required|string|min:8',
 		]);
 
-		$user = User::where('phone', $request->phone)->first();
-
-		if (!$user) {
-			throw ValidationException::withMessages([
-				'phone' => ['User not found.'],
-			]);
-		}
+		$user = auth()->user();
 
 		$user->update([
 			'password' => Hash::make($request->password),
