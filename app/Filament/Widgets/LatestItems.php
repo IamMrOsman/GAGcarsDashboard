@@ -6,6 +6,7 @@ use App\Models\Item;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Widgets\TableWidget as BaseWidget;
 
 class LatestItems extends BaseWidget
@@ -40,6 +41,9 @@ class LatestItems extends BaseWidget
 					}),
 				IconColumn::make('status')
 					->boolean(),
+			])
+			->actions([
+				ViewAction::make(),
 			])
 			->heading('Latest Items');
 	}
