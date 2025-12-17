@@ -57,7 +57,7 @@ class AppResourceController extends Controller
 	 */
 	public function getSimilarItemsByCategory(Category $category, Item $item)
 	{
-		return response()->json($category->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->get());
+		return response()->json($category->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
@@ -68,7 +68,7 @@ class AppResourceController extends Controller
 	 */
 	public function getSimilarItemsByBrand(Brand $brand, Item $item)
 	{
-		return response()->json($brand->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->get());
+		return response()->json($brand->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
@@ -79,7 +79,7 @@ class AppResourceController extends Controller
 	 */
 	public function getSimilarItemsByBrandModel(BrandModel $brandModel, Item $item)
 	{
-		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->get());
+		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
@@ -89,7 +89,7 @@ class AppResourceController extends Controller
 	 */
 	public function getCategoryItems(Category $category)
 	{
-		return response()->json($category->items);
+		return response()->json($category->items()->with('brand', 'category', 'brandModel', 'user')->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
@@ -99,7 +99,7 @@ class AppResourceController extends Controller
 	 */
 	public function getBrandItems(Brand $brand)
 	{
-		return response()->json($brand->items()->with('brand', 'category', 'brandModel', 'user')->get());
+		return response()->json($brand->items()->with('brand', 'category', 'brandModel', 'user')->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
@@ -109,7 +109,7 @@ class AppResourceController extends Controller
 	 */
 	public function getBrandModelItems(BrandModel $brandModel)
 	{
-		return response()->json($brandModel->items);
+		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
