@@ -48,7 +48,7 @@ class BrandModelResource extends Resource
                 Forms\Components\TextInput::make('slug')
 					->columnSpanFull()
                     ->required()
-					->unique()
+					->unique(ignoreRecord: true)
 					->disabled()
 					->dehydrated()
                     ->maxLength(255),
