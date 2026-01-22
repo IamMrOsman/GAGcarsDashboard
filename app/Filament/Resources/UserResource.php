@@ -29,8 +29,13 @@ class UserResource extends Resource
 	{
 		return $form
 			->schema([
+				Forms\Components\FileUpload::make('avatar')
+					->image()
+					->avatar()
+					->default(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name . '&color=FFFFFF&background=09090b')
+					->imageEditor()
+					->circleCropper(),
 				Forms\Components\TextInput::make('name')
-					->columnSpanFull()
 					->required()
 					->maxLength(255),
 				Forms\Components\TextInput::make('email')
@@ -45,7 +50,7 @@ class UserResource extends Resource
 				Forms\Components\Hidden::make('password')
 					->default(Hash::make('password'))
 					->disabledOn('edit')
-					->required(),
+					->dehydrated(fn($context) => $context === 'create'),
 				Forms\Components\Select::make('country_id')
 					->columnSpanFull()
 					->relationship('country', 'name')
@@ -74,6 +79,9 @@ class UserResource extends Resource
 					->toggleable(isToggledHiddenByDefault: true)
 					->label('ID')
 					->searchable(),
+				Tables\Columns\ImageColumn::make('avatar')
+					->circular()
+					->default(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name . '&color=FFFFFF&background=09090b'),
 				Tables\Columns\TextColumn::make('name')
 					->searchable(),
 				Tables\Columns\TextColumn::make('email')

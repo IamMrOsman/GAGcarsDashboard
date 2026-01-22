@@ -19,4 +19,14 @@ class EditUser extends EditRecord
             Actions\RestoreAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Remove password from data if it's empty or not provided (on edit)
+        if (empty($data['password']) || !isset($data['password'])) {
+            unset($data['password']);
+        }
+
+        return $data;
+    }
 }

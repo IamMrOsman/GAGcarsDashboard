@@ -11,16 +11,22 @@ use Spatie\Permission\Traits\HasRoles;
 use Filament\Notifications\Notification;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
 	/** @use HasFactory<\Database\Factories\UserFactory> */
 	use HasFactory, Notifiable, HasUlids, SoftDeletes, HasApiTokens, HasRoles, TwoFactorAuthenticatable;
+
+	public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatar ?? 'https://ui-avatars.com/api/?name=' . $this->name . '&color=FFFFFF&background=09090b';
+    }
 
 	/**
 	 * Boot the model.
