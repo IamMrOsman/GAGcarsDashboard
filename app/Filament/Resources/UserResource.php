@@ -29,14 +29,15 @@ class UserResource extends Resource
 	{
 		return $form
 			->schema([
-				Forms\Components\FileUpload::make('avatar')
-					->image()
-					->avatar()
-					->default(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name . '&color=FFFFFF&background=09090b')
-					->imageEditor()
-					->circleCropper(),
+				// Forms\Components\FileUpload::make('avatar')
+				// 	->image()
+				// 	->avatar()
+				// 	->default(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name . '&color=FFFFFF&background=09090b')
+				// 	->imageEditor()
+				// 	->circleCropper(),
 				Forms\Components\TextInput::make('name')
 					->required()
+					->columnSpanFull()
 					->maxLength(255),
 				Forms\Components\TextInput::make('email')
 					->email()
