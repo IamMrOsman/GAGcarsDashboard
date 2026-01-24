@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class RevenueTrendChart extends ChartWidget
 {
 	protected static ?string $heading = 'Revenue Trend (Last 30 Days)';
-	protected static ?int $sort = 3;
+	protected static ?int $sort = 7;
 	protected int|string|array $columnSpan = 2;
 
 	protected function getData(): array

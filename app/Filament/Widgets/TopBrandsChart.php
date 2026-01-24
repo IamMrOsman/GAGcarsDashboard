@@ -8,7 +8,7 @@ use Filament\Widgets\ChartWidget;
 class TopBrandsChart extends ChartWidget
 {
 	protected static ?string $heading = 'Top Brands by Items';
-	protected static ?int $sort = 10;
+	protected static ?int $sort = 5;
 
 	protected function getData(): array
 	{

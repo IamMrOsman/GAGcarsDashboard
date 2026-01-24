@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class ItemsByCountryChart extends ChartWidget
 {
 	protected static ?string $heading = 'Items by Country';
-	protected static ?int $sort = 6;
+	protected static ?int $sort = 3;
 
 	protected function getData(): array
 	{

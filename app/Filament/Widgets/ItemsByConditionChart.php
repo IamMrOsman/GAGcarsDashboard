@@ -8,7 +8,7 @@ use Filament\Widgets\ChartWidget;
 class ItemsByConditionChart extends ChartWidget
 {
 	protected static ?string $heading = 'Items by Condition';
-	protected static ?int $sort = 5;
+	protected static ?int $sort = 2;
 
 	protected function getData(): array
 	{
