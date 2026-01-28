@@ -15,7 +15,7 @@ use Flowframe\Trend\TrendValue;
 
 class ItemsOverview extends ChartWidget
 {
-	protected static ?int $sort = 3;
+	protected static ?int $sort = 6;
 	protected int|string|array $columnSpan = 'full';
 	protected static ?string $heading = 'Platform Growth Overview';
 	protected static ?string $maxHeight = '400px';

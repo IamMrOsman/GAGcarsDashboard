@@ -46,9 +46,9 @@ class WatchtowerPanelProvider extends PanelProvider
 			->widgets([
 				// \App\Filament\Widgets\AccountWidget::class,
 				// Widgets\FilamentInfoWidget::class,
-				\App\Filament\Widgets\StatsOverview::class,
-				\App\Filament\Widgets\ItemsOverview::class,
-				\App\Filament\Widgets\LatestItems::class,
+				// \App\Filament\Widgets\StatsOverview::class,
+				// \App\Filament\Widgets\ItemsOverview::class,
+				// \App\Filament\Widgets\LatestItems::class,
 			])
 			->middleware([
 				EncryptCookies::class,
