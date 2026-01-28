@@ -48,18 +48,28 @@ class LatestItems extends BaseWidget
 			])
 			->actions([
 				ViewAction::make()
-					->form(function ($record) {
-						$form = ItemResource::form(app(\Filament\Forms\Form::class));
-						
-						// Get the schema and make all fields disabled for viewing
-						$schema = $form->getSchema();
-						$this->makeFieldsReadOnly($schema);
-						
-						return $schema;
+					->form(function ($record, $livewire) {
+						return $this->getItemFormSchema($livewire);
 					})
 					->modalWidth('7xl'),
 			])
 			->heading('Latest Items');
+	}
+
+	protected function getItemFormSchema($livewire): array
+	{
+		// Create a form instance using the Livewire component
+		$form = \Filament\Forms\Form::make($livewire)
+			->schema([]);
+		
+		// Get the ItemResource form schema
+		$itemForm = ItemResource::form($form);
+		$schema = $itemForm->getSchema();
+		
+		// Make all fields read-only
+		$this->makeFieldsReadOnly($schema);
+		
+		return $schema;
 	}
 
 	protected function makeFieldsReadOnly(array $components): void
