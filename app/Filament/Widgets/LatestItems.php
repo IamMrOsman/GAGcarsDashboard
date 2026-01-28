@@ -3,6 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Item;
+use App\Filament\Resources\ItemResource;
+use Filament\Infolists\Infolist;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
@@ -43,7 +45,8 @@ class LatestItems extends BaseWidget
 					->boolean(),
 			])
 			->actions([
-				ViewAction::make(),
+				ViewAction::make()
+					->infolist(fn(Infolist $infolist) => ItemResource::infolist($infolist)->columns(2)),
 			])
 			->heading('Latest Items');
 	}

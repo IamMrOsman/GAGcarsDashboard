@@ -4,15 +4,17 @@ namespace App\Filament\Resources;
 
 use Filament\Forms;
 use App\Models\Item;
-use App\Models\Country;
 use Filament\Tables;
+use App\Models\Country;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Infolists\Components\TextEntry;
 use App\Filament\Resources\ItemResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ItemResource\RelationManagers;
@@ -146,6 +148,27 @@ class ItemResource extends Resource
 					->default(false),
 				Forms\Components\DatePicker::make('warranty_expiration')
 					->visible(fn(Get $get): bool => (bool) $get('warranty')),
+			]);
+	}
+
+	public static function infolist(Infolist $infolist): Infolist
+	{
+		return $infolist
+			->schema([
+				TextEntry::make('name'),
+				TextEntry::make('category.name'),
+				TextEntry::make('brand.name'),
+				TextEntry::make('brandModel.name'),
+				TextEntry::make('description'),
+				TextEntry::make('location'),
+				TextEntry::make('serial_number'),
+				TextEntry::make('condition'),
+				TextEntry::make('status'),
+				TextEntry::make('price'),
+				TextEntry::make('warranty'),
+				TextEntry::make('warranty_expiration'),
+				TextEntry::make('created_at'),
+				TextEntry::make('updated_at'),
 			]);
 	}
 
