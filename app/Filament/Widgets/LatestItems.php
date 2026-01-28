@@ -3,11 +3,15 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Item;
+use Filament\Forms;
+use Filament\Forms\Get;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Widgets\TableWidget as BaseWidget;
+use App\Filament\Resources\ItemResource;
+use App\Models\Country;
 
 class LatestItems extends BaseWidget
 {
@@ -17,7 +21,7 @@ class LatestItems extends BaseWidget
 	public function table(Table $table): Table
 	{
 		return $table
-			->query(Item::latest()->limit(5))
+			->query(fn() => Item::latest()->limit(5))
 			->columns([
 				TextColumn::make('name')
 					->searchable()
@@ -43,8 +47,38 @@ class LatestItems extends BaseWidget
 					->boolean(),
 			])
 			->actions([
-				ViewAction::make(),
+				ViewAction::make()
+					->form(function ($record) {
+						$form = ItemResource::form(app(\Filament\Forms\Form::class));
+						
+						// Get the schema and make all fields disabled for viewing
+						$schema = $form->getSchema();
+						$this->makeFieldsReadOnly($schema);
+						
+						return $schema;
+					})
+					->modalWidth('7xl'),
 			])
 			->heading('Latest Items');
+	}
+
+	protected function makeFieldsReadOnly(array $components): void
+	{
+		foreach ($components as $component) {
+			if (method_exists($component, 'disabled')) {
+				$component->disabled();
+			}
+			if (method_exists($component, 'dehydrated')) {
+				$component->dehydrated(false);
+			}
+			
+			// Handle nested components (like Sections, Repeaters, etc.)
+			if (method_exists($component, 'getChildComponents')) {
+				$this->makeFieldsReadOnly($component->getChildComponents());
+			}
+			if (method_exists($component, 'getSchema')) {
+				$this->makeFieldsReadOnly($component->getSchema());
+			}
+		}
 	}
 }
