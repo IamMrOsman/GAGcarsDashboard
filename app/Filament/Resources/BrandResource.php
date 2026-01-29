@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BrandResource extends Resource
 {
-    protected static ?string $model = Brand::class;
+	protected static ?string $model = Brand::class;
 
 	protected static ?string $recordTitleAttribute = 'name';
 
@@ -27,78 +27,85 @@ class BrandResource extends Resource
 	protected static ?string $modelLabel = 'Make';
 	protected static ?string $pluralModelLabel = 'Makes';
 
-    protected static ?string $navigationIcon = 'tabler-brand-tesla';
+	protected static ?string $navigationIcon = 'tabler-brand-tesla';
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Hidden::make('user_id')
-					->required()
+	public static function form(Form $form): Form
+	{
+		return $form
+			->schema([
+				Forms\Components\Hidden::make('user_id')
+					->required(fn(string $context): bool => $context === 'create')
+					->disabledOn('edit')
+					->dehydrated(fn(string $context): bool => $context === 'create')
 					->default(auth()->id()),
-                Forms\Components\TextInput::make('name')
+				Forms\Components\TextInput::make('name')
 					->columnSpanFull()
-                    ->required()
+					->required()
 					->live(debounce: 1000)
-					->afterStateUpdated(fn (Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('slug')
+					->afterStateUpdated(fn(Set $set, Get $get) => $set('slug', Str::slug($get('name'))))
+					->maxLength(255),
+				Forms\Components\TextInput::make('slug')
 					->columnSpanFull()
-                    ->required()
+					->required()
 					->unique(ignoreRecord: true)
 					->disabled()
 					->dehydrated()
-                    ->maxLength(255),
-                Forms\Components\FileUpload::make('image')
+					->maxLength(255),
+				Forms\Components\FileUpload::make('image')
 					->columnSpanFull()
-                    ->image(),
-            ]);
-    }
+					->image()
+					->disk('public')
+					->directory('brands')
+					->saveUploadedFileUsing(function ($file): string {
+						return $file->store('brands', 'public');
+					}),
+			]);
+	}
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('slug')
-                    ->searchable(),
-                Tables\Columns\ImageColumn::make('image'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
+	public static function table(Table $table): Table
+	{
+		return $table
+			->columns([
+				Tables\Columns\TextColumn::make('name')
+					->searchable(),
+				Tables\Columns\TextColumn::make('slug')
+					->searchable(),
+				Tables\Columns\ImageColumn::make('image'),
+				Tables\Columns\TextColumn::make('created_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+				Tables\Columns\TextColumn::make('updated_at')
+					->dateTime()
+					->sortable()
+					->toggleable(isToggledHiddenByDefault: true),
+			])
+			->filters([
+				//
+			])
+			->actions([
+				Tables\Actions\EditAction::make(),
+			])
+			->bulkActions([
+				Tables\Actions\BulkActionGroup::make([
+					Tables\Actions\DeleteBulkAction::make(),
+				]),
+			]);
+	}
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+	public static function getRelations(): array
+	{
+		return [
+			//
+		];
+	}
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListBrands::route('/'),
-            // 'create' => Pages\CreateBrand::route('/create'),
-            // 'edit' => Pages\EditBrand::route('/{record}/edit'),
-        ];
-    }
+	public static function getPages(): array
+	{
+		return [
+			'index' => Pages\ListBrands::route('/'),
+			// 'create' => Pages\CreateBrand::route('/create'),
+			// 'edit' => Pages\EditBrand::route('/{record}/edit'),
+		];
+	}
 }
