@@ -22,6 +22,7 @@
         "munafio/chatify": "^1.6",
         "rupadana/filament-api-service": "^3.4",
         "secondnetwork/blade-tabler-icons": "^3.31",
+        "solution-forest/filament-simplelightbox": "^0.0.11",
         "tzsk/otp": "^9.0"
     },
     "require-dev": {

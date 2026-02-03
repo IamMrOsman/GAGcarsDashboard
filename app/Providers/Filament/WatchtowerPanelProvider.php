@@ -22,6 +22,7 @@ use Jeffgreco13\FilamentBreezy\Middleware\MustTwoFactor;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use SolutionForest\FilamentSimpleLightBox\SimpleLightBoxPlugin;
 
 class WatchtowerPanelProvider extends PanelProvider
 {
@@ -65,6 +66,7 @@ class WatchtowerPanelProvider extends PanelProvider
 			->plugins([
 			    FilamentShieldPlugin::make(),
 				ApiServicePlugin::make(),
+				SimpleLightBoxPlugin::make(),
 				BreezyCore::make()
 					->myProfile(
 						shouldRegisterUserMenu: true, // Sets the 'account' link in the panel User Menu (default = true)

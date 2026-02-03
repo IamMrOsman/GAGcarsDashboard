@@ -162,8 +162,8 @@ class ItemResource extends Resource
 				ImageEntry::make('images')
 					->columnSpanFull()
 					->disk('public')
-					->visibility('public')
-					->url(fn(Item $record) => Storage::url($record->images[0])),
+					->simpleLightbox()
+					->visibility('public'),
 				TextEntry::make('brand.name'),
 				TextEntry::make('brandModel.name'),
 				TextEntry::make('description'),
