@@ -13,8 +13,10 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ImageEntry;
 use App\Filament\Resources\ItemResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ItemResource\RelationManagers;
@@ -157,6 +159,11 @@ class ItemResource extends Resource
 			->schema([
 				TextEntry::make('name'),
 				TextEntry::make('category.name'),
+				ImageEntry::make('images')
+					->columnSpanFull()
+					->disk('public')
+					->visibility('public')
+					->url(fn(Item $record) => Storage::url($record->images[0])),
 				TextEntry::make('brand.name'),
 				TextEntry::make('brandModel.name'),
 				TextEntry::make('description'),
