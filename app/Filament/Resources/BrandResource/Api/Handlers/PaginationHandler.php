@@ -37,7 +37,8 @@ class PaginationHandler extends Handlers
 				// Example: only count active items
 				// $query->where('status', 'active');
 			}])
-			->paginate(request()->query('per_page'))
+			// ->paginate(request()->query('per_page'))
+			->paginate(200)
 			->appends(request()->query());
 
 		return BrandTransformer::collection($query);
