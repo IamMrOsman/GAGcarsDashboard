@@ -102,7 +102,7 @@ class AuthController extends Controller
 
 		// Send SMS via Arkesel
 		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsDriver->send($user->phone, "Your OTP is: {$phoneOtp}");
+		$smsDriver->send($user->phone, "Your OTP for GAGcars is: {$phoneOtp}. Kindly use it within 5 mins. Do not share.");
 
 		// Send Email using Laravel's built-in mail
 		// \Mail::raw("Your OTP is: {$emailOtp}", function ($message) use ($user) {
