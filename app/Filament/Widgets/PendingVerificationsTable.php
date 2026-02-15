@@ -10,7 +10,7 @@ use Filament\Widgets\TableWidget;
 class PendingVerificationsTable extends TableWidget
 {
 	protected static ?int $sort = 12;
-	protected int|string|array $columnSpan = 2;
+	protected int|string|array $columnSpan = ['default' => 'full', 'lg' => 2];
 
 	public function table(Table $table): Table
 	{

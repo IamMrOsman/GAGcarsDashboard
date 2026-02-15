@@ -10,7 +10,7 @@ use Filament\Widgets\TableWidget;
 class RecentItemsTable extends TableWidget
 {
 	protected static ?int $sort = 14;
-	protected int|string|array $columnSpan = 2;
+	protected int|string|array $columnSpan = ['default' => 'full', 'lg' => 2];
 
 	public function table(Table $table): Table
 	{
@@ -29,7 +29,8 @@ class RecentItemsTable extends TableWidget
 					->color(fn(string $state): string => match ($state) {
 						'new' => 'success',
 						'used' => 'warning',
-					}),
+					})
+					->visibleFrom('md'),
 				TextColumn::make('status')
 					->badge()
 					->color(fn(string $state): string => match ($state) {

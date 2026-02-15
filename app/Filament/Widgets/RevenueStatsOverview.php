@@ -42,6 +42,7 @@ class RevenueStatsOverview extends StatsOverviewWidget
 				->descriptionIcon($revenueChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
 				->chart(
 					Transaction::query()
+						->where('status', 'successful')
 						->select(DB::raw('SUM(amount) as total'))
 						->whereDate('created_at', '>', now()->subDays(7))
 						->groupBy(DB::raw('Date(created_at)'))

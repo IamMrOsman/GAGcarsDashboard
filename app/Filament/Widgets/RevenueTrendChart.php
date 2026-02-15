@@ -10,7 +10,7 @@ class RevenueTrendChart extends ChartWidget
 {
 	protected static ?string $heading = 'Revenue Trend (Last 30 Days)';
 	protected static ?int $sort = 7;
-	protected int|string|array $columnSpan = 2;
+	protected int|string|array $columnSpan = ['default' => 'full', 'lg' => 2];
 
 	protected function getData(): array
 	{

@@ -10,7 +10,7 @@ class PackagePopularityChart extends ChartWidget
 {
 	protected static ?string $heading = 'Most Popular Packages';
 	protected static ?int $sort = 8;
-	protected int|string|array $columnSpan = 2;
+	protected int|string|array $columnSpan = ['default' => 'full', 'lg' => 2];
 
 	protected function getData(): array
 	{

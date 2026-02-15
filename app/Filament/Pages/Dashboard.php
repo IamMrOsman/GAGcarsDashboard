@@ -27,8 +27,15 @@ class Dashboard extends BaseDashboard
 		];
 	}
 
-	public function getColumns(): int
+	/**
+	 * Responsive grid: 1 column on mobile, 2 on tablet, 4 on desktop.
+	 */
+	public function getColumns(): int|string|array
 	{
-		return 4;
+		return [
+			'default' => 1,
+			'sm' => 2,
+			'lg' => 4,
+		];
 	}
 }
