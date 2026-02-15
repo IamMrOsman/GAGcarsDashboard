@@ -14,7 +14,7 @@ class RevenueStatsOverview extends StatsOverviewWidget
 {
 	protected function getStats(): array
 	{
-		$totalRevenue = Transaction::sum('amount') ?? 0;
+		$totalRevenue = Transaction::where('status', 'success')->sum('amount') ?? 0;
 		$currentMonthRevenue = Transaction::whereBetween('created_at', [now()->startOfMonth(), now()])->sum('amount') ?? 0;
 		$previousMonthRevenue = Transaction::whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])->sum('amount') ?? 0;
 
@@ -42,7 +42,7 @@ class RevenueStatsOverview extends StatsOverviewWidget
 				->descriptionIcon($revenueChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
 				->chart(
 					Transaction::query()
-						->where('status', 'successful')
+						->where('status', 'success')
 						->select(DB::raw('SUM(amount) as total'))
 						->whereDate('created_at', '>', now()->subDays(7))
 						->groupBy(DB::raw('Date(created_at)'))
