@@ -205,7 +205,7 @@ class AppResourceController extends Controller
 	 */
 	public function getPackagesByCategory(Category $category)
 	{
-		return response()->json($category->packages);
+		return response()->json($category->packages()->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
