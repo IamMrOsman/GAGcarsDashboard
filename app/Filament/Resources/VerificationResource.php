@@ -116,18 +116,22 @@ class VerificationResource extends Resource
 						TextEntry::make('document_type'),
 						TextEntry::make('document_number'),
 						ImageEntry::make('document_front')
-							->height(240),
+							->height(240)
+							->simpleLightbox(),
 						ImageEntry::make('document_back')
-							->height(240),
+							->height(240)
+							->simpleLightbox(),
 						ImageEntry::make('selfie')
 							->label('Selfie')
-							->height(240),
+							->height(240)
+							->simpleLightbox(),
 					])
 					->columns(2),
 				Section::make('Dealer documents')
 					->schema([
 						ImageEntry::make('dealership_registration_document')
-							->height(240),
+							->height(240)
+							->simpleLightbox(),
 					])
 					->visible(fn ($record) => $record?->verification_type === 'dealer')
 					->columns(1),
@@ -171,20 +175,24 @@ class VerificationResource extends Resource
 					->searchable(),
 				Tables\Columns\ImageColumn::make('dealership_registration_document')
 					->toggleable(isToggledHiddenByDefault: true)
-					->searchable(),
+					->searchable()
+					->simpleLightbox(),
 				Tables\Columns\TextColumn::make('document_type')
 					->searchable(),
 				Tables\Columns\TextColumn::make('document_number')
 					->searchable(),
 				Tables\Columns\ImageColumn::make('document_front')
 					->toggleable(isToggledHiddenByDefault: true)
-					->searchable(),
+					->searchable()
+					->simpleLightbox(),
 				Tables\Columns\ImageColumn::make('document_back')
 					->toggleable(isToggledHiddenByDefault: true)
-					->searchable(),
+					->searchable()
+					->simpleLightbox(),
 				Tables\Columns\ImageColumn::make('selfie')
 					->toggleable(isToggledHiddenByDefault: true)
-					->searchable(),
+					->searchable()
+					->simpleLightbox(),
 				Tables\Columns\TextColumn::make('status')
 					->badge()
 					->color(fn(string $state): string => match ($state) {
