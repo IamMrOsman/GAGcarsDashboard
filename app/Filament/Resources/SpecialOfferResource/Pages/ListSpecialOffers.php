@@ -23,6 +23,9 @@ class ListSpecialOffers extends ListRecords
 	public function getTabs(): array
 	{
 		return [
+			'all' => Tab::make('All')
+				->icon('heroicon-m-squares-2x2')
+				->badge(SpecialOffer::count()),
 			'running' => Tab::make('Running')
 				->icon('heroicon-m-play-circle')
 				->modifyQueryUsing(fn (Builder $query) => $query

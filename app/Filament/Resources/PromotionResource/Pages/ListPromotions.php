@@ -23,6 +23,9 @@ class ListPromotions extends ListRecords
 	public function getTabs(): array
 	{
 		return [
+			'all' => Tab::make('All')
+				->icon('heroicon-m-squares-2x2')
+				->badge(Promotion::count()),
 			'active' => Tab::make('Active')
 				->icon('heroicon-m-play-circle')
 				->modifyQueryUsing(fn (Builder $query) => $query->where(function (Builder $q) {
