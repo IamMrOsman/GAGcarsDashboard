@@ -25,7 +25,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
 	public function getFilamentAvatarUrl(): ?string
     {
-        return $this->avatar ?? 'https://ui-avatars.com/api/?name=' . $this->name . '&color=FFFFFF&background=09090b';
+        return $this->profile_photo ?? 'https://ui-avatars.com/api/?name=' . $this->name . '&color=FFFFFF&background=09090b';
     }
 
 	/**

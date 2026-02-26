@@ -80,7 +80,7 @@ class UserResource extends Resource
 					->toggleable(isToggledHiddenByDefault: true)
 					->label('ID')
 					->searchable(),
-				Tables\Columns\ImageColumn::make('avatar')
+				Tables\Columns\ImageColumn::make('profile_photo')
 					->circular()
 					->default(fn($record) => 'https://ui-avatars.com/api/?name=' . $record->name . '&color=FFFFFF&background=09090b'),
 				Tables\Columns\TextColumn::make('name')
@@ -97,9 +97,6 @@ class UserResource extends Resource
 					->toggleable(isToggledHiddenByDefault: true)
 					->dateTime()
 					->sortable(),
-				Tables\Columns\TextColumn::make('profile_photo_path')
-					->toggleable(isToggledHiddenByDefault: true)
-					->searchable(),
 				Tables\Columns\IconColumn::make('paid_seller')
 					->boolean(),
 				Tables\Columns\TextColumn::make('created_at')

@@ -26,8 +26,8 @@ class EnhancedStatsOverview extends StatsOverviewWidget
 			? round((($currentMonthItems - $previousMonthItems) / $previousMonthItems) * 100, 1)
 			: 0;
 
-		// Users
-		$activeUsers = User::where('active_status', 1)->count();
+		// Users (total count; description/chart show new signup growth)
+		$totalUsers = User::count();
 		$currentMonthUsers = User::whereBetween('created_at', [$currentPeriodStart, now()])->count();
 		$previousMonthUsers = User::whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])->count();
 		$usersChange = $previousMonthUsers > 0
@@ -57,7 +57,7 @@ class EnhancedStatsOverview extends StatsOverviewWidget
 				)
 				->color($itemsChange >= 0 ? 'success' : 'danger'),
 
-			Stat::make('Active Users', number_format($activeUsers))
+			Stat::make('Total Users', number_format($totalUsers))
 				->description($usersChange >= 0 ? "+{$usersChange}% new this month" : "{$usersChange}% this month")
 				->descriptionIcon($usersChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
 				->chart(

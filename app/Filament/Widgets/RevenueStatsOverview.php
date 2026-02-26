@@ -31,9 +31,14 @@ class RevenueStatsOverview extends StatsOverviewWidget
 
 		$pendingVerifications = Verification::where('status', 'pending')->count();
 
-		$activePromotions = Promotion::where('status', 1)
-			->where('start_at', '<=', now())
-			->where('end_at', '>=', now())
+		$activePromotions = Promotion::where('status', '1')
+			->where(function ($query) {
+				$query->whereNull('start_at')->orWhere('start_at', '<=', now());
+			})
+			->where(function ($query) {
+				$query->whereNull('end_at')->orWhere('end_at', '>=', now());
+			})
+			->where('status', 'active')
 			->count();
 
 		return [
