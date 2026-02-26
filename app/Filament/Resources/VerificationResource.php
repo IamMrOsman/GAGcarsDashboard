@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 
 class VerificationResource extends Resource
 {
@@ -53,7 +54,8 @@ class VerificationResource extends Resource
 						'1:1',
 					])
 					->columnSpan(2)
-					->visible(fn($get) => $get('verification_type') === 'dealer'),
+					->visible(fn($get) => $get('verification_type') === 'dealer')
+					->getUploadedFileUsing(fn (Forms\Components\BaseFileUpload $component, string $file): ?array => Str::startsWith($file, 'http') ? ['url' => $file, 'name' => 'Image', 'size' => 0, 'type' => 'image/jpeg'] : null),
 				Forms\Components\Select::make('document_type')
 					->options([
 						'passport' => 'Passport',
@@ -74,7 +76,8 @@ class VerificationResource extends Resource
 						'4:3',
 						'1:1',
 					])
-					->columnSpan(2),
+					->columnSpan(2)
+					->getUploadedFileUsing(fn (Forms\Components\BaseFileUpload $component, string $file): ?array => Str::startsWith($file, 'http') ? ['url' => $file, 'name' => 'Image', 'size' => 0, 'type' => 'image/jpeg'] : null),
 				Forms\Components\FileUpload::make('document_back')
 					->image()
 					->imageEditor()
@@ -83,7 +86,8 @@ class VerificationResource extends Resource
 						'4:3',
 						'1:1',
 					])
-					->columnSpan(2),
+					->columnSpan(2)
+					->getUploadedFileUsing(fn (Forms\Components\BaseFileUpload $component, string $file): ?array => Str::startsWith($file, 'http') ? ['url' => $file, 'name' => 'Image', 'size' => 0, 'type' => 'image/jpeg'] : null),
 				Forms\Components\FileUpload::make('selfie')
 					->image()
 					->imageEditor()
@@ -92,7 +96,8 @@ class VerificationResource extends Resource
 						'4:3',
 						'1:1',
 					])
-					->columnSpan(2),
+					->columnSpan(2)
+					->getUploadedFileUsing(fn (Forms\Components\BaseFileUpload $component, string $file): ?array => Str::startsWith($file, 'http') ? ['url' => $file, 'name' => 'Image', 'size' => 0, 'type' => 'image/jpeg'] : null),
 				Forms\Components\Select::make('status')
 					->options([
 						'pending' => 'Pending',
