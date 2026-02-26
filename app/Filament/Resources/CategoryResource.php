@@ -48,6 +48,12 @@ class CategoryResource extends Resource
 				Forms\Components\Textarea::make('description')
 					->columnSpanFull()
 					->maxLength(255),
+				Forms\Components\Checkbox::make('require_make')
+					->label('Require Make')
+					->default(false),
+				Forms\Components\Checkbox::make('require_model')
+					->label('Require Model')
+					->default(false),
 				Forms\Components\Select::make('itemFields')
 					->columnSpanFull()
 					->label('Available Fields')
