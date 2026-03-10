@@ -153,7 +153,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
 	public function canAccessPanel(Panel $panel): bool
 	{
-		return true;
+		return in_array(auth()->user()->email, ['mcjohnsonlyndon@gmail.com', '1kwakubonsam@gmail.com']);
 	}
 
 	public function verifications()

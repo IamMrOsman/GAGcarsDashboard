@@ -24,12 +24,19 @@ class PaginationHandler extends Handlers
 	{
 		$query = static::getEloquentQuery();
 
+		$user = auth()->user();
+
 		$query = QueryBuilder::for($query)
 			->allowedFields($this->getAllowedFields() ?? [])
 			->allowedSorts($this->getAllowedSorts() ?? [])
 			->allowedFilters($this->getAllowedFilters() ?? [])
 			->allowedIncludes($this->getAllowedIncludes() ?? [])
 			->with(['user', 'country'])
+			->where('country_id', $user->country_id)
+			->where(function ($query) use ($user) {
+				$query->where('target', 'all')
+					->orWhere('target', $user->paid_seller ? 'dealers' : 'customers');
+			})
 			->paginate(request()->query('per_page'))
 			->appends(request()->query());
 
