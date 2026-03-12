@@ -277,6 +277,16 @@ class AuthController extends Controller
 			]);
 		}
 
+		// Verify OTP for phone
+		if (!Otp::match($request->otp, $user->phone)) {
+			// Also try to verify with email OTP
+			if (!Otp::match($request->otp, $user->email)) {
+				throw ValidationException::withMessages([
+					'otp' => ['Invalid OTP.'],
+				]);
+			}
+		}
+
 		$token = $user->createToken($request->phone)->plainTextToken;
 
 		$user->update([

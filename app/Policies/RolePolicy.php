@@ -61,48 +61,48 @@ class RolePolicy
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Role $role): bool
-    {
-        return $user->can('{{ ForceDelete }}');
-    }
+		public function forceDelete(User $user, Role $role): bool
+		{
+			return $user->can('force_delete_role');
+		}
 
     /**
      * Determine whether the user can permanently bulk delete.
      */
-    public function forceDeleteAny(User $user): bool
-    {
-        return $user->can('{{ ForceDeleteAny }}');
-    }
+		public function forceDeleteAny(User $user): bool
+		{
+			return $user->can('force_delete_any_role');
+		}
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Role $role): bool
-    {
-        return $user->can('{{ Restore }}');
-    }
+		public function restore(User $user, Role $role): bool
+		{
+			return $user->can('restore_role');
+		}
 
     /**
      * Determine whether the user can bulk restore.
      */
-    public function restoreAny(User $user): bool
-    {
-        return $user->can('{{ RestoreAny }}');
-    }
+		public function restoreAny(User $user): bool
+		{
+			return $user->can('restore_any_role');
+		}
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Role $role): bool
-    {
-        return $user->can('{{ Replicate }}');
-    }
+		public function replicate(User $user, Role $role): bool
+		{
+			return $user->can('replicate_role');
+		}
 
     /**
      * Determine whether the user can reorder.
      */
-    public function reorder(User $user): bool
-    {
-        return $user->can('{{ Reorder }}');
-    }
+		public function reorder(User $user): bool
+		{
+			return $user->can('reorder_role');
+		}
 }
