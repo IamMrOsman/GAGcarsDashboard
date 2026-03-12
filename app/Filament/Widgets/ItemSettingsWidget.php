@@ -38,4 +38,3 @@ class ItemSettingsWidget extends TableWidget
 			->heading('Listing Requirements by Country & Category');
 	}
 }
-
