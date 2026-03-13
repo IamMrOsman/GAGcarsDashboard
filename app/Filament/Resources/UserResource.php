@@ -99,6 +99,9 @@ class UserResource extends Resource
 					->sortable(),
 				Tables\Columns\IconColumn::make('paid_seller')
 					->boolean(),
+				Tables\Columns\TextColumn::make('uploads_left')
+					->numeric()
+					->sortable(),
 				Tables\Columns\TextColumn::make('created_at')
 					->dateTime()
 					->sortable()
