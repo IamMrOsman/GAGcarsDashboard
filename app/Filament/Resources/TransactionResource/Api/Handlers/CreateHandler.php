@@ -41,7 +41,9 @@ class CreateHandler extends Handlers {
         if ($model->package && $model->package->package_type === 'upload') {
             $user = $model->user;
             if ($user) {
-                $user->increment('uploads_left', $model->package->number_of_listings);
+                $amount = (int) $model->package->number_of_listings;
+                $current = (int) $user->uploads_left; // null -> 0
+                $user->update(['uploads_left' => $current + $amount]);
             }
         }
 
