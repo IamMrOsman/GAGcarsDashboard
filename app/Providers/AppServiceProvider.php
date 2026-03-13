@@ -12,6 +12,7 @@ use Jeffgreco13\FilamentBreezy\Livewire\SanctumTokens;
 use Jeffgreco13\FilamentBreezy\Livewire\TwoFactorAuthentication;
 use Jeffgreco13\FilamentBreezy\Livewire\UpdatePassword;
 use Livewire\Livewire;
+use App\Filament\Widgets\ItemSettingsWidget;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('two_factor_authentication', TwoFactorAuthentication::class);
         Livewire::component('sanctum_tokens', SanctumTokens::class);
         Livewire::component('browser_sessions', BrowserSessions::class);
+
+        // Register Filament header widgets so they resolve on Livewire update requests.
+        Livewire::component('app.filament.widgets.item-settings-widget', ItemSettingsWidget::class);
 
         FilamentIcon::register([
             'panels::sidebar.collapse-button' => 'heroicon-o-bars-2',
