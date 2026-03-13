@@ -76,6 +76,7 @@ class AuthController extends Controller
 
 	/**
 	 * Send OTP to user's phone and email
+	 * Returns success if at least one channel (SMS or email) succeeds.
 	 */
 	public function sendOtp(Request $request)
 	{
@@ -94,29 +95,52 @@ class AuthController extends Controller
 			]);
 		}
 
-		// Generate OTP for phone
-		$phoneOtp = Otp::generate($user->phone);
+		// Generate a single OTP for both SMS and email (keyed by phone for verification)
+		$otp = Otp::generate($user->phone);
 
-		// Generate OTP for email
-		$emailOtp = Otp::generate($user->email);
+		$smsSent   = false;
+		$emailSent = false;
 
 		// Send SMS via Arkesel
-		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsDriver->send($user->phone, "Your OTP for GAGcars is: {$phoneOtp}. Kindly use it within 5 mins. Do not share.");
+		try {
+			$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
+			$smsDriver->send(
+				$user->phone,
+				"Your OTP for GAGcars is: {$otp}. Kindly use it within 5 mins. Do not share."
+			);
+			$smsSent = true;
+		} catch (\Throwable $e) {
+			\Log::warning('OTP SMS failed', [
+				'error'   => $e->getMessage(),
+				'user_id' => $user->id ?? null,
+			]);
+		}
 
-		// Send Email using Laravel's built-in mail
-		// \Mail::raw("Your OTP is: {$emailOtp}", function ($message) use ($user) {
-		// 	$message->to($user->email)
-		// 		->subject('Your OTP Code');
-		// });
+		// Send Email using SMTP (same OTP as SMS)
+		try {
+			$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
+			$emailSent = true;
+		} catch (\Throwable $e) {
+			\Log::warning('OTP email failed', [
+				'error'   => $e->getMessage(),
+				'user_id' => $user->id ?? null,
+			]);
+		}
 
-		$this->sendEmailWithSmtpSettings($user->email, $emailOtp, $user->name);
+		// At least one channel must succeed
+		if ($smsSent || $emailSent) {
+			return response()->json([
+				'message'     => 'OTP sent successfully',
+				'phone'       => $user->phone,
+				'email'       => $user->email,
+				'sms_sent'    => $smsSent,
+				'email_sent'  => $emailSent,
+			], 200);
+		}
 
 		return response()->json([
-			'message' => 'OTP sent successfully to phone',
-			'phone' => $user->phone,
-			'email' => $user->email
-		], 200);
+			'message' => 'Failed to send OTP',
+		], 500);
 	}
 
 	/**
@@ -138,14 +162,11 @@ class AuthController extends Controller
 			]);
 		}
 
-		// Verify OTP for phone
+		// Verify OTP (single OTP was sent to both SMS and email, keyed by phone)
 		if (!Otp::match($request->otp, $user->phone)) {
-			// Also try to verify with email OTP
-			if (!Otp::match($request->otp, $user->email)) {
-				throw ValidationException::withMessages([
-					'otp' => ['Invalid OTP.'],
-				]);
-			}
+			throw ValidationException::withMessages([
+				'otp' => ['Invalid OTP.'],
+			]);
 		}
 
 		// Generate token
@@ -219,6 +240,7 @@ class AuthController extends Controller
 
 	/**
 	 * send reset password otp
+	 * Returns success if at least one channel (SMS or email) succeeds.
 	 */
 	public function sendResetPasswordOtp(Request $request)
 	{
@@ -237,22 +259,49 @@ class AuthController extends Controller
 			]);
 		}
 
-		$otp = Otp::generate($user->phone ?? $user->email);
+		$target = $user->phone ?? $user->email;
+		$otp    = Otp::generate($target);
 
-		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsDriver->send($user->phone ?? $user->email, "Your OTP is: {$otp}");
+		$smsSent   = false;
+		$emailSent = false;
 
-		// Send Email using Laravel's built-in mail
-		// \Mail::raw("Your OTP is: {$otp}", function ($message) use ($user) {
-		// 	$message->to($user->email)
-		// 		->subject('Your OTP Code');
-		// });
+		// SMS
+		try {
+			$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
+			$smsDriver->send(
+				$target,
+				"Your OTP is: {$otp}"
+			);
+			$smsSent = true;
+		} catch (\Throwable $e) {
+			\Log::warning('Reset-password OTP SMS failed', [
+				'error'   => $e->getMessage(),
+				'user_id' => $user->id ?? null,
+			]);
+		}
 
-		$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
+		// Email
+		try {
+			$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
+			$emailSent = true;
+		} catch (\Throwable $e) {
+			\Log::warning('Reset-password OTP email failed', [
+				'error'   => $e->getMessage(),
+				'user_id' => $user->id ?? null,
+			]);
+		}
+
+		if ($smsSent || $emailSent) {
+			return response()->json([
+				'message'    => 'OTP sent successfully',
+				'sms_sent'   => $smsSent,
+				'email_sent' => $emailSent,
+			], 200);
+		}
 
 		return response()->json([
-			'message' => 'OTP sent successfully'
-		], 200);
+			'message' => 'Failed to send OTP',
+		], 500);
 	}
 
 	/**
