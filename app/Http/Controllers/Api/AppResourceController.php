@@ -185,16 +185,21 @@ class AppResourceController extends Controller
 			->where('require_payment', true)
 			->exists();
 
-		// If payment is required, check if user has uploads left
+		// If payment is required, check if user has uploads left for this category
 		if ($paymentRequired) {
-			if ($user->uploads_left <= 0) {
-				return response()->json(['can_upload' => false, 'reason' => 'You have no uploads left'], 200);
+			$uploadsForCategory = $user->getUploadsLeftForCategory($categoryId);
+			if ($uploadsForCategory <= 0) {
+				return response()->json(['can_upload' => false, 'reason' => 'You have no uploads left for this category'], 200);
 			}
+			return response()->json([
+				'can_upload' => true,
+				'reason' => 'Payment required; you have ' . $uploadsForCategory . ' uploads left for this category',
+			], 200);
 		}
 
 		return response()->json([
 			'can_upload' => true,
-			'reason' => $paymentRequired ? 'Payment required but you have ' . $user->uploads_left . ' uploads left' : 'Payment not required for this category'
+			'reason' => 'Payment not required for this category',
 		], 200);
 	}
 

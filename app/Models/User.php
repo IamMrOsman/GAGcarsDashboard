@@ -8,7 +8,6 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Traits\HasRoles;
-use Filament\Notifications\Notification;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
@@ -22,6 +21,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 {
 	/** @use HasFactory<\Database\Factories\UserFactory> */
 	use HasFactory, Notifiable, HasUlids, SoftDeletes, HasApiTokens, HasRoles, TwoFactorAuthenticatable;
+
+	protected $casts = [
+		'uploads_left' => 'array',
+	];
 
 	public function getFilamentAvatarUrl(): ?string
     {
@@ -208,5 +211,43 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 	public function wishList()
 	{
 		return $this->hasMany(WishList::class);
+	}
+
+	/**
+	 * Get uploads left for a category (from uploads_left JSON: category_id => count).
+	 * Checks category key first, then 'all' for packages not tied to a category.
+	 */
+	public function getUploadsLeftForCategory($categoryId): int
+	{
+		$uploads = $this->uploads_left ?? [];
+		$key = $categoryId !== null ? (string) $categoryId : 'all';
+		return (int) ($uploads[$key] ?? $uploads['all'] ?? 0);
+	}
+
+	/**
+	 * Add uploads for a category. If category key exists, add to it; otherwise set it.
+	 */
+	public function addUploadsForCategory($categoryId, int $amount): void
+	{
+		$uploads = $this->uploads_left ?? [];
+		$key = $categoryId !== null ? (string) $categoryId : 'all';
+		$current = (int) ($uploads[$key] ?? 0);
+		$uploads[$key] = $current + $amount;
+		$this->update(['uploads_left' => $uploads]);
+	}
+
+	/**
+	 * Decrement uploads for a category by one. No-op if count for category is 0 or missing.
+	 */
+	public function decrementUploadsForCategory($categoryId): void
+	{
+		$uploads = $this->uploads_left ?? [];
+		$key = $categoryId !== null ? (string) $categoryId : 'all';
+		$current = (int) ($uploads[$key] ?? 0);
+		if ($current <= 0) {
+			return;
+		}
+		$uploads[$key] = $current - 1;
+		$this->update(['uploads_left' => $uploads]);
 	}
 }

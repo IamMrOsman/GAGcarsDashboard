@@ -57,10 +57,9 @@ class CreateHandler extends Handlers {
             ->where('require_payment', true)
             ->exists();
 
-        // If payment is required, decrement user's uploads_left
+        // If payment is required, decrement user's uploads for this category
         if ($paymentRequired) {
-            $user = $model->user;
-            $user->decrement('uploads_left', 1);
+            $model->user->decrementUploadsForCategory($model->category_id);
         }
 
         return static::sendSuccessResponse($model, "Successfully Create Resource");

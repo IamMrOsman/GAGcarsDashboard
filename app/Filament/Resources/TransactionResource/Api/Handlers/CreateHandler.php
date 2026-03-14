@@ -37,13 +37,13 @@ class CreateHandler extends Handlers {
 
         $model->save();
 
-        // If the package type is 'upload', increment user's uploads_left
+        // If the package type is 'upload', add uploads for the package's category (or 'all' if no category)
         if ($model->package && $model->package->package_type === 'upload') {
             $user = $model->user;
             if ($user) {
                 $amount = (int) $model->package->number_of_listings;
-                $current = (int) $user->uploads_left; // null -> 0
-                $user->update(['uploads_left' => $current + $amount]);
+                $categoryId = $model->package->category_id;
+                $user->addUploadsForCategory($categoryId, $amount);
             }
         }
 
