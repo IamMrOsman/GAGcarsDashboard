@@ -27,9 +27,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 	];
 
 	public function getFilamentAvatarUrl(): ?string
-    {
-        return $this->profile_photo ?? 'https://ui-avatars.com/api/?name=' . $this->name . '&color=FFFFFF&background=09090b';
-    }
+	{
+		return $this->profile_photo ?? 'https://ui-avatars.com/api/?name=' . $this->name . '&color=FFFFFF&background=09090b';
+	}
 
 	/**
 	 * Boot the model.
@@ -214,27 +214,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 	}
 
 	/**
-	 * Normalize uploads_left to an array (handles legacy integer or null).
-	 */
-	protected function getUploadsLeftArray(): array
-	{
-		$raw = $this->uploads_left;
-		if (is_array($raw)) {
-			return $raw;
-		}
-		if (is_numeric($raw)) {
-			return ['all' => (int) $raw];
-		}
-		return [];
-	}
-
-	/**
 	 * Get uploads left for a category (from uploads_left JSON: category_id => count).
 	 * Checks category key first, then 'all' for packages not tied to a category.
 	 */
 	public function getUploadsLeftForCategory($categoryId): int
 	{
-		$uploads = $this->getUploadsLeftArray();
+		$uploads = $this->uploads_left ?? [];
 		$key = $categoryId !== null ? (string) $categoryId : 'all';
 		return (int) ($uploads[$key] ?? $uploads['all'] ?? 0);
 	}
@@ -244,7 +229,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 	 */
 	public function addUploadsForCategory($categoryId, int $amount): void
 	{
-		$uploads = $this->getUploadsLeftArray();
+		$uploads = $this->uploads_left ?? [];
 		$key = $categoryId !== null ? (string) $categoryId : 'all';
 		$current = (int) ($uploads[$key] ?? 0);
 		$uploads[$key] = $current + $amount;
@@ -256,7 +241,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 	 */
 	public function decrementUploadsForCategory($categoryId): void
 	{
-		$uploads = $this->getUploadsLeftArray();
+		$uploads = $this->uploads_left ?? [];
 		$key = $categoryId !== null ? (string) $categoryId : 'all';
 		$current = (int) ($uploads[$key] ?? 0);
 		if ($current <= 0) {
