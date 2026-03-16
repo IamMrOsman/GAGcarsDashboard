@@ -68,16 +68,9 @@ class AuthController extends Controller
 
 		$token = $user->createToken($request->email)->plainTextToken;
 
-		$user->load('country', 'state');
-
-		$userData = $user->toArray();
-		$userData['uploads_left'] = is_array($user->uploads_left)
-			? json_encode($user->uploads_left)
-			: (string) $user->uploads_left;
-
 		return response()->json([
 			'token' => $token,
-			'user' => $userData,
+			'user' => $user->load('country', 'state'),
 		], 200);
 	}
 

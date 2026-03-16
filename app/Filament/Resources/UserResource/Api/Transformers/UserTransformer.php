@@ -24,9 +24,6 @@ class UserTransformer extends JsonResource
 		$data['is_verified'] = $this->resource->isVerified();
 		$data['is_verified_dealer'] = $this->resource->isVerifiedDealer();
 		$data['ads'] = $this->resource->items()->count();
-		$data['uploads_left'] = is_array($this->resource->uploads_left)
-			? json_encode($this->resource->uploads_left)
-			: (string) $this->resource->uploads_left;
 
 		return $data;
 	}
