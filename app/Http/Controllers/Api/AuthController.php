@@ -96,7 +96,7 @@ class AuthController extends Controller
 		}
 
 		// Generate a single OTP for both SMS and email (keyed by phone for verification)
-		$otp = Otp::generate($user->phone);
+		$otp = Otp::generate($user->id);
 
 		$smsSent   = false;
 		$emailSent = false;
@@ -163,7 +163,7 @@ class AuthController extends Controller
 		}
 
 		// Verify OTP (single OTP was sent to both SMS and email, keyed by phone)
-		if (!Otp::match($request->otp, $user->phone)) {
+		if (!Otp::match($request->otp, $user->id)) {
 			throw ValidationException::withMessages([
 				'otp' => ['Invalid OTP.'],
 			]);
