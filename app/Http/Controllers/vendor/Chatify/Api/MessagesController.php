@@ -263,6 +263,7 @@ class MessagesController extends Controller
 				'users.created_at',
 				'users.updated_at',
 				'users.avatar',
+				'users.profile_photo',
 				'users.active_status',
 				'users.country_id',
 				'users.state_id',
