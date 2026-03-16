@@ -68,9 +68,16 @@ class AuthController extends Controller
 
 		$token = $user->createToken($request->email)->plainTextToken;
 
+		$user->load('country', 'state');
+
+		$userData = $user->toArray();
+		$userData['uploads_left'] = is_array($user->uploads_left)
+			? json_encode($user->uploads_left)
+			: (string) $user->uploads_left;
+
 		return response()->json([
 			'token' => $token,
-			'user' => $user->load('country', 'state'),
+			'user' => $userData,
 		], 200);
 	}
 
@@ -234,10 +241,10 @@ class AuthController extends Controller
 			]);
 		}
 
-		$otp = Otp::generate($user->phone ?? $user->email);
+		$otp = Otp::generate($user->id);
 
 		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsDriver->send($user->phone ?? $user->email, "Your OTP is: {$otp}");
+		$smsDriver->send($user->id, "Your OTP is: {$otp}");
 
 		// Send Email using Laravel's built-in mail
 		// \Mail::raw("Your OTP is: {$otp}", function ($message) use ($user) {
@@ -275,13 +282,10 @@ class AuthController extends Controller
 		}
 
 		// Verify OTP for phone
-		if (!Otp::match($request->otp, $user->phone)) {
-			// Also try to verify with email OTP
-			if (!Otp::match($request->otp, $user->email)) {
-				throw ValidationException::withMessages([
-					'otp' => ['Invalid OTP.'],
-				]);
-			}
+		if (!Otp::match($request->otp, $user->id)) {
+			throw ValidationException::withMessages([
+				'otp' => ['Invalid OTP.'],
+			]);
 		}
 
 		$token = $user->createToken($request->phone)->plainTextToken;
