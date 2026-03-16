@@ -94,15 +94,15 @@ class AuthController extends Controller
 			]);
 		}
 
-		// Generate OTP for phone
-		$phoneOtp = Otp::generate($user->phone);
+		// Generate OTP for user id
+		$otp = Otp::generate($user->id);
 
 		// Generate OTP for email
-		$emailOtp = Otp::generate($user->email);
+		// $emailOtp = Otp::generate($user->email);
 
 		// Send SMS via Arkesel
 		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsDriver->send($user->phone, "Your OTP for GAGcars is: {$phoneOtp}. Kindly use it within 5 mins. Do not share.");
+		$smsDriver->send($user->phone, "Your OTP for GAGcars is: {$otp}. Kindly use it within 5 mins. Do not share.");
 
 		// Send Email using Laravel's built-in mail
 		// \Mail::raw("Your OTP is: {$emailOtp}", function ($message) use ($user) {
@@ -110,7 +110,7 @@ class AuthController extends Controller
 		// 		->subject('Your OTP Code');
 		// });
 
-		$this->sendEmailWithSmtpSettings($user->email, $emailOtp, $user->name);
+		$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
 
 		return response()->json([
 			'message' => 'OTP sent successfully to phone',
@@ -139,13 +139,10 @@ class AuthController extends Controller
 		}
 
 		// Verify OTP for phone
-		if (!Otp::match($request->otp, $user->phone)) {
-			// Also try to verify with email OTP
-			if (!Otp::match($request->otp, $user->email)) {
-				throw ValidationException::withMessages([
-					'otp' => ['Invalid OTP.'],
-				]);
-			}
+		if (!Otp::match($request->otp, $user->id)) {
+			throw ValidationException::withMessages([
+				'otp' => ['Invalid OTP.'],
+			]);
 		}
 
 		// Generate token
