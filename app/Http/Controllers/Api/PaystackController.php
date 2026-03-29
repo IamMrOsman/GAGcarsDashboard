@@ -99,6 +99,11 @@ class PaystackController extends Controller
 
 		if (!empty($data['callback_url'])) {
 			$payload['callback_url'] = $data['callback_url'];
+		} else {
+			$defaultCallback = (string) PaystackSettingsService::getSetting('paystack_callback_url', '');
+			if ($defaultCallback !== '') {
+				$payload['callback_url'] = $defaultCallback;
+			}
 		}
 
 		$res = $this->paystack->initializeTransaction($payload);
@@ -116,6 +121,18 @@ class PaystackController extends Controller
 				'access_code' => data_get($res, 'data.access_code'),
 				'transaction' => $transaction,
 			],
+		], 200);
+	}
+
+	/**
+	 * Public-safe Paystack config for frontend clients.
+	 */
+	public function config(Request $request)
+	{
+		return response()->json([
+			'success' => true,
+			'message' => 'Paystack config fetched',
+			'data' => PaystackSettingsService::getPublicConfig(),
 		], 200);
 	}
 

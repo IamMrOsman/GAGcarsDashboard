@@ -32,6 +32,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::delete('/user', [AuthController::class, 'deleteAccount']);
 
 	Route::prefix('payments/paystack')->group(function () {
+		Route::get('/config', [PaystackController::class, 'config']);
 		Route::post('/initialize', [PaystackController::class, 'initialize']);
 		Route::post('/verify', [PaystackController::class, 'verify']);
 	});

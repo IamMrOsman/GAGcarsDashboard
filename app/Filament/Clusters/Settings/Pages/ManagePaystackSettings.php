@@ -63,6 +63,21 @@ class ManagePaystackSettings extends Page implements HasForms
 							->label('Test Public Key')
 							->helperText('Your Paystack test public key for development/testing'),
 
+						TextInput::make('paystack_webhook_secret')
+							->label('Webhook Secret')
+							->password()
+							->helperText('Optional secret used to validate Paystack webhooks. Leave empty to use active secret key.'),
+
+						TextInput::make('paystack_webhook_url')
+							->label('Webhook URL')
+							->url()
+							->helperText('Webhook endpoint configured in Paystack dashboard, e.g. https://your-domain.com/api/paystack/webhook'),
+
+						TextInput::make('paystack_callback_url')
+							->label('Default Callback URL')
+							->url()
+							->helperText('Optional frontend callback URL used when initialize request does not provide callback_url.'),
+
 						Toggle::make('paystack_live_mode')
 							->label('Live Mode')
 							->default(false)
