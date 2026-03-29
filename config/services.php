@@ -40,4 +40,14 @@ return [
 		'sender_id' => env('ARKESEL_SENDER_ID'),
 	],
 
+	'paystack' => [
+		'enabled' => env('PAYSTACK_ENABLED', false),
+		'live_mode' => env('PAYSTACK_LIVE_MODE', false),
+		'live_secret_key' => env('PAYSTACK_LIVE_SECRET_KEY'),
+		'live_public_key' => env('PAYSTACK_LIVE_PUBLIC_KEY'),
+		'test_secret_key' => env('PAYSTACK_TEST_SECRET_KEY'),
+		'test_public_key' => env('PAYSTACK_TEST_PUBLIC_KEY'),
+		'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'), // optional; defaults to secret key
+	],
+
 ];

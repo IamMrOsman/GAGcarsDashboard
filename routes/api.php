@@ -5,11 +5,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AppResourceController;
 use App\Http\Controllers\Api\UserResourcesController;
+use App\Http\Controllers\Api\PaystackController;
 use App\Http\Controllers\vendor\Chatify\Api\MessagesController;
 
 Route::post('/sanctum/register', [AuthController::class, 'register']);
 
 Route::post('/sanctum/token', [AuthController::class, 'login']);
+
+// Paystack Webhook (no auth)
+Route::post('/paystack/webhook', [PaystackController::class, 'webhook']);
 
 // OTP Routes
 Route::post('/otp/send', [AuthController::class, 'sendOtp']);
@@ -26,6 +30,11 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::post('/change-password', [AuthController::class, 'changePassword']);
 	Route::post('/update-profile', [AuthController::class, 'updateProfile']);
 	Route::delete('/user', [AuthController::class, 'deleteAccount']);
+
+	Route::prefix('payments/paystack')->group(function () {
+		Route::post('/initialize', [PaystackController::class, 'initialize']);
+		Route::post('/verify', [PaystackController::class, 'verify']);
+	});
 
 	Route::prefix('user/{user}')->group(function () {
 		Route::get('/details', [UserResourcesController::class, 'userDetails']);

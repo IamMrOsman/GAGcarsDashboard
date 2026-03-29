@@ -13,6 +13,13 @@ class Transaction extends Model
 
 	protected $guarded = [];
 
+	protected $casts = [
+		'metadata' => 'array',
+		'gateway_response' => 'array',
+		'paid_at' => 'datetime',
+		'fulfilled_at' => 'datetime',
+	];
+
 	public function package()
 	{
 		return $this->belongsTo(Package::class);
