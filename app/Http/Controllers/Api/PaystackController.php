@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Services\PaystackService;
 use App\Services\PaystackSettingsService;
 use Carbon\Carbon;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -135,18 +136,38 @@ class PaystackController extends Controller
 				'success' => false,
 				'message' => $message,
 			], 422);
+		} catch (ConnectionException $e) {
+			$transaction->update([
+				'status' => 'gateway_error',
+				'gateway_response' => ['error' => $e->getMessage()],
+			]);
+
+			return response()->json([
+				'success' => false,
+				'message' => 'Unable to reach payment gateway. Try again shortly.',
+			], 503);
 		}
 
 		$transaction->update([
 			'gateway_response' => $res,
 		]);
 
+		$authorizationUrl = data_get($res, 'data.authorization_url');
+		if (!is_string($authorizationUrl) || trim($authorizationUrl) === '') {
+			$transaction->update(['status' => 'gateway_error']);
+
+			return response()->json([
+				'success' => false,
+				'message' => 'Payment gateway did not return a checkout URL.',
+			], 422);
+		}
+
 		return response()->json([
 			'success' => true,
 			'message' => 'Payment initialized',
 			'data' => [
 				'reference' => $reference,
-				'authorization_url' => data_get($res, 'data.authorization_url'),
+				'authorization_url' => $authorizationUrl,
 				'access_code' => data_get($res, 'data.access_code'),
 				'transaction' => $transaction,
 			],
@@ -192,7 +213,29 @@ class PaystackController extends Controller
 			], 403);
 		}
 
-		$res = $this->paystack->verifyTransaction($data['reference']);
+		try {
+			$res = $this->paystack->verifyTransaction($data['reference']);
+		} catch (RequestException $e) {
+			$body = $e->response?->json();
+			$message = is_array($body) && isset($body['message']) && is_string($body['message'])
+				? $body['message']
+				: 'Payment verification failed.';
+			$transaction->update([
+				'status' => 'verification_error',
+				'gateway_response' => is_array($body) ? $body : ['error' => $e->getMessage()],
+			]);
+
+			return response()->json([
+				'success' => false,
+				'message' => $message,
+			], 422);
+		} catch (ConnectionException $e) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Unable to reach payment gateway. Try again shortly.',
+			], 503);
+		}
+
 		$paystackStatus = (string) data_get($res, 'data.status');
 		$paidAmount = (int) data_get($res, 'data.amount', 0); // kobo
 		$currency = (string) data_get($res, 'data.currency');
