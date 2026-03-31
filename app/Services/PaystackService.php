@@ -44,8 +44,7 @@ class PaystackService
 
 	public function getWebhookSecret(): string
 	{
-		// Prefer explicit webhook secret; fallback to secret key.
-		return (string) (config('services.paystack.webhook_secret') ?: PaystackSettingsService::getSecretKey());
+		return PaystackSettingsService::getWebhookSecret();
 	}
 }
 

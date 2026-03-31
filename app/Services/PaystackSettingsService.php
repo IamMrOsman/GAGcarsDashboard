@@ -28,6 +28,9 @@ class PaystackSettingsService
 			'live_public_key' => $paystackSettings['paystack_live_public_key'] ?? '',
 			'test_secret_key' => $paystackSettings['paystack_test_secret_key'] ?? '',
 			'test_public_key' => $paystackSettings['paystack_test_public_key'] ?? '',
+			'webhook_secret' => $paystackSettings['paystack_webhook_secret'] ?? '',
+			'webhook_url' => $paystackSettings['paystack_webhook_url'] ?? '',
+			'callback_url' => $paystackSettings['paystack_callback_url'] ?? '',
 			'live_mode' => $paystackSettings['paystack_live_mode'] ?? false,
 			'enabled' => $paystackSettings['paystack_enabled'] ?? false,
 		];
@@ -52,8 +55,7 @@ class PaystackSettingsService
 		if (($paystackSettings['paystack_live_mode'] ?? false) === true) {
 			$requiredFields = ['paystack_live_secret_key', 'paystack_live_public_key'];
 		} else {
-			// For test mode, test keys are optional but recommended
-			$requiredFields = [];
+			$requiredFields = ['paystack_test_secret_key', 'paystack_test_public_key'];
 		}
 
 		foreach ($requiredFields as $field) {
@@ -91,6 +93,30 @@ class PaystackSettingsService
 	{
 		$config = self::getPaystackConfig();
 		return ($config['live_mode'] ?? false) === true;
+	}
+
+	public static function getWebhookSecret(): string
+	{
+		$config = self::getPaystackConfig();
+
+		if (!empty($config['webhook_secret'])) {
+			return (string) $config['webhook_secret'];
+		}
+
+		return self::getSecretKey();
+	}
+
+	public static function getPublicConfig(): array
+	{
+		$config = self::getPaystackConfig();
+
+		return [
+			'enabled' => (bool) ($config['enabled'] ?? false),
+			'live_mode' => (bool) ($config['live_mode'] ?? false),
+			'public_key' => self::getPublicKey(),
+			'webhook_url' => (string) ($config['webhook_url'] ?? ''),
+			'callback_url' => (string) ($config['callback_url'] ?? ''),
+		];
 	}
 
 	public static function getSetting(string $key, $default = null)

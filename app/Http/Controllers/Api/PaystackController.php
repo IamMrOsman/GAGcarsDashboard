@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Services\PaystackService;
 use App\Services\PaystackSettingsService;
 use Carbon\Carbon;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -70,6 +71,14 @@ class PaystackController extends Controller
 		$amount = (float) $package->price;
 		$amountInKobo = (int) round($amount * 100);
 
+		$email = $data['email'] ?? $user->email;
+		if (!is_string($email) || trim($email) === '') {
+			return response()->json([
+				'success' => false,
+				'message' => 'A valid email is required for payment. Please update your profile.',
+			], 422);
+		}
+
 		$transaction = Transaction::create([
 			'user_id' => $user->id,
 			'package_id' => $package->id,
@@ -84,24 +93,49 @@ class PaystackController extends Controller
 			],
 		]);
 
+		$paystackMetadata = [
+			'transaction_id' => (string) $transaction->id,
+			'user_id' => (string) $user->id,
+			'package_id' => (string) $package->id,
+			'package_type' => (string) $package->package_type,
+		];
+		if ($item !== null) {
+			$paystackMetadata['item_id'] = (string) $item->id;
+		}
+
 		$payload = [
-			'email' => $data['email'] ?? $user->email,
+			'email' => trim($email),
 			'amount' => $amountInKobo,
 			'reference' => $reference,
-			'metadata' => [
-				'transaction_id' => (string) $transaction->id,
-				'user_id' => (string) $user->id,
-				'package_id' => (string) $package->id,
-				'item_id' => $item ? (string) $item->id : null,
-				'package_type' => $package->package_type,
-			],
+			'metadata' => $paystackMetadata,
 		];
 
 		if (!empty($data['callback_url'])) {
 			$payload['callback_url'] = $data['callback_url'];
+		} else {
+			$defaultCallback = (string) PaystackSettingsService::getSetting('paystack_callback_url', '');
+			if ($defaultCallback !== '') {
+				$payload['callback_url'] = $defaultCallback;
+			}
 		}
 
-		$res = $this->paystack->initializeTransaction($payload);
+		try {
+			$res = $this->paystack->initializeTransaction($payload);
+		} catch (RequestException $e) {
+			$body = $e->response?->json();
+			$message = is_array($body) && isset($body['message']) && is_string($body['message'])
+				? $body['message']
+				: 'Payment gateway error. Please try again or contact support.';
+			$transaction->update([
+				'status' => 'gateway_error',
+				'gateway_response' => is_array($body) ? $body : ['error' => $e->getMessage()],
+			]);
+
+			return response()->json([
+				'success' => false,
+				'message' => $message,
+			], 422);
+		}
 
 		$transaction->update([
 			'gateway_response' => $res,
@@ -116,6 +150,18 @@ class PaystackController extends Controller
 				'access_code' => data_get($res, 'data.access_code'),
 				'transaction' => $transaction,
 			],
+		], 200);
+	}
+
+	/**
+	 * Public-safe Paystack config for frontend clients.
+	 */
+	public function config(Request $request)
+	{
+		return response()->json([
+			'success' => true,
+			'message' => 'Paystack config fetched',
+			'data' => PaystackSettingsService::getPublicConfig(),
 		], 200);
 	}
 
