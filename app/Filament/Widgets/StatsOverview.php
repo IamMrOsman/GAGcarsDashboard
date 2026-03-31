@@ -5,10 +5,8 @@ namespace App\Filament\Widgets;
 use App\Models\Item;
 use App\Models\User;
 use App\Models\WishList;
-use App\Models\Promotion;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\DB;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
 
