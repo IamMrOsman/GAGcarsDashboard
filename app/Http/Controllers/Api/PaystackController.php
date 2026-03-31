@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -42,136 +43,154 @@ class PaystackController extends Controller
 			'callback_url' => ['nullable', 'url'],
 		]);
 
-		$user = $request->user();
-		$package = Package::with('country')->findOrFail($data['package_id']);
-
-		// Packages are country-specific in your UI/API.
-		if ($package->country_id !== null && $user->country_id !== null && $package->country_id !== $user->country_id) {
-			throw ValidationException::withMessages([
-				'package_id' => ['Package is not available for your country.'],
-			]);
-		}
-
-		$item = null;
-		if ($package->package_type === 'promotion') {
-			if (empty($data['item_id'])) {
-				throw ValidationException::withMessages([
-					'item_id' => ['item_id is required for promotion packages.'],
-				]);
-			}
-
-			$item = Item::findOrFail($data['item_id']);
-			if ((string) $item->user_id !== (string) $user->id) {
-				throw ValidationException::withMessages([
-					'item_id' => ['You can only promote your own item.'],
-				]);
-			}
-		}
-
-		$reference = $this->paystack->generateReference('gag');
-		$amount = (float) $package->price;
-		$amountInKobo = (int) round($amount * 100);
-
-		$email = $data['email'] ?? $user->email;
-		if (!is_string($email) || trim($email) === '') {
-			return response()->json([
-				'success' => false,
-				'message' => 'A valid email is required for payment. Please update your profile.',
-			], 422);
-		}
-
-		$transaction = Transaction::create([
-			'user_id' => $user->id,
-			'package_id' => $package->id,
-			'item_id' => $item?->id,
-			'amount' => $amount,
-			'payment_channel' => 'paystack',
-			'status' => 'initialized',
-			'reference' => $reference,
-			'gateway' => 'paystack',
-			'metadata' => [
-				'package_type' => $package->package_type,
-			],
-		]);
-
-		$paystackMetadata = [
-			'transaction_id' => (string) $transaction->id,
-			'user_id' => (string) $user->id,
-			'package_id' => (string) $package->id,
-			'package_type' => (string) $package->package_type,
-		];
-		if ($item !== null) {
-			$paystackMetadata['item_id'] = (string) $item->id;
-		}
-
-		$payload = [
-			'email' => trim($email),
-			'amount' => $amountInKobo,
-			'reference' => $reference,
-			'metadata' => $paystackMetadata,
-		];
-
-		if (!empty($data['callback_url'])) {
-			$payload['callback_url'] = $data['callback_url'];
-		} else {
-			$defaultCallback = (string) PaystackSettingsService::getSetting('paystack_callback_url', '');
-			if ($defaultCallback !== '') {
-				$payload['callback_url'] = $defaultCallback;
-			}
-		}
-
 		try {
-			$res = $this->paystack->initializeTransaction($payload);
-		} catch (RequestException $e) {
-			$body = $e->response?->json();
-			$message = is_array($body) && isset($body['message']) && is_string($body['message'])
-				? $body['message']
-				: 'Payment gateway error. Please try again or contact support.';
-			$transaction->update([
-				'status' => 'gateway_error',
-				'gateway_response' => is_array($body) ? $body : ['error' => $e->getMessage()],
-			]);
+			$user = $request->user();
+			$package = Package::with('country')->findOrFail($data['package_id']);
 
-			return response()->json([
-				'success' => false,
-				'message' => $message,
-			], 422);
-		} catch (ConnectionException $e) {
-			$transaction->update([
-				'status' => 'gateway_error',
-				'gateway_response' => ['error' => $e->getMessage()],
-			]);
+			// Packages are country-specific in your UI/API (compare as ints — DB/API may mix string/int).
+			if ($package->country_id !== null && $user->country_id !== null) {
+				if ((int) $package->country_id !== (int) $user->country_id) {
+					throw ValidationException::withMessages([
+						'package_id' => ['Package is not available for your country.'],
+					]);
+				}
+			}
 
-			return response()->json([
-				'success' => false,
-				'message' => 'Unable to reach payment gateway. Try again shortly.',
-			], 503);
-		}
+			$item = null;
+			if ($package->package_type === 'promotion') {
+				if (empty($data['item_id'])) {
+					throw ValidationException::withMessages([
+						'item_id' => ['item_id is required for promotion packages.'],
+					]);
+				}
 
-		$transaction->update([
-			'gateway_response' => $res,
-		]);
+				$item = Item::findOrFail($data['item_id']);
+				if ((string) $item->user_id !== (string) $user->id) {
+					throw ValidationException::withMessages([
+						'item_id' => ['You can only promote your own item.'],
+					]);
+				}
+			}
 
-		$authorizationUrl = data_get($res, 'data.authorization_url');
-		if (!is_string($authorizationUrl) || trim($authorizationUrl) === '') {
-			$transaction->update(['status' => 'gateway_error']);
+			$reference = $this->paystack->generateReference('gag');
+			$amount = (float) $package->price;
+			$amountInKobo = (int) round($amount * 100);
 
-			return response()->json([
-				'success' => false,
-				'message' => 'Payment gateway did not return a checkout URL.',
-			], 422);
-		}
+			$email = $data['email'] ?? $user->email;
+			if (!is_string($email) || trim($email) === '') {
+				return response()->json([
+					'success' => false,
+					'message' => 'A valid email is required for payment. Please update your profile.',
+				], 422);
+			}
 
-		return response()->json([
-			'success' => true,
-			'message' => 'Payment initialized',
-			'data' => [
+			$transaction = Transaction::create([
+				'user_id' => $user->id,
+				'package_id' => $package->id,
+				'item_id' => $item?->id,
+				'amount' => $amount,
+				'payment_channel' => 'paystack',
+				'status' => 'initialized',
 				'reference' => $reference,
-				'authorization_url' => $authorizationUrl,
-				'access_code' => data_get($res, 'data.access_code'),
-				'transaction' => $transaction,
-			],
-		], 200);
+				'gateway' => 'paystack',
+				'metadata' => [
+					'package_type' => $package->package_type,
+				],
+			]);
+
+			$paystackMetadata = [
+				'transaction_id' => (string) $transaction->id,
+				'user_id' => (string) $user->id,
+				'package_id' => (string) $package->id,
+				'package_type' => (string) $package->package_type,
+			];
+			if ($item !== null) {
+				$paystackMetadata['item_id'] = (string) $item->id;
+			}
+
+			$payload = [
+				'email' => trim($email),
+				'amount' => $amountInKobo,
+				'reference' => $reference,
+				'metadata' => $paystackMetadata,
+			];
+
+			if (!empty($data['callback_url'])) {
+				$payload['callback_url'] = $data['callback_url'];
+			} else {
+				$defaultCallback = (string) PaystackSettingsService::getSetting('paystack_callback_url', '');
+				if ($defaultCallback !== '') {
+					$payload['callback_url'] = $defaultCallback;
+				}
+			}
+
+			try {
+				$res = $this->paystack->initializeTransaction($payload);
+			} catch (RequestException $e) {
+				$body = $e->response?->json();
+				$message = is_array($body) && isset($body['message']) && is_string($body['message'])
+					? $body['message']
+					: 'Payment gateway error. Please try again or contact support.';
+				$transaction->update([
+					'status' => 'gateway_error',
+					'gateway_response' => is_array($body) ? $body : ['error' => $e->getMessage()],
+				]);
+
+				return response()->json([
+					'success' => false,
+					'message' => $message,
+				], 422);
+			} catch (ConnectionException $e) {
+				$transaction->update([
+					'status' => 'gateway_error',
+					'gateway_response' => ['error' => $e->getMessage()],
+				]);
+
+				return response()->json([
+					'success' => false,
+					'message' => 'Unable to reach payment gateway. Try again shortly.',
+				], 503);
+			}
+
+			$transaction->update([
+				'gateway_response' => $res,
+			]);
+
+			$authorizationUrl = data_get($res, 'data.authorization_url');
+			if (!is_string($authorizationUrl) || trim($authorizationUrl) === '') {
+				$transaction->update(['status' => 'gateway_error']);
+
+				return response()->json([
+					'success' => false,
+					'message' => 'Payment gateway did not return a checkout URL.',
+				], 422);
+			}
+
+			// Omit gateway_response from JSON: large nested Paystack payloads can break encoding or responses.
+			$transactionPayload = Arr::except($transaction->fresh()->toArray(), ['gateway_response']);
+
+			return response()->json([
+				'success' => true,
+				'message' => 'Payment initialized',
+				'data' => [
+					'reference' => $reference,
+					'authorization_url' => $authorizationUrl,
+					'access_code' => data_get($res, 'data.access_code'),
+					'transaction' => $transactionPayload,
+				],
+			], 200);
+		} catch (ValidationException $e) {
+			throw $e;
+		} catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+			throw $e;
+		} catch (\Throwable $e) {
+			report($e);
+
+			return response()->json([
+				'success' => false,
+				'message' => config('app.debug') ? $e->getMessage() : 'Unable to start payment. Please try again.',
+			], 500);
+		}
 	}
 
 	/**
@@ -270,11 +289,16 @@ class PaystackController extends Controller
 			$this->fulfillIfNeeded($transaction);
 		}
 
+		$tx = $transaction->fresh(['package', 'item']);
+		$transactionPayload = $tx
+			? Arr::except($tx->toArray(), ['gateway_response'])
+			: [];
+
 		return response()->json([
 			'success' => $success,
 			'message' => $success ? 'Payment verified' : 'Payment not successful',
 			'data' => [
-				'transaction' => $transaction->fresh(['package', 'item']),
+				'transaction' => $transactionPayload,
 				'paystack' => $res,
 			],
 		], 200);

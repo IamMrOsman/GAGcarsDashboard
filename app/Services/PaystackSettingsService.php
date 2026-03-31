@@ -22,17 +22,32 @@ class PaystackSettingsService
 			return [];
 		}
 
+		$liveMode = ($paystackSettings['paystack_live_mode'] ?? false) === true;
+
+		$liveSecret = trim((string) ($paystackSettings['paystack_live_secret_key'] ?? ''));
+		$livePublic = trim((string) ($paystackSettings['paystack_live_public_key'] ?? ''));
+		$testSecret = trim((string) ($paystackSettings['paystack_test_secret_key'] ?? ''));
+		$testPublic = trim((string) ($paystackSettings['paystack_test_public_key'] ?? ''));
+
+		// Test mode but keys were saved in the "live" fields (common admin mistake).
+		if (!$liveMode && ($testSecret === '' || $testPublic === '')) {
+			if (str_starts_with($liveSecret, 'sk_test') && str_starts_with($livePublic, 'pk_test')) {
+				$testSecret = $liveSecret;
+				$testPublic = $livePublic;
+			}
+		}
+
 		// Return Paystack config format
 		return [
-			'live_secret_key' => $paystackSettings['paystack_live_secret_key'] ?? '',
-			'live_public_key' => $paystackSettings['paystack_live_public_key'] ?? '',
-			'test_secret_key' => $paystackSettings['paystack_test_secret_key'] ?? '',
-			'test_public_key' => $paystackSettings['paystack_test_public_key'] ?? '',
+			'live_secret_key' => $liveSecret,
+			'live_public_key' => $livePublic,
+			'test_secret_key' => $testSecret,
+			'test_public_key' => $testPublic,
 			'webhook_secret' => $paystackSettings['paystack_webhook_secret'] ?? '',
 			'webhook_url' => $paystackSettings['paystack_webhook_url'] ?? '',
 			'callback_url' => $paystackSettings['paystack_callback_url'] ?? '',
-			'live_mode' => $paystackSettings['paystack_live_mode'] ?? false,
-			'enabled' => $paystackSettings['paystack_enabled'] ?? false,
+			'live_mode' => $liveMode,
+			'enabled' => true,
 		];
 	}
 
@@ -44,27 +59,19 @@ class PaystackSettingsService
 			return false;
 		}
 
-		$paystackSettings = $paystackSetting->data;
+		$config = self::getPaystackConfig();
 
-		// Check if Paystack is enabled
-		if (($paystackSettings['paystack_enabled'] ?? false) !== true) {
+		if (empty($config) || !($config['enabled'] ?? false)) {
 			return false;
 		}
 
-		// Check if live mode is enabled and live keys are present
-		if (($paystackSettings['paystack_live_mode'] ?? false) === true) {
-			$requiredFields = ['paystack_live_secret_key', 'paystack_live_public_key'];
-		} else {
-			$requiredFields = ['paystack_test_secret_key', 'paystack_test_public_key'];
+		if (($config['live_mode'] ?? false) === true) {
+			return ($config['live_secret_key'] ?? '') !== ''
+				&& ($config['live_public_key'] ?? '') !== '';
 		}
 
-		foreach ($requiredFields as $field) {
-			if (empty($paystackSettings[$field])) {
-				return false;
-			}
-		}
-
-		return true;
+		return ($config['test_secret_key'] ?? '') !== ''
+			&& ($config['test_public_key'] ?? '') !== '';
 	}
 
 	public static function getSecretKey(): string
