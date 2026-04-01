@@ -136,7 +136,13 @@ class UserResourcesController extends Controller
 	 */
 	public function myListings()
 	{
-		return ItemTransformer::collection(auth()->user()->items()->with('category')->get());
+		// My Listings should only include real listings (exclude drafts).
+		return ItemTransformer::collection(
+			auth()->user()->items()
+				->with('category')
+				->whereNotIn('status', ['draft', 'pending_payment'])
+				->get()
+		);
 	}
 
 	/**
