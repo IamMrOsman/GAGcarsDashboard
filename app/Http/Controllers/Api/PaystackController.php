@@ -12,6 +12,7 @@ use App\Services\PaystackSettingsService;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -76,8 +77,9 @@ class PaystackController extends Controller
 			$amount = (float) $package->price;
 			$amountInKobo = (int) round($amount * 100);
 
-			$email = $data['email'] ?? $user->email;
-			if (!is_string($email) || trim($email) === '') {
+			$rawEmail = $data['email'] ?? $user->email;
+			$email = trim((string) ($rawEmail ?? ''));
+			if ($email === '') {
 				return response()->json([
 					'success' => false,
 					'message' => 'A valid email is required for payment. Please update your profile.',
@@ -133,7 +135,9 @@ class PaystackController extends Controller
 					: 'Payment gateway error. Please try again or contact support.';
 				$transaction->update([
 					'status' => 'gateway_error',
-					'gateway_response' => is_array($body) ? $body : ['error' => $e->getMessage()],
+					'gateway_response' => $this->encodeGatewayResponseForStorage(
+						is_array($body) ? $body : ['error' => $e->getMessage()],
+					),
 				]);
 
 				return response()->json([
@@ -143,7 +147,9 @@ class PaystackController extends Controller
 			} catch (ConnectionException $e) {
 				$transaction->update([
 					'status' => 'gateway_error',
-					'gateway_response' => ['error' => $e->getMessage()],
+					'gateway_response' => $this->encodeGatewayResponseForStorage([
+						'error' => $e->getMessage(),
+					]),
 				]);
 
 				return response()->json([
@@ -152,8 +158,10 @@ class PaystackController extends Controller
 				], 503);
 			}
 
+			$res = is_array($res) ? $res : [];
+
 			$transaction->update([
-				'gateway_response' => $res,
+				'gateway_response' => $this->encodeGatewayResponseForStorage($res),
 			]);
 
 			$authorizationUrl = data_get($res, 'data.authorization_url');
@@ -167,7 +175,8 @@ class PaystackController extends Controller
 			}
 
 			// Omit gateway_response from JSON: large nested Paystack payloads can break encoding or responses.
-			$transactionPayload = Arr::except($transaction->fresh()->toArray(), ['gateway_response']);
+			$transaction->refresh();
+			$transactionPayload = Arr::except($transaction->toArray(), ['gateway_response']);
 
 			return response()->json([
 				'success' => true,
@@ -183,12 +192,28 @@ class PaystackController extends Controller
 			throw $e;
 		} catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
 			throw $e;
-		} catch (\Throwable $e) {
+		} catch (QueryException $e) {
 			report($e);
 
 			return response()->json([
 				'success' => false,
-				'message' => config('app.debug') ? $e->getMessage() : 'Unable to start payment. Please try again.',
+				'message' => config('app.debug')
+					? $e->getMessage()
+					: 'Could not save payment (database error). Run migrations and ensure utf8mb4. See laravel.log.',
+			], 500);
+		} catch (\Throwable $e) {
+			report($e);
+			$kind = class_basename($e);
+			$prev = $e->getPrevious();
+			if ($prev instanceof \Throwable) {
+				$kind .= ' ← ' . class_basename($prev);
+			}
+
+			return response()->json([
+				'success' => false,
+				'message' => config('app.debug')
+					? $e->getMessage()
+					: "Unable to start payment ($kind). Check laravel.log or enable APP_DEBUG temporarily.",
 			], 500);
 		}
 	}
@@ -241,7 +266,9 @@ class PaystackController extends Controller
 				: 'Payment verification failed.';
 			$transaction->update([
 				'status' => 'verification_error',
-				'gateway_response' => is_array($body) ? $body : ['error' => $e->getMessage()],
+				'gateway_response' => $this->encodeGatewayResponseForStorage(
+					is_array($body) ? $body : ['error' => $e->getMessage()],
+				),
 			]);
 
 			return response()->json([
@@ -255,6 +282,8 @@ class PaystackController extends Controller
 			], 503);
 		}
 
+		$res = is_array($res) ? $res : [];
+
 		$paystackStatus = (string) data_get($res, 'data.status');
 		$paidAmount = (int) data_get($res, 'data.amount', 0); // kobo
 		$currency = (string) data_get($res, 'data.currency');
@@ -262,10 +291,11 @@ class PaystackController extends Controller
 		$gatewayTxnId = data_get($res, 'data.id');
 
 		$expectedAmount = (int) round(((float) $transaction->amount) * 100);
+
 		if ($expectedAmount > 0 && $paidAmount > 0 && $expectedAmount !== $paidAmount) {
 			$transaction->update([
 				'status' => 'amount_mismatch',
-				'gateway_response' => $res,
+				'gateway_response' => $this->encodeGatewayResponseForStorage($res),
 				'currency' => $currency ?: $transaction->currency,
 				'gateway_transaction_id' => $gatewayTxnId ? (string) $gatewayTxnId : $transaction->gateway_transaction_id,
 			]);
@@ -279,7 +309,7 @@ class PaystackController extends Controller
 		$success = $paystackStatus === 'success';
 		$transaction->update([
 			'status' => $success ? 'success' : ($paystackStatus ?: 'failed'),
-			'gateway_response' => $res,
+			'gateway_response' => $this->encodeGatewayResponseForStorage($res),
 			'currency' => $currency ?: $transaction->currency,
 			'gateway_transaction_id' => $gatewayTxnId ? (string) $gatewayTxnId : $transaction->gateway_transaction_id,
 			'paid_at' => $success && $paidAt ? Carbon::parse($paidAt) : $transaction->paid_at,
@@ -334,7 +364,7 @@ class PaystackController extends Controller
 
 		// Store payload for audit/debug.
 		$transaction->update([
-			'gateway_response' => $request->all(),
+			'gateway_response' => $this->encodeGatewayResponseForStorage($request->all()),
 		]);
 
 		if ($event === 'charge.success') {
@@ -349,6 +379,28 @@ class PaystackController extends Controller
 		}
 
 		return response()->json(['success' => true], 200);
+	}
+
+	/**
+	 * Paystack JSON may contain UTF-8 sequences MySQL utf8 (3-byte) rejects; normalize before json column write.
+	 *
+	 * @param  array<string, mixed>  $payload
+	 * @return array<string, mixed>
+	 */
+	private function encodeGatewayResponseForStorage(array $payload): array
+	{
+		if ($payload === []) {
+			return [];
+		}
+
+		$json = json_encode($payload, JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
+		if ($json === false || $json === '') {
+			return ['_note' => 'gateway_payload_could_not_be_encoded'];
+		}
+
+		$decoded = json_decode($json, true);
+
+		return is_array($decoded) ? $decoded : ['_note' => 'gateway_payload_redecode_failed'];
 	}
 
 	private function fulfillIfNeeded(Transaction $transaction): void

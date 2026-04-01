@@ -18,7 +18,9 @@ class PaystackService
 
 		$response->throw();
 
-		return $response->json();
+		$decoded = $response->json();
+
+		return is_array($decoded) ? $decoded : [];
 	}
 
 	public function verifyTransaction(string $reference): array
@@ -29,7 +31,9 @@ class PaystackService
 
 		$response->throw();
 
-		return $response->json();
+		$decoded = $response->json();
+
+		return is_array($decoded) ? $decoded : [];
 	}
 
 	public function generateReference(string $prefix = 'gag'): string
