@@ -14,6 +14,8 @@ use App\Models\ChFavorite as Favorite;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 use Chatify\Facades\ChatifyMessenger as Chatify;
+use App\Models\UserNotification;
+use App\Services\FcmService;
 
 
 class MessagesController extends Controller
@@ -152,16 +154,54 @@ class MessagesController extends Controller
 			]);
 
 			// fetch message to send it with the response
-			// $messageData = Chatify::parseMessage($message);
+			$messageData = Chatify::parseMessage($message);
 
 			// send to user using pusher
-			// if (Auth::user()->id != $request['id']) {
-			// 	Chatify::push("private-chatify." . $request['to_id'], 'messaging', [
-			// 		'from_id' => Auth::user()->id,
-			// 		'to_id' => $request['to_id'],
-			// 		'message' => $messageData
-			// 	]);
-			// }
+			if (Auth::user()->id != $request['to_id']) {
+				Chatify::push("private-chatify." . $request['to_id'], 'messaging', [
+					'from_id' => Auth::user()->id,
+					'to_id' => $request['to_id'],
+					'message' => $messageData,
+				]);
+			}
+
+			// Persist an in-app notification for the recipient (matches Flutter model).
+			UserNotification::query()->create([
+				'user_id' => $request['to_id'],
+				'title' => 'New message',
+				'message' => strip_tags(html_entity_decode($messageData['body'] ?? 'You have a new message')),
+				'notification_type' => 'chat_message',
+				'is_read' => false,
+				'data' => [
+					'from_id' => (string) Auth::user()->id,
+					'to_id' => (string) $request['to_id'],
+				],
+			]);
+
+			// Push notification via FCM to recipient devices (if configured).
+			try {
+				$recipient = User::query()->find($request['to_id']);
+				$tokens = $recipient?->deviceTokens()?->pluck('token')->all() ?? [];
+				(new FcmService())->sendToTokens($tokens, [
+					'priority' => 'high',
+					'notification' => [
+						'title' => 'New message',
+						'body' => strip_tags(html_entity_decode($messageData['body'] ?? 'You have a new message')),
+					],
+					'data' => [
+						'type' => 'chat_message',
+						'from_id' => (string) Auth::user()->id,
+						'deep_link' => 'gagcars://chat?user=' . (string) Auth::user()->id,
+					],
+					'android' => [
+						'notification' => [
+							'sound' => 'chat_sound',
+						],
+					],
+				]);
+			} catch (\Throwable $e) {
+				// don't break sendMessage flow if push fails
+			}
 		}
 
 		// send the response

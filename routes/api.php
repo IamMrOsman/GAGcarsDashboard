@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\AppResourceController;
 use App\Http\Controllers\Api\UserResourcesController;
 use App\Http\Controllers\Api\PaystackController;
 use App\Http\Controllers\Api\ItemDraftController;
+use App\Http\Controllers\Api\DeviceTokenController;
+use App\Http\Controllers\Api\UserNotificationController;
 use App\Http\Controllers\vendor\Chatify\Api\MessagesController;
 
 Route::post('/sanctum/register', [AuthController::class, 'register']);
@@ -59,7 +61,14 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/listings', [UserResourcesController::class, 'myListings']);
 		Route::post('/wish-list/{item}', [UserResourcesController::class, 'addToWishList']);
 		Route::get('/wish-list', [UserResourcesController::class, 'wishList']);
-		Route::get('/notifications', [UserResourcesController::class, 'notifications']);
+		Route::get('/notifications', [UserNotificationController::class, 'index']);
+		Route::put('/notifications/{notification}/read', [UserNotificationController::class, 'markAsRead']);
+		Route::delete('/notifications', [UserNotificationController::class, 'destroyAll']);
+	});
+
+	Route::prefix('devices')->group(function () {
+		Route::post('/tokens', [DeviceTokenController::class, 'store']);
+		Route::delete('/tokens', [DeviceTokenController::class, 'destroy']);
 	});
 
 	Route::prefix('app')->group(function () {
@@ -80,8 +89,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::post('/fetchMessages', [MessagesController::class, 'fetch']);
 		Route::get('/search', [MessagesController::class, 'search']);
 		Route::get('/getContacts', [MessagesController::class, 'getContacts']);
+		Route::post('/auth', [MessagesController::class, 'pusherAuth']);
 		// Route::post('/deleteConversation', [MessagesController::class, 'deleteConversation']);
-		// Route::post('/auth', [MessagesController::class, 'pusherAuth']);
 		// Route::post('/idInfo', [MessagesController::class, 'idFetchData']);
 		// Route::get('/download/{fileName}', [MessagesController::class, 'download']);
 		// Route::post('/makeSeen', [MessagesController::class, 'seen']);

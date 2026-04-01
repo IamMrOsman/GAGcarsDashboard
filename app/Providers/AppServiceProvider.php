@@ -13,6 +13,10 @@ use Jeffgreco13\FilamentBreezy\Livewire\TwoFactorAuthentication;
 use Jeffgreco13\FilamentBreezy\Livewire\UpdatePassword;
 use Livewire\Livewire;
 use App\Filament\Widgets\ItemSettingsWidget;
+use App\Models\Post;
+use App\Models\Broadcast;
+use App\Observers\PostObserver;
+use App\Observers\BroadcastObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
             'panels::sidebar.expand-button' => 'heroicon-o-bars-2',
             'white' => Color::hex('#ffff'),
         ]);
+
+		Post::observe(PostObserver::class);
+		Broadcast::observe(BroadcastObserver::class);
 
 		Gate::define('viewApiDocs', function () {
 			return true;

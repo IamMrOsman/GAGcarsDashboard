@@ -213,6 +213,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 		return $this->hasMany(WishList::class);
 	}
 
+	public function deviceTokens()
+	{
+		return $this->hasMany(DeviceToken::class);
+	}
+
+	public function userNotifications()
+	{
+		return $this->hasMany(UserNotification::class);
+	}
+
 	/**
 	 * Get uploads left for a category (from uploads_left JSON: category_id => count).
 	 * Checks category key first, then 'all' for packages not tied to a category.
