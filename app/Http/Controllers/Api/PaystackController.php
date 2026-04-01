@@ -72,6 +72,16 @@ class PaystackController extends Controller
 					]);
 				}
 			}
+			// For upload packages, allow linking the payment to a draft item for recovery/resume.
+			if ($item === null && !empty($data['item_id'])) {
+				$linked = Item::findOrFail($data['item_id']);
+				if ((string) $linked->user_id !== (string) $user->id) {
+					throw ValidationException::withMessages([
+						'item_id' => ['Forbidden'],
+					]);
+				}
+				$item = $linked;
+			}
 
 			$reference = $this->paystack->generateReference('gag');
 			$amount = (float) $package->price;

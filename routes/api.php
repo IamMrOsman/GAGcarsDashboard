@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AppResourceController;
 use App\Http\Controllers\Api\UserResourcesController;
 use App\Http\Controllers\Api\PaystackController;
+use App\Http\Controllers\Api\ItemDraftController;
 use App\Http\Controllers\vendor\Chatify\Api\MessagesController;
 
 Route::post('/sanctum/register', [AuthController::class, 'register']);
@@ -35,6 +36,15 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/config', [PaystackController::class, 'config']);
 		Route::post('/initialize', [PaystackController::class, 'initialize']);
 		Route::post('/verify', [PaystackController::class, 'verify']);
+	});
+
+	Route::prefix('items/drafts')->group(function () {
+		Route::get('/', [ItemDraftController::class, 'index']);
+		Route::post('/', [ItemDraftController::class, 'store']);
+		Route::get('/{item}', [ItemDraftController::class, 'show']);
+		Route::patch('/{item}', [ItemDraftController::class, 'update']);
+		Route::delete('/{item}', [ItemDraftController::class, 'destroy']);
+		Route::post('/{item}/submit', [ItemDraftController::class, 'submit']);
 	});
 
 	Route::prefix('user/{user}')->group(function () {

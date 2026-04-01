@@ -19,6 +19,7 @@ class Item extends Model
 		'features' => 'array',
 		'images' => 'array',
 		'color' => 'array',
+		'draft_payload' => 'array',
 	];
 
 	protected static function boot()
