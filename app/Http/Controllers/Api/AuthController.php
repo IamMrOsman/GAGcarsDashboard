@@ -220,30 +220,25 @@ class AuthController extends Controller
 	public function sendResetPasswordOtp(Request $request)
 	{
 		$request->validate([
-			'phone' => 'required_without:email|string',
-			'email' => 'required_without:phone|email',
+			'phone' => 'required|string',
+			'email' => 'required|email',
 		]);
 
-		$user = User::where('phone', $request->phone)
-			->orWhere('email', $request->email)
+		$user = User::where('email', $request->email)
+			->where('phone', $request->phone)
 			->first();
 
 		if (!$user) {
 			throw ValidationException::withMessages([
-				'phone' => ['User not found.'],
+				'phone' => ['No account matches this email and phone number.'],
 			]);
 		}
 
 		$otp = Otp::generate($user->id);
 
 		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsDriver->send($user->id, "Your OTP is: {$otp}");
-
-		// Send Email using Laravel's built-in mail
-		// \Mail::raw("Your OTP is: {$otp}", function ($message) use ($user) {
-		// 	$message->to($user->email)
-		// 		->subject('Your OTP Code');
-		// });
+		$smsMessage = "Your GAGcars password reset OTP is: {$otp}. Valid for a few minutes. Do not share.";
+		$smsDriver->send($user->phone, $smsMessage);
 
 		$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
 
@@ -258,19 +253,19 @@ class AuthController extends Controller
 	public function resetPassword(Request $request)
 	{
 		$request->validate([
-			'phone' => 'required_without:email|string',
-			'email' => 'required_without:phone|email',
+			'phone' => 'required|string',
+			'email' => 'required|email',
 			'otp' => 'required|string|size:6',
 			'password' => 'required|string|min:8',
 		]);
 
-		$user = User::where('phone', $request->phone)
-			->orWhere('email', $request->email)
+		$user = User::where('email', $request->email)
+			->where('phone', $request->phone)
 			->first();
 
 		if (!$user) {
 			throw ValidationException::withMessages([
-				'phone' => ['User not found.'],
+				'phone' => ['No account matches this email and phone number.'],
 			]);
 		}
 
