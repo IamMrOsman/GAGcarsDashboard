@@ -14,7 +14,11 @@ class WalletKpisOverview extends Widget
 {
     protected static string $view = 'filament.widgets.wallet-kpis-overview';
 
-    protected int|string|array $columnSpan = 'full';
+    // Match the “feel” of other dashboard cards by not spanning the entire width on desktop.
+    protected int|string|array $columnSpan = [
+        'default' => 'full',
+        'lg' => 2,
+    ];
 
     /**
      * today | 7_days | 30_days | 90_days | all_time

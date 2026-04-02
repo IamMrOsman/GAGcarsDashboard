@@ -1,4 +1,4 @@
-<div class="rounded-2xl p-4 sm:p-6 bg-gradient-to-r from-primary-50 via-white to-primary-50 ring-1 ring-gray-200/70 dark:from-primary-950/30 dark:via-gray-950 dark:to-primary-950/20 dark:ring-gray-800">
+<div class="mx-auto w-full max-w-6xl rounded-2xl p-4 sm:p-6 bg-gradient-to-r from-primary-50 via-white to-primary-50 ring-1 ring-gray-200/70 dark:from-primary-950/30 dark:via-gray-950 dark:to-primary-950/20 dark:ring-gray-800">
 	<div class="space-y-4">
 		<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 			<div class="flex flex-wrap justify-center gap-2 lg:justify-start">
@@ -61,7 +61,7 @@
 			<div class="text-sm text-gray-700 dark:text-gray-200">Loading…</div>
 		</div>
 
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 			@php
 				$cards = [
 					['title' => 'Total Balance', 'key' => 'total_balance', 'type' => 'money'],
