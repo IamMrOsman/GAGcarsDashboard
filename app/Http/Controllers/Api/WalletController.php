@@ -45,28 +45,122 @@ class WalletController extends Controller
     {
         $user = $request->user();
 
-        $entries = WalletLedger::query()
+        $txRows = Transaction::query()
             ->where('user_id', $user->id)
+            ->with('package')
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get();
+
+        $topupLedgers = WalletLedger::query()
+            ->where('user_id', $user->id)
+            ->where('reason', 'wallet_topup')
             ->orderByDesc('created_at')
             ->limit(50)
             ->get([
                 'id',
-                'direction',
                 'amount',
-                'reason',
                 'status',
                 'reference',
                 'created_at',
                 'metadata',
             ]);
 
+        $activities = [];
+
+        foreach ($txRows as $t) {
+            $activities[] = $this->mapTransactionToActivity($t);
+        }
+
+        foreach ($topupLedgers as $ledger) {
+            $activities[] = $this->mapWalletTopupLedgerToActivity($ledger);
+        }
+
+        usort($activities, function (array $a, array $b): int {
+            return strcmp((string) $b['created_at'], (string) $a['created_at']);
+        });
+
+        $activities = array_slice($activities, 0, 100);
+
         return response()->json([
             'success' => true,
-            'message' => 'Wallet transactions fetched',
+            'message' => 'Wallet payment activity fetched',
             'data' => [
-                'transactions' => $entries,
+                'activities' => $activities,
             ],
         ], 200);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapTransactionToActivity(Transaction $t): array
+    {
+        $packageType = null;
+        if ($t->relationLoaded('package') && $t->package !== null) {
+            $packageType = $t->package->package_type ?? null;
+        }
+        if ($packageType === null && is_array($t->metadata)) {
+            $packageType = $t->metadata['package_type'] ?? null;
+        }
+
+        $activityType = match ($packageType) {
+            'upload' => 'listing_payment',
+            'promotion' => 'promotion_payment',
+            default => 'package_payment',
+        };
+
+        $createdAt = $t->created_at instanceof Carbon
+            ? $t->created_at->toIso8601String()
+            : (string) $t->created_at;
+
+        return [
+            'id' => 'txn:'.$t->id,
+            'kind' => 'transaction',
+            'activity_type' => $activityType,
+            'direction' => 'debit',
+            'amount' => (float) $t->amount,
+            'status' => (string) $t->status,
+            'reference' => (string) ($t->reference ?? ''),
+            'transaction_id' => (string) $t->id,
+            'ledger_id' => null,
+            'gateway_transaction_id' => $t->gateway_transaction_id !== null
+                ? (string) $t->gateway_transaction_id
+                : null,
+            'payment_channel' => (string) $t->payment_channel,
+            'created_at' => $createdAt,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapWalletTopupLedgerToActivity(WalletLedger $l): array
+    {
+        $createdAt = $l->created_at instanceof Carbon
+            ? $l->created_at->toIso8601String()
+            : (string) $l->created_at;
+
+        $gatewayTxnId = null;
+        if (is_array($l->metadata)) {
+            $raw = $l->metadata['gateway_transaction_id'] ?? null;
+            $gatewayTxnId = $raw !== null && $raw !== '' ? (string) $raw : null;
+        }
+
+        return [
+            'id' => 'wl:'.$l->id,
+            'kind' => 'wallet_topup',
+            'activity_type' => 'wallet_topup',
+            'direction' => 'credit',
+            'amount' => (float) $l->amount,
+            'status' => (string) $l->status,
+            'reference' => (string) ($l->reference ?? ''),
+            'transaction_id' => null,
+            'ledger_id' => (string) $l->id,
+            'gateway_transaction_id' => $gatewayTxnId,
+            'payment_channel' => 'paystack',
+            'created_at' => $createdAt,
+        ];
     }
 
     public function initializeTopup(Request $request)
