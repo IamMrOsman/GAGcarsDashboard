@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('wallet_ledger', function (Blueprint $table) {
+        Schema::create('wallet_ledgers', function (Blueprint $table) {
             $table->ulid('id');
 
             $table->foreignUlid('user_id')
@@ -32,7 +32,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('wallet_ledger');
+        Schema::dropIfExists('wallet_ledgers');
     }
 };
 

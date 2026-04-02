@@ -12,6 +12,8 @@ class WalletLedger extends Model
     use HasFactory;
     use HasUlids;
 
+    protected $table = 'wallet_ledgers';
+
     protected $guarded = [];
 
     protected $casts = [
