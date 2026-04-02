@@ -1,6 +1,7 @@
-<div class="space-y-4">
-	<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-		<div class="flex flex-wrap gap-2">
+<div class="rounded-2xl p-4 sm:p-6 bg-gradient-to-r from-primary-50 via-white to-primary-50 ring-1 ring-gray-200/70 dark:from-primary-950/30 dark:via-gray-950 dark:to-primary-950/20 dark:ring-gray-800">
+	<div class="space-y-4">
+		<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+			<div class="flex flex-wrap justify-center gap-2 lg:justify-start">
 			@php
 				$tabs = [
 					'today' => 'Today',
@@ -25,18 +26,19 @@
 			@endforeach
 		</div>
 
-		<div class="w-full sm:w-64">
-			<label class="sr-only" for="walletKpiCountry">Country</label>
-			<select
-				id="walletKpiCountry"
-				wire:model.live="countryId"
-				class="w-full rounded-lg border-gray-200 bg-white text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-900"
-			>
-				<option value="all">All countries</option>
-				@foreach ($countries as $c)
-					<option value="{{ $c['id'] }}">{{ $c['name'] }}</option>
-				@endforeach
-			</select>
+			<div class="w-full sm:w-72 lg:w-64">
+				<label class="sr-only" for="walletKpiCountry">Country</label>
+				<select
+					id="walletKpiCountry"
+					wire:model.live="countryId"
+					class="w-full rounded-lg border-gray-200 bg-white text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-900"
+				>
+					<option value="all">All countries</option>
+					@foreach ($countries as $c)
+						<option value="{{ $c['id'] }}">{{ $c['name'] }}</option>
+					@endforeach
+				</select>
+			</div>
 		</div>
 	</div>
 
@@ -54,7 +56,7 @@
 	<div class="relative">
 		<div
 			wire:loading.delay
-			class="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/60 dark:bg-gray-950/60"
+			class="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/60 dark:bg-gray-950/60"
 		>
 			<div class="text-sm text-gray-700 dark:text-gray-200">Loading…</div>
 		</div>
