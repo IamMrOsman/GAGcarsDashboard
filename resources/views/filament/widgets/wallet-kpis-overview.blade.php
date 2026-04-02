@@ -1,5 +1,6 @@
-<div class="w-full rounded-2xl p-4 sm:p-6 bg-gradient-to-r from-primary-50 via-white to-primary-50 ring-1 ring-gray-200/70 dark:from-primary-950/30 dark:via-gray-950 dark:to-primary-950/20 dark:ring-gray-800">
-	<div class="space-y-4">
+<x-filament-widgets::widget class="w-full">
+	<div class="w-full rounded-2xl p-4 sm:p-6 bg-gradient-to-r from-primary-50 via-white to-primary-50 ring-1 ring-gray-200/70 dark:from-primary-950/30 dark:via-gray-950 dark:to-primary-950/20 dark:ring-gray-800">
+		<div class="space-y-4">
 		<div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 			<div class="flex flex-wrap justify-center gap-2 lg:justify-start">
 			@php
@@ -66,6 +67,7 @@
 				{{ $stat }}
 			@endforeach
 		</div>
+		</div>
 	</div>
-</div>
+</x-filament-widgets::widget>
 
