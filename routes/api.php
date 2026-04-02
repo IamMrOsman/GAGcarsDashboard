@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PaystackController;
 use App\Http\Controllers\Api\ItemDraftController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\UserNotificationController;
+use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\vendor\Chatify\Api\MessagesController;
 
 Route::post('/sanctum/register', [AuthController::class, 'register']);
@@ -82,6 +83,13 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::post('/can-upload', [AppResourceController::class, 'canUpload']);
 		Route::get('/category-faqs/{faqCategory}', [AppResourceController::class, 'getCategoryFaqs']);
 		Route::get('packages-by-category/{category}', [AppResourceController::class, 'getPackagesByCategory']);
+	});
+
+	Route::prefix('wallet')->group(function () {
+		Route::get('/balance', [WalletController::class, 'balance']);
+		Route::get('/transactions', [WalletController::class, 'transactions']);
+		Route::post('/topups/initialize', [WalletController::class, 'initializeTopup']);
+		Route::post('/purchases/package', [WalletController::class, 'purchasePackage']);
 	});
 
 	Route::prefix('chat')->group(function () {

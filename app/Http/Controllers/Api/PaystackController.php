@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\Package;
-use App\Models\Promotion;
 use App\Models\Transaction;
+use App\Models\WalletBalance;
+use App\Models\WalletLedger;
+use App\Models\WalletTopup;
 use App\Services\PaystackService;
 use App\Services\PaystackSettingsService;
+use App\Services\PackageFulfillmentService;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -22,6 +25,7 @@ class PaystackController extends Controller
 {
 	public function __construct(
 		private readonly PaystackService $paystack,
+		private readonly PackageFulfillmentService $packageFulfillment,
 	) {}
 
 	/**
@@ -326,7 +330,7 @@ class PaystackController extends Controller
 		]);
 
 		if ($success) {
-			$this->fulfillIfNeeded($transaction);
+			$this->packageFulfillment->fulfillIfNeeded($transaction);
 		}
 
 		$tx = $transaction->fresh(['package', 'item']);
@@ -367,25 +371,96 @@ class PaystackController extends Controller
 		}
 
 		$transaction = Transaction::with('package')->where('reference', $reference)->first();
+		$walletTopup = null;
+
 		if (!$transaction) {
-			// Acknowledge anyway so Paystack doesn't retry forever.
-			return response()->json(['success' => true], 200);
+			$walletTopup = WalletTopup::where('reference', $reference)->first();
+			if (!$walletTopup) {
+				// Acknowledge anyway so Paystack doesn't retry forever.
+				return response()->json(['success' => true], 200);
+			}
 		}
 
+		$gatewayResponse = $this->encodeGatewayResponseForStorage($request->all());
+
 		// Store payload for audit/debug.
-		$transaction->update([
-			'gateway_response' => $this->encodeGatewayResponseForStorage($request->all()),
-		]);
+		if ($transaction) {
+			$transaction->update([
+				'gateway_response' => $gatewayResponse,
+			]);
+		} elseif ($walletTopup) {
+			$walletTopup->update([
+				'metadata' => array_merge(
+					(array) ($walletTopup->metadata ?? []),
+					['gateway_response' => $gatewayResponse],
+				),
+			]);
+		}
 
 		if ($event === 'charge.success') {
-			$transaction->update([
-				'status' => 'success',
-				'currency' => (string) ($data['currency'] ?? $transaction->currency),
-				'gateway_transaction_id' => isset($data['id']) ? (string) $data['id'] : $transaction->gateway_transaction_id,
-				'paid_at' => isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : $transaction->paid_at,
-			]);
+			if ($transaction) {
+				$transaction->update([
+					'status' => 'success',
+					'currency' => (string) ($data['currency'] ?? $transaction->currency),
+					'gateway_transaction_id' => isset($data['id']) ? (string) $data['id'] : $transaction->gateway_transaction_id,
+					'paid_at' => isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : $transaction->paid_at,
+				]);
 
-			$this->fulfillIfNeeded($transaction);
+				$this->packageFulfillment->fulfillIfNeeded($transaction);
+			} elseif ($walletTopup) {
+				DB::transaction(function () use ($walletTopup, $data, $reference) {
+					$lockedTopup = WalletTopup::where('reference', $reference)->lockForUpdate()->first();
+					if (!$lockedTopup) {
+						return;
+					}
+
+					// Idempotency: only credit once.
+					if ($lockedTopup->status === 'success') {
+						return;
+					}
+
+					$paidAt = isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : now();
+					$amount = (float) $lockedTopup->amount;
+					$gatewayTxnId = isset($data['id']) ? (string) $data['id'] : null;
+
+					$lockedTopup->update([
+						'status' => 'success',
+						'paid_at' => $paidAt,
+						'metadata' => array_merge(
+							(array) ($lockedTopup->metadata ?? []),
+							[
+								'gateway_transaction_id' => $gatewayTxnId,
+								'paid_at' => $paidAt->toIso8601String(),
+							]
+						),
+					]);
+
+					$ledger = WalletLedger::where('reference', $reference)->lockForUpdate()->first();
+
+					$balance = WalletBalance::where('user_id', $lockedTopup->user_id)->lockForUpdate()->first();
+					if (!$balance) {
+						$balance = WalletBalance::create([
+							'user_id' => $lockedTopup->user_id,
+							'balance' => 0,
+						]);
+					}
+
+					// Apply credit if ledger wasn't already completed.
+					if ($ledger && $ledger->status !== 'completed') {
+						$balance->increment('balance', $amount);
+						$ledger->update([
+							'status' => 'completed',
+							'metadata' => array_merge(
+								(array) ($ledger->metadata ?? []),
+								[
+									'paid_at' => $paidAt->toIso8601String(),
+									'gateway_transaction_id' => $gatewayTxnId,
+								],
+							),
+						]);
+					}
+				});
+			}
 		}
 
 		return response()->json(['success' => true], 200);
@@ -415,59 +490,6 @@ class PaystackController extends Controller
 
 	private function fulfillIfNeeded(Transaction $transaction): void
 	{
-		// Idempotency: only fulfill once.
-		if ($transaction->fulfilled_at !== null) {
-			return;
-		}
-
-		DB::transaction(function () use ($transaction) {
-			$locked = Transaction::with(['package', 'user', 'item'])
-				->whereKey($transaction->getKey())
-				->lockForUpdate()
-				->firstOrFail();
-
-			if ($locked->fulfilled_at !== null) {
-				return;
-			}
-
-			$package = $locked->package;
-			$user = $locked->user;
-
-			if (!$package || !$user) {
-				return;
-			}
-
-			if ($package->package_type === 'upload') {
-				$amount = (int) ($package->number_of_listings ?? 0);
-				$user->addUploadsForCategory($package->category_id, $amount);
-			}
-
-			if ($package->package_type === 'promotion') {
-				if (!$locked->item_id) {
-					throw ValidationException::withMessages([
-						'item_id' => ['Transaction item_id is missing for promotion package.'],
-					]);
-				}
-
-				$days = (int) ($package->promotion_days ?? 0);
-				if ($days <= 0) {
-					throw ValidationException::withMessages([
-						'package_id' => ['Promotion package has invalid promotion_days.'],
-					]);
-				}
-
-				Promotion::create([
-					'user_id' => $user->id,
-					'item_id' => $locked->item_id,
-					'start_at' => now(),
-					'end_at' => now()->addDays($days),
-					'status' => 'active',
-				]);
-			}
-
-			$locked->update([
-				'fulfilled_at' => now(),
-			]);
-		});
+		$this->packageFulfillment->fulfillIfNeeded($transaction);
 	}
 }
