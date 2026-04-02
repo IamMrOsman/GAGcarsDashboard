@@ -8,6 +8,7 @@ use App\Models\WalletBalance;
 use App\Models\WalletLedger;
 use Carbon\Carbon;
 use Filament\Widgets\Widget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
 
 class WalletKpisOverview extends Widget
@@ -174,6 +175,54 @@ class WalletKpisOverview extends Widget
     public function formatMoney(float $value): string
     {
         return 'GHC ' . number_format($value, 2);
+    }
+
+    /**
+     * @return array<Stat>
+     */
+    public function getStatCards(): array
+    {
+        return [
+            Stat::make('Total Balance', $this->formatMoney((float) ($this->kpis['total_balance'] ?? 0)))
+                ->description('Money on users wallets (unspent)')
+                ->descriptionIcon('heroicon-m-wallet')
+                ->color('primary'),
+
+            Stat::make('Total Top-ups', $this->formatMoney((float) ($this->kpis['total_topups'] ?? 0)))
+                ->description('Completed credits')
+                ->descriptionIcon('heroicon-m-arrow-down-tray')
+                ->color('success'),
+
+            Stat::make('Total Spending', $this->formatMoney((float) ($this->kpis['total_spending'] ?? 0)))
+                ->description('Completed debits')
+                ->descriptionIcon('heroicon-m-arrow-up-tray')
+                ->color('warning'),
+
+            Stat::make('Listing Spending', $this->formatMoney((float) ($this->kpis['listing_spending'] ?? 0)))
+                ->description('Upload packages')
+                ->descriptionIcon('heroicon-m-document-text')
+                ->color('info'),
+
+            Stat::make('Promotion Spending', $this->formatMoney((float) ($this->kpis['promotion_spending'] ?? 0)))
+                ->description('Promotion packages')
+                ->descriptionIcon('heroicon-m-megaphone')
+                ->color('warning'),
+
+            Stat::make('Revenue', $this->formatMoney((float) ($this->kpis['revenue'] ?? 0)))
+                ->description('All successful transactions')
+                ->descriptionIcon('heroicon-m-banknotes')
+                ->color('success'),
+
+            Stat::make('Failed Transactions', number_format((int) ($this->kpis['failed_transactions'] ?? 0)))
+                ->description('Wallet ledger failures')
+                ->descriptionIcon('heroicon-m-x-circle')
+                ->color('danger'),
+
+            Stat::make('Pending Transactions', number_format((int) ($this->kpis['pending_transactions'] ?? 0)))
+                ->description('Awaiting completion')
+                ->descriptionIcon('heroicon-m-clock')
+                ->color('gray'),
+        ];
     }
 }
 

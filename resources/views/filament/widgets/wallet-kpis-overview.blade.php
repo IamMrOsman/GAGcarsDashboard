@@ -61,38 +61,9 @@
 			<div class="text-sm text-gray-700 dark:text-gray-200">Loading…</div>
 		</div>
 
-		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			@php
-				$cards = [
-					['title' => 'Total Balance', 'key' => 'total_balance', 'type' => 'money'],
-					['title' => 'Total Top-ups', 'key' => 'total_topups', 'type' => 'money'],
-					['title' => 'Total Spending', 'key' => 'total_spending', 'type' => 'money'],
-					['title' => 'Listing Spending', 'key' => 'listing_spending', 'type' => 'money'],
-					['title' => 'Promotion Spending', 'key' => 'promotion_spending', 'type' => 'money'],
-					['title' => 'Revenue', 'key' => 'revenue', 'type' => 'money'],
-					['title' => 'Failed Transactions', 'key' => 'failed_transactions', 'type' => 'count'],
-					['title' => 'Pending Transactions', 'key' => 'pending_transactions', 'type' => 'count'],
-				];
-			@endphp
-
-			@foreach ($cards as $card)
-				<x-filament::card>
-					<div class="flex items-start justify-between gap-3">
-						<div class="text-sm font-medium text-gray-600 dark:text-gray-300">
-							{{ $card['title'] }}
-						</div>
-					</div>
-
-					<div class="mt-2 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
-						@php($raw = $kpis[$card['key']] ?? ($card['type'] === 'count' ? 0 : 0.0))
-
-						@if ($card['type'] === 'money')
-							{{ $this->formatMoney((float) $raw) }}
-						@else
-							{{ number_format((int) $raw) }}
-						@endif
-					</div>
-				</x-filament::card>
+		<div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+			@foreach ($this->getStatCards() as $stat)
+				{{ $stat }}
 			@endforeach
 		</div>
 	</div>
