@@ -17,6 +17,7 @@ use App\Models\Post;
 use App\Models\Broadcast;
 use App\Observers\PostObserver;
 use App\Observers\BroadcastObserver;
+use App\Services\PusherSettingsService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -52,6 +53,12 @@ class AppServiceProvider extends ServiceProvider
 
 		Post::observe(PostObserver::class);
 		Broadcast::observe(BroadcastObserver::class);
+
+		try {
+			PusherSettingsService::applyToConfig();
+		} catch (\Throwable $e) {
+			// e.g. migrate before settings table exists
+		}
 
 		Gate::define('viewApiDocs', function () {
 			return true;

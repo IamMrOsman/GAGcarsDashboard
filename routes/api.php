@@ -10,7 +10,10 @@ use App\Http\Controllers\Api\ItemDraftController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\UserNotificationController;
 use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\ClientConfigController;
 use App\Http\Controllers\vendor\Chatify\Api\MessagesController;
+
+Route::get('/client-config', ClientConfigController::class);
 
 Route::post('/sanctum/register', [AuthController::class, 'register']);
 

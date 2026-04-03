@@ -20,7 +20,6 @@ class Dashboard extends BaseDashboard
 			\App\Filament\Widgets\PackagePopularityChart::class,
 			\App\Filament\Widgets\TopCategoriesChart::class,
 			\App\Filament\Widgets\TopBrandsChart::class,
-			\App\Filament\Widgets\RecentTransactionsTable::class,
 			\App\Filament\Widgets\PendingVerificationsTable::class,
 			\App\Filament\Widgets\HighValueItemsTable::class,
 			\App\Filament\Widgets\RecentItemsTable::class,

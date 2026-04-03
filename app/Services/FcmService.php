@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -10,8 +11,7 @@ class FcmService
 	/**
 	 * Sends a push notification using legacy FCM HTTP API.
 	 *
-	 * Env required:
-	 * - FCM_SERVER_KEY
+	 * Server key: FCM_SERVER_KEY env, else Firebase Settings (firebase_server_key) in the database.
 	 *
 	 * Note: This is intentionally simple to get you working quickly.
 	 * If/when you want HTTP v1, we can switch to a service account-based sender.
@@ -21,9 +21,9 @@ class FcmService
 		$tokens = array_values(array_filter(array_unique(array_map('trim', $tokens))));
 		if (count($tokens) === 0) return;
 
-		$serverKey = env('FCM_SERVER_KEY');
+		$serverKey = self::resolveServerKey();
 		if (!$serverKey) {
-			Log::warning('FCM_SERVER_KEY missing; skipping push');
+			Log::warning('FCM server key missing (FCM_SERVER_KEY or Firebase settings); skipping push');
 			return;
 		}
 
@@ -50,9 +50,9 @@ class FcmService
 
 	public function sendToTopic(string $topic, array $payload): void
 	{
-		$serverKey = env('FCM_SERVER_KEY');
+		$serverKey = self::resolveServerKey();
 		if (!$serverKey) {
-			Log::warning('FCM_SERVER_KEY missing; skipping push');
+			Log::warning('FCM server key missing (FCM_SERVER_KEY or Firebase settings); skipping push');
 			return;
 		}
 
@@ -75,6 +75,26 @@ class FcmService
 		} catch (\Throwable $e) {
 			Log::error('FCM topic push exception', ['error' => $e->getMessage()]);
 		}
+	}
+
+	private static function resolveServerKey(): ?string
+	{
+		$fromEnv = env('FCM_SERVER_KEY');
+		if (is_string($fromEnv) && trim($fromEnv) !== '') {
+			return trim($fromEnv);
+		}
+
+		try {
+			$row = Setting::where('key_slug', 'firebase')->first();
+			$key = $row?->data['firebase_server_key'] ?? null;
+			if (is_string($key) && trim($key) !== '') {
+				return trim($key);
+			}
+		} catch (\Throwable $e) {
+			// ignore
+		}
+
+		return null;
 	}
 }
 
