@@ -156,6 +156,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
 	public function canAccessPanel(Panel $panel): bool
 	{
+		if ($panel->getId() === 'marketer') {
+			return $this->hasRole('marketer');
+		}
+
+		if ($this->hasRole('marketer') && ! $this->hasRole('admin')) {
+			return false;
+		}
+
 		return (
 			in_array($this->email, ['mcjohnsonlyndon@gmail.com', '1kwakubonsam@gmail.com']) ||
 			$this->hasRole('admin') ||
@@ -216,6 +224,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 	public function deviceTokens()
 	{
 		return $this->hasMany(DeviceToken::class);
+	}
+
+	public function marketerProfile()
+	{
+		return $this->hasOne(MarketerProfile::class);
+	}
+
+	public function promoCodesAsMarketer()
+	{
+		return $this->hasMany(PromoCode::class, 'marketer_id');
 	}
 
 	public function userNotifications()

@@ -9,6 +9,10 @@ use Illuminate\Validation\ValidationException;
 
 class PackageFulfillmentService
 {
+    public function __construct(
+        private readonly PromoRedemptionService $promoRedemption,
+    ) {}
+
     /**
      * Fulfill a paid package purchase (upload allowance or promotion activation).
      *
@@ -71,6 +75,9 @@ class PackageFulfillmentService
             $locked->update([
                 'fulfilled_at' => now(),
             ]);
+
+            $locked->refresh();
+            $this->promoRedemption->recordIfApplicable($locked);
         });
     }
 }

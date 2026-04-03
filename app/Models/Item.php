@@ -63,6 +63,11 @@ class Item extends Model
 		return $this->belongsTo(User::class);
 	}
 
+	public function promoCode()
+	{
+		return $this->belongsTo(PromoCode::class);
+	}
+
 	public function country()
 	{
 		return $this->belongsTo(Country::class);

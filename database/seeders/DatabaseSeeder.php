@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
 			CountrySeeder::class,
 			ItemFieldSeeder::class,
 			BrandSeeder::class,
+			MarketerRoleSeeder::class,
 		]);
 	}
 }

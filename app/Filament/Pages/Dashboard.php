@@ -9,6 +9,7 @@ class Dashboard extends BaseDashboard
 	public function getWidgets(): array
 	{
 		return [
+			\App\Filament\Widgets\MarketingPromoOverview::class,
 			\App\Filament\Widgets\WalletKpisOverview::class,
 			\App\Filament\Widgets\EnhancedStatsOverview::class,
 			\App\Filament\Widgets\RevenueStatsOverview::class,

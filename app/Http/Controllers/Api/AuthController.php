@@ -43,7 +43,7 @@ class AuthController extends Controller
 
 		return response()->json([
 			// 'token' => $token,
-			'user' => $user->load('country', 'state'),
+			'user' => $this->userPayloadWithRoles($user),
 		], 201);
 	}
 
@@ -70,7 +70,7 @@ class AuthController extends Controller
 
 		return response()->json([
 			'token' => $token,
-			'user' => $user->load('country', 'state'),
+			'user' => $this->userPayloadWithRoles($user),
 		], 200);
 	}
 
@@ -151,7 +151,7 @@ class AuthController extends Controller
 		return response()->json([
 			'message' => 'OTP verified successfully',
 			'token' => $token,
-			'user' => $user->load('country', 'state'),
+			'user' => $this->userPayloadWithRoles($user),
 		], 200);
 	}
 
@@ -163,10 +163,22 @@ class AuthController extends Controller
 		$user = $request->user();
 
 		return response()->json([
-			'user' => $user->load('country', 'state'),
+			'user' => $this->userPayloadWithRoles($user),
 			'verified' => $user->isVerified(),
-			'verified_dealer' => $user->isVerifiedDealer()
+			'verified_dealer' => $user->isVerifiedDealer(),
 		]);
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function userPayloadWithRoles(User $user): array
+	{
+		$loaded = $user->load('country', 'state');
+		$payload = $loaded->toArray();
+		$payload['roles'] = $loaded->getRoleNames()->values()->all();
+
+		return $payload;
 	}
 
 	/**
