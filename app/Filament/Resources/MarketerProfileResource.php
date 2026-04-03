@@ -26,7 +26,7 @@ class MarketerProfileResource extends Resource
             ->schema([
                 Forms\Components\Select::make('user_id')
                     ->label('User')
-                    ->relationship('user', 'name', fn ($q) => $q->role('marketer'))
+                    ->relationship('user', 'name', fn ($query) => $query->role('marketer'))
                     ->searchable()
                     ->preload()
                     ->required()

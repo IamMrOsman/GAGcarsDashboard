@@ -37,7 +37,7 @@ class PromoCodeResource extends Resource
                     ->helperText('Stored uppercase. Must be unique.'),
                 Forms\Components\Select::make('marketer_id')
                     ->label('Marketer')
-                    ->relationship('marketer', 'name', fn (Builder $q) => $q->role('marketer'))
+                    ->relationship('marketer', 'name', fn (Builder $query) => $query->role('marketer'))
                     ->searchable()
                     ->preload()
                     ->required(),
@@ -65,7 +65,7 @@ class PromoCodeResource extends Resource
                     ->default(true),
                 Forms\Components\Select::make('package_id')
                     ->label('Limit to package (optional)')
-                    ->relationship('package', 'name', fn (Builder $q) => $q->where('package_type', 'upload'))
+                    ->relationship('package', 'name', fn (Builder $query) => $query->where('package_type', 'upload'))
                     ->searchable()
                     ->preload()
                     ->nullable(),
