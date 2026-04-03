@@ -10,7 +10,10 @@ class MarketingPromoOverview extends BaseWidget
 {
     protected static ?int $sort = 2;
 
-    protected static ?string $pollingInterval = '30s';
+    protected function getPollingInterval(): ?string
+    {
+        return '30s';
+    }
 
     protected function getStats(): array
     {
