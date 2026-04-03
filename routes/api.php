@@ -104,7 +104,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		// Route::post('/deleteConversation', [MessagesController::class, 'deleteConversation']);
 		// Route::post('/idInfo', [MessagesController::class, 'idFetchData']);
 		// Route::get('/download/{fileName}', [MessagesController::class, 'download']);
-		// Route::post('/makeSeen', [MessagesController::class, 'seen']);
+		Route::post('/makeSeen', [MessagesController::class, 'seen']);
 		// Route::post('/star', [MessagesController::class, 'favorite']);
 		// Route::post('/favorites', [MessagesController::class, 'getFavorites']);
 		// Route::post('/shared', [MessagesController::class, 'sharedPhotos']);
