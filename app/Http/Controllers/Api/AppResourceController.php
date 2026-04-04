@@ -17,6 +17,22 @@ use App\Models\Country;
 
 class AppResourceController extends Controller
 {
+	/**
+	 * Resolve a brand from a route segment: numeric = id, otherwise slug (case-insensitive).
+	 */
+	protected function resolveBrandFromRouteSegment(string $brand): Brand
+	{
+		$key = trim($brand);
+		if ($key === '') {
+			abort(404);
+		}
+		if (preg_match('/^\d+$/', $key)) {
+			return Brand::where('id', (int) $key)->firstOrFail();
+		}
+
+		return Brand::whereRaw('LOWER(slug) = ?', [strtolower($key)])->firstOrFail();
+	}
+
 	public function priceNotification(Item $item)
 	{
 		$user = auth()->user();
@@ -61,14 +77,14 @@ class AppResourceController extends Controller
 	}
 
 	/**
-	 * Get Similar Items by Brand
-	 * @param Brand $brand
-	 * @param Item $item
+	 * Get Similar Items by Brand ({brand} may be numeric id or slug).
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	public function getSimilarItemsByBrand(Brand $brand, Item $item)
+	public function getSimilarItemsByBrand(string $brand, Item $item)
 	{
-		return response()->json($brand->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
+		$brandModel = $this->resolveBrandFromRouteSegment($brand);
+
+		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
@@ -93,13 +109,14 @@ class AppResourceController extends Controller
 	}
 
 	/**
-	 * Get Brand Items
-	 * @param Brand $brand
+	 * Get Brand Items ({brand} may be numeric id or slug, e.g. "toyota").
 	 * @return \Illuminate\Http\JsonResponse
 	 */
-	public function getBrandItems(Brand $brand)
+	public function getBrandItems(string $brand)
 	{
-		return response()->json($brand->items()->with('brand', 'category', 'brandModel', 'user')->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
+		$brandModel = $this->resolveBrandFromRouteSegment($brand);
+
+		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
 	}
 
 	/**
