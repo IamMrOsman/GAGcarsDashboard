@@ -12,7 +12,6 @@ use App\Models\WalletTopup;
 use App\Services\PaystackService;
 use App\Services\PaystackSettingsService;
 use App\Services\PackageFulfillmentService;
-use App\Services\PromoCodeService;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -47,7 +46,6 @@ class PaystackController extends Controller
 			'item_id' => ['nullable', 'string', 'exists:items,id'],
 			'email' => ['nullable', 'email'],
 			'callback_url' => ['nullable', 'url'],
-			'promo_code' => ['nullable', 'string', 'max:64'],
 		]);
 
 		try {
@@ -91,36 +89,7 @@ class PaystackController extends Controller
 
 			$reference = $this->paystack->generateReference('gag');
 			$gross = (float) $package->price;
-			$promoQuote = null;
-			$rawPromo = isset($data['promo_code']) ? (string) $data['promo_code'] : '';
-
-			if (($package->package_type ?? '') === 'upload') {
-				if ($item !== null && $item->promo_code_id) {
-					$fromItem = \App\Models\PromoCode::find($item->promo_code_id);
-					if (! $fromItem) {
-						throw ValidationException::withMessages([
-							'promo_code' => ['The listing has an invalid promo code. Save the draft again.'],
-						]);
-					}
-					if (trim($rawPromo) !== '') {
-						if (PromoCodeService::normalizeCode($rawPromo) !== PromoCodeService::normalizeCode($fromItem->code)) {
-							throw ValidationException::withMessages([
-								'promo_code' => ['Promo code does not match the code on this listing draft.'],
-							]);
-						}
-					}
-					$promoQuote = PromoCodeService::validateAndQuote($fromItem->code, $package, $user);
-				} elseif (trim($rawPromo) !== '') {
-					$promoQuote = PromoCodeService::validateAndQuote($rawPromo, $package, $user);
-				}
-			} elseif (trim($rawPromo) !== '') {
-				throw ValidationException::withMessages([
-					'promo_code' => ['Promo codes apply to upload packages only.'],
-				]);
-			}
-
-			$amount = $promoQuote ? $promoQuote['paid'] : $gross;
-			$promoDiscount = $promoQuote ? $promoQuote['discount'] : 0.0;
+			$amount = $gross;
 			$amountInKobo = (int) round($amount * 100);
 
 			$rawEmail = $data['email'] ?? $user->email;
@@ -135,11 +104,6 @@ class PaystackController extends Controller
 			$metadata = [
 				'package_type' => $package->package_type,
 			];
-			if ($promoQuote) {
-				$metadata['promo_code_id'] = $promoQuote['promo_code']->id;
-				$metadata['original_amount'] = $gross;
-				$metadata['promo_discount_amount'] = $promoDiscount;
-			}
 
 			$transaction = Transaction::create([
 				'user_id' => $user->id,
@@ -525,10 +489,5 @@ class PaystackController extends Controller
 		$decoded = json_decode($json, true);
 
 		return is_array($decoded) ? $decoded : ['_note' => 'gateway_payload_redecode_failed'];
-	}
-
-	private function fulfillIfNeeded(Transaction $transaction): void
-	{
-		$this->packageFulfillment->fulfillIfNeeded($transaction);
 	}
 }

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\CategoryRequirement;
-use App\Services\PromoCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -57,7 +56,6 @@ class ItemDraftController extends Controller
 			'images' => ['nullable', 'array'],
 			'draft_step' => ['nullable', 'string', 'max:100'],
 			'draft_payload' => ['nullable', 'array'],
-			'promo_code' => ['nullable', 'string', 'max:64'],
 		]);
 
 		// Generate a unique slug for drafts (user can update it later).
@@ -65,7 +63,7 @@ class ItemDraftController extends Controller
 		$slug = $baseSlug . '-' . Str::lower((string) Str::ulid());
 
 		$item = new Item();
-		$item->fill(Arr::except($data, ['draft_payload', 'promo_code']));
+		$item->fill(Arr::except($data, ['draft_payload']));
 		$item->user_id = $user->id;
 		$item->country_id = $user->country_id;
 		$item->slug = $slug;
@@ -74,8 +72,6 @@ class ItemDraftController extends Controller
 		$item->last_saved_at = now();
 		$item->expires_at = now()->addDays(30);
 		$item->save();
-
-		$this->applyPromoFromRequest($request, $item);
 
 		return response()->json([
 			'success' => true,
@@ -101,21 +97,18 @@ class ItemDraftController extends Controller
 			'images' => ['nullable', 'array'],
 			'draft_step' => ['nullable', 'string', 'max:100'],
 			'draft_payload' => ['nullable', 'array'],
-			'promo_code' => ['nullable', 'string', 'max:64'],
 		]);
 
 		// Do not allow arbitrary status changes via draft update.
 		unset($data['status']);
 
-		$item->fill(Arr::except($data, ['draft_payload', 'promo_code']));
+		$item->fill(Arr::except($data, ['draft_payload']));
 		if (array_key_exists('draft_payload', $data)) {
 			$item->draft_payload = $data['draft_payload'];
 		}
 		$item->last_saved_at = now();
 		$item->expires_at = now()->addDays(30);
 		$item->save();
-
-		$this->applyPromoFromRequest($request, $item);
 
 		return response()->json([
 			'success' => true,
@@ -210,28 +203,6 @@ class ItemDraftController extends Controller
 		if ((string) $item->user_id !== (string) $user->id) {
 			abort(403, 'Forbidden');
 		}
-	}
-
-	/**
-	 * When `promo_code` is present in JSON, set or clear `items.promo_code_id`.
-	 */
-	private function applyPromoFromRequest(Request $request, Item $item): void
-	{
-		if (! $request->exists('promo_code')) {
-			return;
-		}
-
-		$raw = $request->input('promo_code');
-		if ($raw === null || $raw === '') {
-			$item->promo_code_id = null;
-			$item->save();
-
-			return;
-		}
-
-		$promo = PromoCodeService::validateForDraft((string) $raw);
-		$item->promo_code_id = $promo->id;
-		$item->save();
 	}
 }
 

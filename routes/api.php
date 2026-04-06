@@ -11,8 +11,6 @@ use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\UserNotificationController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\ClientConfigController;
-use App\Http\Controllers\Api\PromoCodeController;
-use App\Http\Controllers\Api\MarketerApiController;
 use App\Http\Controllers\vendor\Chatify\Api\MessagesController;
 
 Route::get('/client-config', ClientConfigController::class);
@@ -44,14 +42,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/config', [PaystackController::class, 'config']);
 		Route::post('/initialize', [PaystackController::class, 'initialize']);
 		Route::post('/verify', [PaystackController::class, 'verify']);
-	});
-
-	Route::post('/promo-codes/validate', [PromoCodeController::class, 'validateCode'])
-		->middleware('throttle:60,1');
-
-	Route::prefix('marketer')->group(function () {
-		Route::get('/promo-codes', [MarketerApiController::class, 'promoCodes']);
-		Route::get('/stats', [MarketerApiController::class, 'stats']);
 	});
 
 	Route::prefix('items/drafts')->group(function () {
