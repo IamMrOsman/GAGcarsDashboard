@@ -226,11 +226,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 		return $this->hasMany(DeviceToken::class);
 	}
 
-	public function marketerProfile()
-	{
-		return $this->hasOne(MarketerProfile::class);
-	}
-
 	public function userNotifications()
 	{
 		return $this->hasMany(UserNotification::class);
