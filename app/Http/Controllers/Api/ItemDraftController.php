@@ -71,7 +71,7 @@ class ItemDraftController extends Controller
 		$item->status = 'draft';
 		$item->draft_payload = $data['draft_payload'] ?? $data;
 		$item->last_saved_at = now();
-		$item->expires_at = now()->addDays(30);
+		$item->expires_at = null;
 		$item->save();
 
 		return response()->json([
@@ -108,7 +108,6 @@ class ItemDraftController extends Controller
 			$item->draft_payload = $data['draft_payload'];
 		}
 		$item->last_saved_at = now();
-		$item->expires_at = now()->addDays(30);
 		$item->save();
 
 		return response()->json([

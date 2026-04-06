@@ -5,12 +5,21 @@ namespace App\Observers;
 use App\Models\Item;
 use App\Models\User;
 use App\Services\EventMessageService;
+use App\Services\ListingSettingsService;
+use Illuminate\Support\Facades\DB;
 
 class ItemObserver
 {
 	public function __construct(
 		private readonly EventMessageService $eventMessages,
 	) {}
+
+	public function created(Item $item): void
+	{
+		if ($item->status === 'active') {
+			$this->applyActiveListingExpiry($item);
+		}
+	}
 
 	public function updated(Item $item): void
 	{
@@ -20,6 +29,10 @@ class ItemObserver
 
 		$old = $item->getOriginal('status');
 		$new = $item->status;
+
+		if ($new === 'active' && $old !== 'active') {
+			$this->applyActiveListingExpiry($item);
+		}
 
 		$user = $item->relationLoaded('user') ? $item->user : User::find($item->user_id);
 		if (! $user) {
@@ -43,5 +56,16 @@ class ItemObserver
 				'amount' => (string) ($item->price ?? ''),
 			]));
 		}
+	}
+
+	/**
+	 * Persist expiry without firing model events (query builder update).
+	 */
+	private function applyActiveListingExpiry(Item $item): void
+	{
+		$days = ListingSettingsService::getActiveListingDays();
+		DB::table('items')->where('id', $item->getKey())->update([
+			'expires_at' => now()->addDays($days),
+		]);
 	}
 }
