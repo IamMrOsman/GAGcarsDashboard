@@ -27,27 +27,38 @@ class WalletController extends Controller
 
     public function balance(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user()->loadMissing('country');
 
         $balance = WalletBalance::where('user_id', $user->id)->value('balance')
             ?? 0;
+
+        $currencyCode = $user->country?->currency;
+        if (! is_string($currencyCode) || trim($currencyCode) === '') {
+            $currencyCode = 'GHS';
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Wallet balance fetched',
             'data' => [
                 'balance' => (float) $balance,
+                'currency_code' => $currencyCode,
             ],
         ], 200);
     }
 
     public function transactions(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user()->loadMissing('country');
+
+        $walletCurrency = $user->country?->currency;
+        if (! is_string($walletCurrency) || trim($walletCurrency) === '') {
+            $walletCurrency = 'GHS';
+        }
 
         $txRows = Transaction::query()
             ->where('user_id', $user->id)
-            ->with('package')
+            ->with(['package.country', 'item'])
             ->orderByDesc('created_at')
             ->limit(100)
             ->get();
@@ -73,7 +84,7 @@ class WalletController extends Controller
         }
 
         foreach ($topupLedgers as $ledger) {
-            $activities[] = $this->mapWalletTopupLedgerToActivity($ledger);
+            $activities[] = $this->mapWalletTopupLedgerToActivity($ledger, $walletCurrency);
         }
 
         usort($activities, function (array $a, array $b): int {
@@ -114,6 +125,23 @@ class WalletController extends Controller
             ? $t->created_at->toIso8601String()
             : (string) $t->created_at;
 
+        $currencyCode = $t->currency;
+        if (! is_string($currencyCode) || trim($currencyCode) === '') {
+            $currencyCode = $t->package?->country?->currency;
+        }
+        if (! is_string($currencyCode) || trim($currencyCode) === '') {
+            $currencyCode = 'GHS';
+        }
+
+        $package = $t->package;
+        $item = $t->item;
+        $packageName = $package !== null ? (string) ($package->name ?? '') : '';
+        $itemName = $item !== null ? (string) ($item->name ?? '') : '';
+        $promotionDays = null;
+        if ($package !== null && isset($package->promotion_days)) {
+            $promotionDays = (int) $package->promotion_days;
+        }
+
         return [
             'id' => 'txn:'.$t->id,
             'kind' => 'transaction',
@@ -129,13 +157,20 @@ class WalletController extends Controller
                 : null,
             'payment_channel' => (string) $t->payment_channel,
             'created_at' => $createdAt,
+            'currency_code' => $currencyCode,
+            'item_name' => $itemName !== '' ? $itemName : null,
+            'package_name' => $packageName !== '' ? $packageName : null,
+            'promotion_days' => $promotionDays,
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function mapWalletTopupLedgerToActivity(WalletLedger $l): array
+    /**
+     * @param  string  $currencyCode  ISO code from user's country (wallet display currency).
+     */
+    private function mapWalletTopupLedgerToActivity(WalletLedger $l, string $currencyCode): array
     {
         $createdAt = $l->created_at instanceof Carbon
             ? $l->created_at->toIso8601String()
@@ -160,6 +195,10 @@ class WalletController extends Controller
             'gateway_transaction_id' => $gatewayTxnId,
             'payment_channel' => 'paystack',
             'created_at' => $createdAt,
+            'currency_code' => $currencyCode,
+            'item_name' => null,
+            'package_name' => null,
+            'promotion_days' => null,
         ];
     }
 
