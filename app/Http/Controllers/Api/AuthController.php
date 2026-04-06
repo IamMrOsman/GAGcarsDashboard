@@ -10,11 +10,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Services\SmtpSettingsService;
+use App\Services\EventMessageService;
 use Illuminate\Support\Facades\Config;
 use App\Mail\OtpMail;
 
 class AuthController extends Controller
 {
+	public function __construct(
+		private readonly EventMessageService $eventMessages,
+	) {}
+
 	/**
 	 * Sanctum Register
 	 */
@@ -38,6 +43,8 @@ class AuthController extends Controller
 			'country_id' => $request->country_id,
 			'state_id' => $request->state_id,
 		]);
+
+		$this->eventMessages->send('new_account', $user, []);
 
 		$token = $user->createToken($request->phone)->plainTextToken;
 
@@ -112,6 +119,8 @@ class AuthController extends Controller
 
 		$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
 
+		$this->eventMessages->send('otp_sent', $user, ['otp' => (string) $otp]);
+
 		return response()->json([
 			'message' => 'OTP sent successfully to phone',
 			'phone' => $user->phone,
@@ -147,6 +156,8 @@ class AuthController extends Controller
 
 		// Generate token
 		$token = $user->createToken($request->phone)->plainTextToken;
+
+		$this->eventMessages->send('account_verified', $user, []);
 
 		return response()->json([
 			'message' => 'OTP verified successfully',
@@ -253,6 +264,8 @@ class AuthController extends Controller
 		$smsDriver->send($user->phone, $smsMessage);
 
 		$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
+
+		$this->eventMessages->send('password_reset', $user, ['otp' => (string) $otp]);
 
 		return response()->json([
 			'message' => 'OTP sent successfully'

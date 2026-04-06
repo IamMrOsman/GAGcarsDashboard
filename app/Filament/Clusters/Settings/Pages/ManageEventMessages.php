@@ -69,6 +69,7 @@ class ManageEventMessages extends Page implements HasForms
 												'upload_credits_added' => 'Upload Credits Added',
 												'item_promoted' => 'Item Promoted',
 												'promotion_expired' => 'Promotion Expired',
+												'listing_expired' => 'Listing Expired',
 												'wishlist_item_price_drop' => 'Wishlist Item Price Drop',
 												'password_reset' => 'Password Reset',
 												'otp_sent' => 'OTP Sent',

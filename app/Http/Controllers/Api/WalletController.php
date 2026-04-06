@@ -9,6 +9,7 @@ use App\Models\WalletBalance;
 use App\Models\WalletLedger;
 use App\Models\WalletTopup;
 use App\Services\PackageFulfillmentService;
+use App\Services\EventMessageService;
 use App\Services\PaystackService;
 use App\Services\PaystackSettingsService;
 use Carbon\Carbon;
@@ -22,6 +23,7 @@ class WalletController extends Controller
     public function __construct(
         private readonly PaystackService $paystack,
         private readonly PackageFulfillmentService $packageFulfillment,
+        private readonly EventMessageService $eventMessages,
     ) {
     }
 
@@ -442,6 +444,12 @@ class WalletController extends Controller
                 'message' => 'Wallet purchase failed to fulfill package.',
             ], 422);
         }
+
+        $transaction->refresh();
+        $this->eventMessages->send('payment_successful', $user, [
+            'amount' => (string) $transaction->amount,
+            'reference' => (string) $transaction->reference,
+        ]);
 
         return response()->json([
             'success' => true,

@@ -67,6 +67,9 @@ class ListItems extends ListRecords
 		$tabs['sold'] = Tab::make('Sold')
 			->badge(Item::where('status', 'sold')->count())
 			->modifyQueryUsing(fn($query) => $query->where('status', 'sold'));
+		$tabs['expired'] = Tab::make('Expired')
+			->badge(Item::where('status', 'expired')->count())
+			->modifyQueryUsing(fn($query) => $query->where('status', 'expired'));
 
 		return $tabs;
 	}

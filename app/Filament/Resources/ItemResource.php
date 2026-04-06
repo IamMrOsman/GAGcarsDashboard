@@ -128,6 +128,7 @@ class ItemResource extends Resource
 						'active' => 'Active',
 						'rejected' => 'Rejected',
 						'sold' => 'Sold',
+						'expired' => 'Expired',
 					])
 					->default('pending_approval'),
 				Forms\Components\TextInput::make('price')

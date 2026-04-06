@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Services\EventMessageService;
 
 class ItemDraftController extends Controller
 {
@@ -129,7 +130,7 @@ class ItemDraftController extends Controller
 		], 200);
 	}
 
-	public function submit(Request $request, Item $item)
+	public function submit(Request $request, Item $item, EventMessageService $eventMessages)
 	{
 		$this->authorizeDraft($request, $item);
 
@@ -189,6 +190,10 @@ class ItemDraftController extends Controller
 		$item->status = $approvalRequired ? 'pending_approval' : 'active';
 		$item->last_saved_at = now();
 		$item->save();
+
+		$eventMessages->send('item_listed', $user, [
+			'item_name' => (string) ($item->name ?? ''),
+		]);
 
 		return response()->json([
 			'success' => true,

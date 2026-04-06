@@ -12,6 +12,7 @@ use App\Models\WalletTopup;
 use App\Services\PaystackService;
 use App\Services\PaystackSettingsService;
 use App\Services\PackageFulfillmentService;
+use App\Services\EventMessageService;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -26,6 +27,7 @@ class PaystackController extends Controller
 	public function __construct(
 		private readonly PaystackService $paystack,
 		private readonly PackageFulfillmentService $packageFulfillment,
+		private readonly EventMessageService $eventMessages,
 	) {}
 
 	/**
@@ -334,6 +336,21 @@ class PaystackController extends Controller
 
 		if ($success) {
 			$this->packageFulfillment->fulfillIfNeeded($transaction);
+		}
+
+		$transaction->loadMissing('user');
+		if ($transaction->user) {
+			if ($success) {
+				$this->eventMessages->send('payment_successful', $transaction->user, [
+					'amount' => (string) $transaction->amount,
+					'reference' => (string) ($transaction->reference ?? ''),
+				]);
+			} else {
+				$this->eventMessages->send('payment_failed', $transaction->user, [
+					'amount' => (string) $transaction->amount,
+					'reference' => (string) ($transaction->reference ?? ''),
+				]);
+			}
 		}
 
 		$tx = $transaction->fresh(['package', 'item']);

@@ -15,8 +15,12 @@ use Livewire\Livewire;
 use App\Filament\Widgets\ItemSettingsWidget;
 use App\Models\Post;
 use App\Models\Broadcast;
+use App\Models\Item;
+use App\Models\Verification;
 use App\Observers\PostObserver;
 use App\Observers\BroadcastObserver;
+use App\Observers\ItemObserver;
+use App\Observers\VerificationObserver;
 use App\Services\PusherSettingsService;
 
 class AppServiceProvider extends ServiceProvider
@@ -53,6 +57,8 @@ class AppServiceProvider extends ServiceProvider
 
 		Post::observe(PostObserver::class);
 		Broadcast::observe(BroadcastObserver::class);
+		Item::observe(ItemObserver::class);
+		Verification::observe(VerificationObserver::class);
 
 		try {
 			PusherSettingsService::applyToConfig();

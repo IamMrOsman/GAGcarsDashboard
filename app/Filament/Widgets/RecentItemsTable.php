@@ -38,6 +38,7 @@ class RecentItemsTable extends TableWidget
 						'pending_approval' => 'warning',
 						'sold' => 'info',
 						'rejected' => 'danger',
+						'expired' => 'gray',
 						default => 'gray',
 					}),
 			])
