@@ -8,9 +8,84 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Filament\Resources\ItemResource\Api\Transformers\ItemTransformer;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 class UserResourcesController extends Controller
 {
+	private function applyItemFiltersToWishlistItemQuery(Builder $q, Request $request): Builder
+	{
+		if ($request->filled('condition')) {
+			$cond = strtolower(trim((string) $request->query('condition')));
+			if ($cond === 'new') {
+				$q->whereRaw('LOWER(`condition`) = ?', ['new']);
+			} elseif ($cond === 'used') {
+				$q->whereRaw('LOWER(`condition`) = ?', ['used']);
+			}
+		}
+
+		$min = $request->query('price_min');
+		$max = $request->query('price_max');
+		if ($min !== null || $max !== null) {
+			$minInt = $min !== null ? (int) $min : 0;
+			$maxInt = $max !== null ? (int) $max : null;
+			if ($maxInt !== null && $maxInt > 0) {
+				$q->whereRaw('CAST(price AS UNSIGNED) BETWEEN ? AND ?', [$minInt, $maxInt]);
+			} else {
+				$q->whereRaw('CAST(price AS UNSIGNED) >= ?', [$minInt]);
+			}
+		}
+
+		$yMin = $request->query('year_min');
+		$yMax = $request->query('year_max');
+		if ($yMin !== null || $yMax !== null) {
+			$yMinInt = $yMin !== null ? (int) $yMin : 0;
+			$yMaxInt = $yMax !== null ? (int) $yMax : null;
+			if ($yMaxInt !== null && $yMaxInt > 0) {
+				$q->whereBetween('year', [$yMinInt, $yMaxInt]);
+			} else {
+				$q->where('year', '>=', $yMinInt);
+			}
+		}
+
+		$mMin = $request->query('mileage_min');
+		$mMax = $request->query('mileage_max');
+		if ($mMin !== null || $mMax !== null) {
+			$mMinInt = $mMin !== null ? (int) $mMin : 0;
+			$mMaxInt = $mMax !== null ? (int) $mMax : null;
+			if ($mMaxInt !== null && $mMaxInt > 0) {
+				$q->whereRaw('CAST(mileage AS UNSIGNED) BETWEEN ? AND ?', [$mMinInt, $mMaxInt]);
+			} else {
+				$q->whereRaw('CAST(mileage AS UNSIGNED) >= ?', [$mMinInt]);
+			}
+		}
+
+		if ($request->filled('location')) {
+			$q->where('location', (string) $request->query('location'));
+		}
+
+		return $q;
+	}
+
+	private function applyItemSortToWishlistItemQuery(Builder $q, Request $request, string $defaultSort = 'relevance'): Builder
+	{
+		$sort = strtolower(trim((string) ($request->query('sort') ?? $defaultSort)));
+
+		return match ($sort) {
+			'newest' => $q->orderByDesc('created_at'),
+			'oldest' => $q->orderBy('created_at'),
+			'price_asc' => $q->orderByRaw('CAST(price AS UNSIGNED) ASC'),
+			'price_desc' => $q->orderByRaw('CAST(price AS UNSIGNED) DESC'),
+			default => $q->orderByDesc('updated_at'),
+		};
+	}
+
+	private function perPage(Request $request): int
+	{
+		$perPage = (int) ($request->query('per_page') ?? 15);
+		return $perPage > 0 ? min($perPage, 200) : 15;
+	}
+
 	/**
 	 * User's Listings
 	 * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
@@ -125,9 +200,23 @@ class UserResourcesController extends Controller
 	 * My Wishlist
 	 * @return JsonResponse
 	 */
-	public function wishList()
+	public function wishList(Request $request)
 	{
-		return response()->json(auth()->user()->wishList()->with('item.category')->get());
+		$user = $request->user();
+		$countryId = $user?->country_id;
+
+		$query = $user->wishList()
+			->with('item.category')
+			->whereHas('item', function (Builder $itemQ) use ($countryId, $request): void {
+				$itemQ
+					->where('status', 'active')
+					->when($countryId, fn (Builder $q) => $q->where('country_id', $countryId));
+
+				$this->applyItemFiltersToWishlistItemQuery($itemQ, $request);
+				$this->applyItemSortToWishlistItemQuery($itemQ, $request);
+			});
+
+		return response()->json($query->paginate($this->perPage($request))->appends($request->query()));
 	}
 
 	/**

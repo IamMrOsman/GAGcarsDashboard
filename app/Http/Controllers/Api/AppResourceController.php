@@ -14,9 +14,88 @@ use App\Http\Controllers\Controller;
 use App\Models\ItemPriceNotification;
 use App\Services\PaymentRequirementService;
 use App\Models\Country;
+use Illuminate\Database\Eloquent\Builder;
 
 class AppResourceController extends Controller
 {
+	/**
+	 * Apply unified filters to an Item query.
+	 */
+	private function applyItemFilters(Builder $q, Request $request): Builder
+	{
+		if ($request->filled('condition')) {
+			$cond = strtolower(trim((string) $request->query('condition')));
+			if ($cond === 'new') {
+				$q->whereRaw('LOWER(`condition`) = ?', ['new']);
+			} elseif ($cond === 'used') {
+				$q->whereRaw('LOWER(`condition`) = ?', ['used']);
+			}
+		}
+
+		$min = $request->query('price_min');
+		$max = $request->query('price_max');
+		if ($min !== null || $max !== null) {
+			$minInt = $min !== null ? (int) $min : 0;
+			$maxInt = $max !== null ? (int) $max : null;
+			if ($maxInt !== null && $maxInt > 0) {
+				$q->whereRaw('CAST(price AS UNSIGNED) BETWEEN ? AND ?', [$minInt, $maxInt]);
+			} else {
+				$q->whereRaw('CAST(price AS UNSIGNED) >= ?', [$minInt]);
+			}
+		}
+
+		$yMin = $request->query('year_min');
+		$yMax = $request->query('year_max');
+		if ($yMin !== null || $yMax !== null) {
+			$yMinInt = $yMin !== null ? (int) $yMin : 0;
+			$yMaxInt = $yMax !== null ? (int) $yMax : null;
+			if ($yMaxInt !== null && $yMaxInt > 0) {
+				$q->whereBetween('year', [$yMinInt, $yMaxInt]);
+			} else {
+				$q->where('year', '>=', $yMinInt);
+			}
+		}
+
+		$mMin = $request->query('mileage_min');
+		$mMax = $request->query('mileage_max');
+		if ($mMin !== null || $mMax !== null) {
+			$mMinInt = $mMin !== null ? (int) $mMin : 0;
+			$mMaxInt = $mMax !== null ? (int) $mMax : null;
+			if ($mMaxInt !== null && $mMaxInt > 0) {
+				$q->whereRaw('CAST(mileage AS UNSIGNED) BETWEEN ? AND ?', [$mMinInt, $mMaxInt]);
+			} else {
+				$q->whereRaw('CAST(mileage AS UNSIGNED) >= ?', [$mMinInt]);
+			}
+		}
+
+		if ($request->filled('location')) {
+			$q->where('location', (string) $request->query('location'));
+		}
+
+		return $q;
+	}
+
+	private function applyItemSort(Builder $q, Request $request, string $defaultSort = 'relevance'): Builder
+	{
+		$sort = strtolower(trim((string) ($request->query('sort') ?? $defaultSort)));
+
+		return match ($sort) {
+			'newest' => $q->orderByDesc('created_at'),
+			'oldest' => $q->orderBy('created_at'),
+			'price_asc' => $q->orderByRaw('CAST(price AS UNSIGNED) ASC'),
+			'price_desc' => $q->orderByRaw('CAST(price AS UNSIGNED) DESC'),
+			default => $q->orderByDesc('updated_at'), // best-effort "relevance"
+		};
+	}
+
+	private function paginateOrGet(Builder $q, Request $request)
+	{
+		$perPage = (int) ($request->query('per_page') ?? 15);
+		$perPage = $perPage > 0 ? min($perPage, 200) : 15;
+
+		return $q->paginate($perPage)->appends($request->query());
+	}
+
 	/**
 	 * Resolve a brand from a route segment: numeric = id, otherwise slug (case-insensitive).
 	 */
@@ -73,7 +152,16 @@ class AppResourceController extends Controller
 	 */
 	public function getSimilarItemsByCategory(Category $category, Item $item)
 	{
-		return response()->json($category->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
+		$q = $category->items()
+			->with('brand', 'category', 'brandModel', 'user')
+			->where('id', '!=', $item->id)
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
+
+		$this->applyItemFilters($q, request());
+		$this->applyItemSort($q, request());
+
+		return response()->json($this->paginateOrGet($q, request()));
 	}
 
 	/**
@@ -105,7 +193,15 @@ class AppResourceController extends Controller
 	 */
 	public function getCategoryItems(Category $category)
 	{
-		return response()->json($category->items()->with('brand', 'category', 'brandModel', 'user')->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
+		$q = $category->items()
+			->with('brand', 'category', 'brandModel', 'user')
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
+
+		$this->applyItemFilters($q, request());
+		$this->applyItemSort($q, request());
+
+		return response()->json($this->paginateOrGet($q, request()));
 	}
 
 	/**
@@ -116,7 +212,15 @@ class AppResourceController extends Controller
 	{
 		$brandModel = $this->resolveBrandFromRouteSegment($brand);
 
-		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
+		$q = $brandModel->items()
+			->with('brand', 'category', 'brandModel', 'user')
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
+
+		$this->applyItemFilters($q, request());
+		$this->applyItemSort($q, request());
+
+		return response()->json($this->paginateOrGet($q, request()));
 	}
 
 	/**
@@ -126,7 +230,15 @@ class AppResourceController extends Controller
 	 */
 	public function getBrandModelItems(BrandModel $brandModel)
 	{
-		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
+		$q = $brandModel->items()
+			->with('brand', 'category', 'brandModel', 'user')
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
+
+		$this->applyItemFilters($q, request());
+		$this->applyItemSort($q, request());
+
+		return response()->json($this->paginateOrGet($q, request()));
 	}
 
 	/**
@@ -136,44 +248,50 @@ class AppResourceController extends Controller
 	 */
 	public function searchItems(Request $request)
 	{
-		$query = $request->query('query');
+		$query = (string) $request->query('query', '');
+		$query = trim($query);
 
-		// Search for items by name
-		$itemsByName = Item::where('name', 'like', '%' . $query . '%')
+		$q = Item::query()
+			->with('brand', 'category', 'brandModel', 'user')
 			->where('status', 'active')
-			->where('country_id', auth()->user()->country_id);
+			->where('country_id', auth()->user()->country_id)
+			->when($query !== '', function (Builder $builder) use ($query): void {
+				$builder->where(function (Builder $w) use ($query): void {
+					$w->where('name', 'like', '%'.$query.'%')
+						->orWhereHas('category', fn ($q) => $q->where('name', 'like', '%'.$query.'%'))
+						->orWhereHas('brand', fn ($q) => $q->where('name', 'like', '%'.$query.'%'))
+						->orWhereHas('brandModel', fn ($q) => $q->where('name', 'like', '%'.$query.'%'));
+				});
+			});
 
-		// Search for items by category name
-		$itemsByCategory = Item::whereHas('category', function ($q) use ($query) {
-			$q->where('name', 'like', '%' . $query . '%');
-		})
+		$this->applyItemFilters($q, $request);
+		$this->applyItemSort($q, $request);
+
+		return response()->json($this->paginateOrGet($q, $request));
+	}
+
+	/**
+	 * Distinct locations for current country (for filter dropdown).
+	 */
+	public function getLocations(Request $request)
+	{
+		$user = $request->user();
+		$countryId = $user?->country_id;
+		if (! $countryId) {
+			return response()->json(['data' => []]);
+		}
+
+		$locations = Item::query()
 			->where('status', 'active')
-			->where('country_id', auth()->user()->country_id);
+			->where('country_id', $countryId)
+			->whereNotNull('location')
+			->where('location', '!=', '')
+			->distinct()
+			->orderBy('location')
+			->pluck('location')
+			->values();
 
-		// Search for items by brand name
-		$itemsByBrand = Item::whereHas('brand', function ($q) use ($query) {
-			$q->where('name', 'like', '%' . $query . '%');
-		})
-			->where('status', 'active')
-			->where('country_id', auth()->user()->country_id);
-
-		// Search for items by brand model name
-		$itemsByBrandModel = Item::whereHas('brandModel', function ($q) use ($query) {
-			$q->where('name', 'like', '%' . $query . '%');
-		})
-			->where('status', 'active')
-			->where('country_id', auth()->user()->country_id);
-
-		// Combine all queries and get unique results
-		$results = $itemsByName
-			->union($itemsByCategory)
-			->union($itemsByBrand)
-			->union($itemsByBrandModel)
-			->get()
-			->unique('id')
-			->load('brand', 'category', 'brandModel', 'user');
-
-		return response()->json($results);
+		return response()->json(['data' => $locations]);
 	}
 
 	/**

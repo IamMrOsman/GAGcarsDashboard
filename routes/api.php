@@ -77,6 +77,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	});
 
 	Route::prefix('app')->group(function () {
+		Route::get('/locations', [AppResourceController::class, 'getLocations']);
 		Route::get('/similar-items-by-category/{category}/{item}', [AppResourceController::class, 'getSimilarItemsByCategory']);
 		Route::get('/similar-items-by-brand/{brand}/{item}', [AppResourceController::class, 'getSimilarItemsByBrand']);
 		Route::get('/similar-items-by-brand-model/{brandModel}/{item}', [AppResourceController::class, 'getSimilarItemsByBrandModel']);
