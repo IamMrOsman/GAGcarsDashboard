@@ -13,7 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->appendToGroup('api', [
+            \App\Http\Middleware\AppMaintenanceMiddleware::class,
+            \App\Http\Middleware\BlockPendingDeleteAccountMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

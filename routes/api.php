@@ -37,6 +37,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::post('/change-password', [AuthController::class, 'changePassword']);
 	Route::post('/update-profile', [AuthController::class, 'updateProfile']);
 	Route::delete('/user', [AuthController::class, 'deleteAccount']);
+	Route::post('/delete-account/request', [AuthController::class, 'requestAccountDeletion']);
 
 	Route::prefix('payments/paystack')->group(function () {
 		Route::get('/config', [PaystackController::class, 'config']);

@@ -20,7 +20,7 @@ class PaginationHandler extends Handlers {
      */
     public function handler()
     {
-        $query = static::getEloquentQuery();
+        $query = static::getEloquentQuery()->orderByDesc('created_at');
 
         $query = QueryBuilder::for($query)
         ->allowedFields($this->getAllowedFields() ?? [])

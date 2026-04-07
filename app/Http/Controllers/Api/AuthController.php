@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
+use App\Models\DeleteAccountRequest;
 use Tzsk\Otp\Facades\Otp;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Services\SmtpSettingsService;
 use App\Services\EventMessageService;
+use App\Services\DeleteAccountService;
 use Illuminate\Support\Facades\Config;
 use App\Mail\OtpMail;
 
@@ -386,10 +388,52 @@ class AuthController extends Controller
 	 */
 	public function deleteAccount()
 	{
-		auth()->user()->delete();
+		// Backwards compatibility: route still exists but now creates a request.
+		return $this->requestAccountDeletion(request());
+	}
+
+	/**
+	 * Create a delete account request (user is restricted immediately by middleware).
+	 */
+	public function requestAccountDeletion(Request $request)
+	{
+		$user = $request->user();
+		if (! $user) {
+			return response()->json(['message' => 'Unauthorized'], 401);
+		}
+
+		$existing = DeleteAccountRequest::where('user_id', $user->id)
+			->where('status', 'pending')
+			->first();
+
+		if ($existing) {
+			return response()->json([
+				'message' => 'Delete account request already submitted.',
+				'status' => 'pending',
+			], 200);
+		}
+
+		$service = new DeleteAccountService();
+		$snapshot = $service->buildSnapshot($user);
+
+		$req = DeleteAccountRequest::create([
+			'user_id' => $user->id,
+			'status' => 'pending',
+			'snapshot' => $snapshot,
+			'requested_at' => now(),
+		]);
+
+		$service->sendSubmittedNotifications($user);
+
+		// Kick the user out immediately (middleware also blocks).
+		try {
+			$request->user()->currentAccessToken()?->delete();
+		} catch (\Throwable) {}
 
 		return response()->json([
-			'message' => 'Account deleted successfully'
-		], 200);
+			'message' => 'Delete account request submitted.',
+			'request_id' => $req->id,
+			'status' => $req->status,
+		], 201);
 	}
 }
