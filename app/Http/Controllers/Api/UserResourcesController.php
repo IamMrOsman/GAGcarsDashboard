@@ -15,6 +15,9 @@ class UserResourcesController extends Controller
 {
 	private function applyItemFiltersToWishlistItemQuery(Builder $q, Request $request): Builder
 	{
+		$priceNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(price, ',', ''), ' ', ''), '₵', ''), '') AS UNSIGNED)";
+		$mileageNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(mileage, ',', ''), ' ', ''), 'km', ''), '') AS UNSIGNED)";
+
 		if ($request->filled('condition')) {
 			$cond = strtolower(trim((string) $request->query('condition')));
 			if ($cond === 'new') {
@@ -30,9 +33,9 @@ class UserResourcesController extends Controller
 			$minInt = $min !== null ? (int) $min : 0;
 			$maxInt = $max !== null ? (int) $max : null;
 			if ($maxInt !== null && $maxInt > 0) {
-				$q->whereRaw('CAST(price AS UNSIGNED) BETWEEN ? AND ?', [$minInt, $maxInt]);
+				$q->whereRaw("$priceNumericSql BETWEEN ? AND ?", [$minInt, $maxInt]);
 			} else {
-				$q->whereRaw('CAST(price AS UNSIGNED) >= ?', [$minInt]);
+				$q->whereRaw("$priceNumericSql >= ?", [$minInt]);
 			}
 		}
 
@@ -54,9 +57,9 @@ class UserResourcesController extends Controller
 			$mMinInt = $mMin !== null ? (int) $mMin : 0;
 			$mMaxInt = $mMax !== null ? (int) $mMax : null;
 			if ($mMaxInt !== null && $mMaxInt > 0) {
-				$q->whereRaw('CAST(mileage AS UNSIGNED) BETWEEN ? AND ?', [$mMinInt, $mMaxInt]);
+				$q->whereRaw("$mileageNumericSql BETWEEN ? AND ?", [$mMinInt, $mMaxInt]);
 			} else {
-				$q->whereRaw('CAST(mileage AS UNSIGNED) >= ?', [$mMinInt]);
+				$q->whereRaw("$mileageNumericSql >= ?", [$mMinInt]);
 			}
 		}
 
@@ -70,12 +73,13 @@ class UserResourcesController extends Controller
 	private function applyItemSortToWishlistItemQuery(Builder $q, Request $request, string $defaultSort = 'relevance'): Builder
 	{
 		$sort = strtolower(trim((string) ($request->query('sort') ?? $defaultSort)));
+		$priceNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(price, ',', ''), ' ', ''), '₵', ''), '') AS UNSIGNED)";
 
 		return match ($sort) {
 			'newest' => $q->orderByDesc('created_at'),
 			'oldest' => $q->orderBy('created_at'),
-			'price_asc' => $q->orderByRaw('CAST(price AS UNSIGNED) ASC'),
-			'price_desc' => $q->orderByRaw('CAST(price AS UNSIGNED) DESC'),
+			'price_asc' => $q->orderByRaw("$priceNumericSql ASC"),
+			'price_desc' => $q->orderByRaw("$priceNumericSql DESC"),
 			default => $q->orderByDesc('updated_at'),
 		};
 	}
