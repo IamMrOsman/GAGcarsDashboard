@@ -96,9 +96,22 @@ class WatermarkService
 		}
 
 		try {
-			$res = Http::timeout(25)->get($url);
+			$res = Http::timeout(25)
+				->withHeaders([
+					// Prefer formats we can process with GD.
+					'Accept' => 'image/jpeg,image/png,image/webp;q=0.9,*/*;q=0.1',
+				])
+				->get($url);
 			if (!$res->successful()) {
 				return null;
+			}
+
+			$contentType = (string) $res->header('Content-Type');
+			$extFromType = self::guessExtension($contentType);
+			if ($extFromType === null) {
+				// Cloudinary (or another CDN) might negotiate AVIF; we can't process that with GD.
+				// In that case, keep the original remote URL so the app can still display it.
+				return $url;
 			}
 
 			$bytes = $res->body();
@@ -106,14 +119,19 @@ class WatermarkService
 				return null;
 			}
 
-			$ext = self::guessExtension($res->header('Content-Type')) ?? self::guessExtensionFromUrl($url) ?? 'jpg';
+			$ext = $extFromType ?? self::guessExtensionFromUrl($url) ?? 'jpg';
 			$name = Str::lower((string) Str::ulid()) . '.' . $ext;
 			$path = trim($directory, '/') . '/' . $name;
 
 			Storage::disk('public')->put($path, $bytes);
 
 			$abs = Storage::disk('public')->path($path);
-			self::applyToAbsolutePath($abs);
+			// If we can't load/process, fall back to remote URL to avoid breaking image display.
+			if (self::loadImage($abs)) {
+				self::applyToAbsolutePath($abs);
+			} else {
+				return $url;
+			}
 
 			return $path;
 		} catch (\Throwable $e) {
