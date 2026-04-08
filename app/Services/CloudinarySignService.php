@@ -3,21 +3,46 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\Crypt;
 
 class CloudinarySignService
 {
 	public function cloudName(): string
 	{
-		return (string) config('services.cloudinary.cloud_name', env('CLOUDINARY_CLOUD_NAME', ''));
+		$setting = Setting::where('key_slug', 'app')->first();
+		$data = $setting && is_array($setting->data) ? $setting->data : [];
+		$val = trim((string)($data['cloudinary_cloud_name'] ?? ''));
+
+		return $val !== '' ? $val : (string) config('services.cloudinary.cloud_name', env('CLOUDINARY_CLOUD_NAME', ''));
 	}
 
 	public function apiKey(): string
 	{
-		return (string) config('services.cloudinary.api_key', env('CLOUDINARY_API_KEY', ''));
+		$setting = Setting::where('key_slug', 'app')->first();
+		$data = $setting && is_array($setting->data) ? $setting->data : [];
+		$val = trim((string)($data['cloudinary_api_key'] ?? ''));
+
+		return $val !== '' ? $val : (string) config('services.cloudinary.api_key', env('CLOUDINARY_API_KEY', ''));
 	}
 
 	private function apiSecret(): string
 	{
+		$setting = Setting::where('key_slug', 'app')->first();
+		$data = $setting && is_array($setting->data) ? $setting->data : [];
+		$enc = $data['cloudinary_api_secret_enc'] ?? null;
+
+		if (is_string($enc) && $enc !== '') {
+			try {
+				$secret = Crypt::decryptString($enc);
+				$secret = trim((string) $secret);
+				if ($secret !== '') {
+					return $secret;
+				}
+			} catch (\Throwable) {
+				// fall through to env/config
+			}
+		}
+
 		return (string) config('services.cloudinary.api_secret', env('CLOUDINARY_API_SECRET', ''));
 	}
 
