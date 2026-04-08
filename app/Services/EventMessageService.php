@@ -5,38 +5,13 @@ namespace App\Services;
 use App\Mail\EventMessageMail;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\EventMessageCatalog;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class EventMessageService
 {
-	/**
-	 * Human labels for email subjects (match Filament ManageEventMessages options).
-	 *
-	 * @var array<string, string>
-	 */
-	public const EVENT_LABELS = [
-		'new_account' => 'New Account Created',
-		'account_verified' => 'Account Verified',
-		'item_listed' => 'Item Listed',
-		'item_sold' => 'Item Sold',
-		'item_approved' => 'Item Approved',
-		'item_rejected' => 'Item Rejected',
-		'payment_successful' => 'Payment Successful',
-		'payment_failed' => 'Payment Failed',
-		'package_purchased' => 'Package Purchased',
-		'upload_credits_added' => 'Upload Credits Added',
-		'item_promoted' => 'Item Promoted',
-		'promotion_expired' => 'Promotion Expired',
-		'listing_expired' => 'Listing Expired',
-		'wishlist_item_price_drop' => 'Wishlist Item Price Drop',
-		'password_reset' => 'Password Reset',
-		'otp_sent' => 'OTP Sent',
-		'verification_approved' => 'Verification Approved',
-		'verification_rejected' => 'Verification Rejected',
-	];
-
 	/**
 	 * Send configured event message (email and/or SMS). Safe to call from HTTP flows: failures are logged.
 	 *
@@ -67,6 +42,34 @@ class EventMessageService
 				'error' => $e->getMessage(),
 			]);
 		}
+	}
+
+	/**
+	 * Whether an enabled template would send SMS for this event (avoids duplicating hardcoded OTP SMS).
+	 */
+	public function willSendSms(string $eventKey): bool
+	{
+		$row = $this->findEnabledRow($eventKey);
+		if ($row === null) {
+			return false;
+		}
+		$channel = (string) ($row['channel'] ?? 'email');
+
+		return $channel === 'sms' || $channel === 'both';
+	}
+
+	/**
+	 * Whether an enabled template would send email for this event (avoids duplicating OtpMail).
+	 */
+	public function willSendEmail(string $eventKey): bool
+	{
+		$row = $this->findEnabledRow($eventKey);
+		if ($row === null) {
+			return false;
+		}
+		$channel = (string) ($row['channel'] ?? 'email');
+
+		return $channel === 'email' || $channel === 'both';
 	}
 
 	/**
@@ -161,7 +164,7 @@ class EventMessageService
 			return;
 		}
 
-		$label = self::EVENT_LABELS[$eventKey] ?? $eventKey;
+		$label = EventMessageCatalog::LABELS[$eventKey] ?? $eventKey;
 		$subject = 'GAGcars — '.$label;
 
 		if (SmtpSettingsService::isSmtpConfigured()) {

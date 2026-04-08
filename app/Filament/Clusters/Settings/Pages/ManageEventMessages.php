@@ -4,7 +4,6 @@ namespace App\Filament\Clusters\Settings\Pages;
 
 use App\Models\Setting;
 use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Forms\Contracts\HasForms;
@@ -18,6 +17,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Grid;
 use App\Filament\Clusters\Settings;
+use App\Support\EventMessageCatalog;
 
 class ManageEventMessages extends Page implements HasForms
 {
@@ -47,7 +47,7 @@ class ManageEventMessages extends Page implements HasForms
 		return $form
 			->schema([
 				Section::make('System Event Messages')
-					->description('Configure email and SMS templates for system events')
+					->description('Templates are keyed by event; see placeholder hints below each message. OTP flows use hardcoded SMS/email only when no enabled template covers that channel.')
 					->schema([
 						Repeater::make('event_messages')
 							->label('Event Messages')
@@ -56,29 +56,11 @@ class ManageEventMessages extends Page implements HasForms
 									->schema([
 										Select::make('event')
 											->label('Event')
-											->options([
-												'new_account' => 'New Account Created',
-												'account_verified' => 'Account Verified',
-												'item_listed' => 'Item Listed',
-												'item_sold' => 'Item Sold',
-												'item_approved' => 'Item Approved',
-												'item_rejected' => 'Item Rejected',
-												'payment_successful' => 'Payment Successful',
-												'payment_failed' => 'Payment Failed',
-												'package_purchased' => 'Package Purchased',
-												'upload_credits_added' => 'Upload Credits Added',
-												'item_promoted' => 'Item Promoted',
-												'promotion_expired' => 'Promotion Expired',
-												'listing_expired' => 'Listing Expired',
-												'wishlist_item_price_drop' => 'Wishlist Item Price Drop',
-												'password_reset' => 'Password Reset',
-												'otp_sent' => 'OTP Sent',
-												'verification_approved' => 'Verification Approved',
-												'verification_rejected' => 'Verification Rejected',
-											])
+											->options(EventMessageCatalog::LABELS)
 											->required()
 											->searchable()
-											->helperText('Select the system event'),
+											->live()
+											->helperText('Select the system event; labels match code triggers in EventMessageCatalog'),
 
 										Select::make('channel')
 											->label('Channel')
@@ -96,7 +78,13 @@ class ManageEventMessages extends Page implements HasForms
 									->label('Message Template')
 									->required()
 									->rows(4)
-									->helperText('Use placeholders like {user_name}, {item_name}, {amount}, etc.')
+									->helperText(function (Get $get): string {
+										$ev = $get('event');
+										$extra = is_string($ev) ? EventMessageCatalog::hintFor($ev) : '';
+										$base = 'Common: {user_name}, {email}, {phone}, {otp}, {item_name}, {amount}. ';
+
+										return $extra !== '' ? $base.'Suggested for this event: '.$extra : $base.'Select an event above for suggested placeholders.';
+									})
 									->placeholder('Hello {user_name}, your {item_name} has been sold for {amount}. Thank you!'),
 
 								Toggle::make('enabled')
@@ -106,7 +94,9 @@ class ManageEventMessages extends Page implements HasForms
 							])
 							->columns(1)
 							->collapsible()
-							->itemLabel(fn (array $state): ?string => $state['event'] ?? null)
+							->itemLabel(fn (array $state): ?string => isset($state['event'])
+								? (EventMessageCatalog::LABELS[$state['event']] ?? $state['event'])
+								: null)
 							->addActionLabel('Add Event Message')
 							->defaultItems(0),
 					]),
@@ -119,9 +109,6 @@ class ManageEventMessages extends Page implements HasForms
 		try {
 			// Get form data
 			$data = $this->form->getState();
-
-			// Debug: Log the data
-			\Log::info('Event Messages Save - Form Data:', $data);
 
 			if (empty($data)) {
 				Notification::make()
@@ -143,9 +130,6 @@ class ManageEventMessages extends Page implements HasForms
 					'data' => $data,
 				]
 			);
-
-			// Debug: Log saved setting
-			\Log::info('Event Messages Save - Saved as single record:', ['key' => 'event_messages', 'data' => $data]);
 
 			Notification::make()
 				->title("Event messages saved successfully")

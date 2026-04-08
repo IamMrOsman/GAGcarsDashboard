@@ -190,9 +190,15 @@ class ItemDraftController extends Controller
 		$item->last_saved_at = now();
 		$item->save();
 
-		$eventMessages->send('item_listed', $user, [
-			'item_name' => (string) ($item->name ?? ''),
-		]);
+		if ($item->status === 'pending_approval') {
+			$eventMessages->send('item_submitted_for_approval', $user, [
+				'item_name' => (string) ($item->name ?? ''),
+			]);
+		} else {
+			$eventMessages->send('item_listed', $user, [
+				'item_name' => (string) ($item->name ?? ''),
+			]);
+		}
 
 		return response()->json([
 			'success' => true,

@@ -109,17 +109,15 @@ class AuthController extends Controller
 		// Generate OTP for email
 		// $emailOtp = Otp::generate($user->email);
 
-		// Send SMS via Arkesel
-		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsDriver->send($user->phone, "Your OTP for GAGcars is: {$otp}. Kindly use it within 5 mins. Do not share.");
+		// SMS: avoid duplicate if Event Messages template already sends SMS for otp_sent
+		if (! $this->eventMessages->willSendSms('otp_sent') && $user->phone) {
+			$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
+			$smsDriver->send($user->phone, "Your OTP for GAGcars is: {$otp}. Kindly use it within 5 mins. Do not share.");
+		}
 
-		// Send Email using Laravel's built-in mail
-		// \Mail::raw("Your OTP is: {$emailOtp}", function ($message) use ($user) {
-		// 	$message->to($user->email)
-		// 		->subject('Your OTP Code');
-		// });
-
-		$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
+		if (! $this->eventMessages->willSendEmail('otp_sent') && $user->email) {
+			$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
+		}
 
 		$this->eventMessages->send('otp_sent', $user, ['otp' => (string) $otp]);
 
@@ -261,11 +259,15 @@ class AuthController extends Controller
 
 		$otp = Otp::generate($user->id);
 
-		$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
-		$smsMessage = "Your GAGcars password reset OTP is: {$otp}. Valid for a few minutes. Do not share.";
-		$smsDriver->send($user->phone, $smsMessage);
+		if (! $this->eventMessages->willSendSms('password_reset') && $user->phone) {
+			$smsDriver = new \App\Services\Sms\ArkeselSmsDriver();
+			$smsMessage = "Your GAGcars password reset OTP is: {$otp}. Valid for a few minutes. Do not share.";
+			$smsDriver->send($user->phone, $smsMessage);
+		}
 
-		$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
+		if (! $this->eventMessages->willSendEmail('password_reset') && $user->email) {
+			$this->sendEmailWithSmtpSettings($user->email, $otp, $user->name);
+		}
 
 		$this->eventMessages->send('password_reset', $user, ['otp' => (string) $otp]);
 
