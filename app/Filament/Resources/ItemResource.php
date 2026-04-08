@@ -20,6 +20,7 @@ use Filament\Infolists\Components\ImageEntry;
 use App\Filament\Resources\ItemResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ItemResource\RelationManagers;
+use App\Services\WatermarkService;
 
 class ItemResource extends Resource
 {
@@ -80,6 +81,14 @@ class ItemResource extends Resource
 					->columnSpanFull()
 					->multiple()
 					->image()
+					->disk('public')
+					->directory('items')
+					->saveUploadedFileUsing(function ($file): string {
+						$path = $file->store('items', 'public');
+						// Apply watermark in-place (best-effort; logs on failure).
+						WatermarkService::applyToPublicPath($path);
+						return $path;
+					})
 					->disabledOn('edit'),
 				Forms\Components\Section::make()
 					->schema([])
