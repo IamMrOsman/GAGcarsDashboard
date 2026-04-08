@@ -150,20 +150,38 @@ class AppResourceController extends Controller
 	}
 
 	/**
-	 * Get Similar Items by Category
-	 * @param Category $category
-	 * @param Item $item
-	 * @return \Illuminate\Http\JsonResponse
+	 * Similar listings for the item detail screen.
+	 *
+	 * Ordering: same brand first, then same category (other brands), then other active listings
+	 * in the user’s country (so the section is rarely empty). Route {category} still scopes
+	 * relevance for the middle tier; primary relevance is always the viewed item’s brand.
 	 */
 	public function getSimilarItemsByCategory(Category $category, Item $item)
 	{
-		$q = $category->items()
+		$countryId = auth()->user()->country_id;
+		$brandId = $item->brand_id;
+		$categoryId = (int) $category->id;
+
+		$q = Item::query()
 			->with('brand', 'category', 'brandModel', 'user')
 			->where('id', '!=', $item->id)
 			->where('status', 'active')
-			->where('country_id', auth()->user()->country_id);
+			->where('country_id', $countryId);
 
 		$this->applyItemFilters($q, request());
+
+		if ($brandId) {
+			$q->orderByRaw(
+				'CASE WHEN brand_id = ? THEN 0 WHEN category_id = ? THEN 1 ELSE 2 END',
+				[$brandId, $categoryId]
+			);
+		} else {
+			$q->orderByRaw(
+				'CASE WHEN category_id = ? THEN 0 ELSE 1 END',
+				[$categoryId]
+			);
+		}
+
 		$this->applyItemSort($q, request());
 
 		return response()->json($this->paginateOrGet($q, request()));
