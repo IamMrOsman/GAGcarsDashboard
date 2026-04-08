@@ -283,7 +283,7 @@ class AppResourceController extends Controller
 		$user = $request->user();
 		$countryId = $user?->country_id;
 		if (! $countryId) {
-			return response()->json(['data' => []]);
+			return response()->json(['data' => [], 'meta' => []]);
 		}
 
 		$locations = Item::query()
@@ -296,7 +296,27 @@ class AppResourceController extends Controller
 			->pluck('location')
 			->values();
 
-		return response()->json(['data' => $locations]);
+		$priceNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(price, ',', ''), ' ', ''), '₵', ''), '') AS UNSIGNED)";
+		$mileageNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(mileage, ',', ''), ' ', ''), 'km', ''), '') AS UNSIGNED)";
+
+		$meta = Item::query()
+			->where('status', 'active')
+			->where('country_id', $countryId)
+			->selectRaw("MAX($priceNumericSql) as price_max")
+			->selectRaw("MAX($mileageNumericSql) as mileage_max")
+			->selectRaw("MIN(year) as year_min")
+			->selectRaw("MAX(year) as year_max")
+			->first();
+
+		return response()->json([
+			'data' => $locations,
+			'meta' => [
+				'price_max' => (int) ($meta->price_max ?? 0),
+				'mileage_max' => (int) ($meta->mileage_max ?? 0),
+				'year_min' => (int) ($meta->year_min ?? 0),
+				'year_max' => (int) ($meta->year_max ?? 0),
+			],
+		]);
 	}
 
 	/**
