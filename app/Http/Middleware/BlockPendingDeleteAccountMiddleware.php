@@ -18,7 +18,9 @@ class BlockPendingDeleteAccountMiddleware
 
 		$path = ltrim($request->path(), '/');
 		$allowed = [
-			'api/auth/logout',
+			// Allow logout paths so the user can exit cleanly.
+			'api/logout',
+			'api/logout-all',
 			'api/user', // allow auth check to fail gracefully
 			'api/delete-account/request',
 		];

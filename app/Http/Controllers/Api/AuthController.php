@@ -397,43 +397,54 @@ class AuthController extends Controller
 	 */
 	public function requestAccountDeletion(Request $request)
 	{
-		$user = $request->user();
-		if (! $user) {
-			return response()->json(['message' => 'Unauthorized'], 401);
-		}
-
-		$existing = DeleteAccountRequest::where('user_id', $user->id)
-			->where('status', 'pending')
-			->first();
-
-		if ($existing) {
-			return response()->json([
-				'message' => 'Delete account request already submitted.',
-				'status' => 'pending',
-			], 200);
-		}
-
-		$service = new DeleteAccountService();
-		$snapshot = $service->buildSnapshot($user);
-
-		$req = DeleteAccountRequest::create([
-			'user_id' => $user->id,
-			'status' => 'pending',
-			'snapshot' => $snapshot,
-			'requested_at' => now(),
-		]);
-
-		$service->sendSubmittedNotifications($user);
-
-		// Kick the user out immediately (middleware also blocks).
 		try {
-			$request->user()->currentAccessToken()?->delete();
-		} catch (\Throwable) {}
+			$user = $request->user();
+			if (! $user) {
+				return response()->json(['message' => 'Unauthorized'], 401);
+			}
 
-		return response()->json([
-			'message' => 'Delete account request submitted.',
-			'request_id' => $req->id,
-			'status' => $req->status,
-		], 201);
+			$existing = DeleteAccountRequest::where('user_id', $user->id)
+				->where('status', 'pending')
+				->first();
+
+			if ($existing) {
+				return response()->json([
+					'message' => 'Delete account request already submitted.',
+					'status' => 'pending',
+				], 200);
+			}
+
+			$service = new DeleteAccountService();
+			$snapshot = $service->buildSnapshot($user);
+
+			$req = DeleteAccountRequest::create([
+				'user_id' => $user->id,
+				'status' => 'pending',
+				'snapshot' => $snapshot,
+				'requested_at' => now(),
+			]);
+
+			$service->sendSubmittedNotifications($user);
+
+			// Kick the user out immediately (middleware also blocks).
+			try {
+				$request->user()->currentAccessToken()?->delete();
+			} catch (\Throwable) {}
+
+			return response()->json([
+				'message' => 'Delete account request submitted.',
+				'request_id' => $req->id,
+				'status' => $req->status,
+			], 201);
+		} catch (\Throwable $e) {
+			\Log::error('Delete account request error', [
+				'user_id' => optional($request->user())->id,
+				'error' => $e->getMessage(),
+			]);
+
+			return response()->json([
+				'message' => 'Unable to submit delete account request right now. Please try again later.',
+			], 500);
+		}
 	}
 }
