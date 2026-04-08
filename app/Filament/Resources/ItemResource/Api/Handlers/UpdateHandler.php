@@ -5,7 +5,6 @@ use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemResource\Api\Requests\UpdateItemRequest;
-use App\Services\WatermarkService;
 
 class UpdateHandler extends Handlers {
     public static string | null $uri = '/{id}';
@@ -37,20 +36,14 @@ class UpdateHandler extends Handlers {
 
         $payload = $request->all();
 
-		// If mobile sends new remote URLs in images, download + watermark + store locally.
+		// Mobile sends Cloudinary URLs in images. Watermarking is enforced at upload time,
+		// so keep URLs as-is to ensure fast delivery from Cloudinary.
 		if (isset($payload['images']) && is_array($payload['images'])) {
 			$out = [];
 			foreach ($payload['images'] as $img) {
 				$s = is_string($img) ? trim($img) : '';
 				if ($s === '') continue;
-
-				if (str_starts_with($s, 'http')) {
-					$stored = WatermarkService::watermarkRemoteUrlToPublic($s, 'items');
-					// Always keep something so the item still has images.
-					$out[] = (is_string($stored) && $stored !== '') ? $stored : $s;
-				} else {
-					$out[] = $s;
-				}
+				$out[] = $s;
 			}
 			$payload['images'] = $out;
 		}
