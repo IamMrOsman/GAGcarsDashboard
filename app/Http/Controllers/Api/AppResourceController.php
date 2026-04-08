@@ -15,13 +15,14 @@ use App\Models\ItemPriceNotification;
 use App\Services\PaymentRequirementService;
 use App\Models\Country;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppResourceController extends Controller
 {
 	/**
 	 * Apply unified filters to an Item query.
 	 */
-	private function applyItemFilters(Builder $q, Request $request): Builder
+	private function applyItemFilters(Builder|Relation $q, Request $request): Builder|Relation
 	{
 		$priceNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(price, ',', ''), ' ', ''), '₵', ''), '') AS UNSIGNED)";
 		$mileageNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(mileage, ',', ''), ' ', ''), 'km', ''), '') AS UNSIGNED)";
@@ -78,7 +79,7 @@ class AppResourceController extends Controller
 		return $q;
 	}
 
-	private function applyItemSort(Builder $q, Request $request, string $defaultSort = 'relevance'): Builder
+	private function applyItemSort(Builder|Relation $q, Request $request, string $defaultSort = 'relevance'): Builder|Relation
 	{
 		$sort = strtolower(trim((string) ($request->query('sort') ?? $defaultSort)));
 		$priceNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(price, ',', ''), ' ', ''), '₵', ''), '') AS UNSIGNED)";
@@ -92,7 +93,7 @@ class AppResourceController extends Controller
 		};
 	}
 
-	private function paginateOrGet(Builder $q, Request $request)
+	private function paginateOrGet(Builder|Relation $q, Request $request)
 	{
 		$perPage = (int) ($request->query('per_page') ?? 15);
 		$perPage = $perPage > 0 ? min($perPage, 200) : 15;
