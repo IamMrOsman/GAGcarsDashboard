@@ -76,13 +76,19 @@ class VerificationResource extends Resource
 					->relationship('verifiedBy', 'name')
 					->searchable()
 					->columnSpan(3)
-					->preload(),
+					->preload()
+					->disabled()
+					->dehydrated(true)
+					->default(fn () => auth()->id()),
 				Forms\Components\Select::make('rejected_by')
 					->label('Rejected By')
 					->relationship('rejectedBy', 'name')
 					->searchable()
 					->columnSpan(3)
-					->preload(),
+					->preload()
+					->disabled()
+					->dehydrated(true)
+					->default(fn () => auth()->id()),
 				Forms\Components\DateTimePicker::make('approved_at')
 					->columnSpan(3),
 				Forms\Components\DateTimePicker::make('rejected_at')

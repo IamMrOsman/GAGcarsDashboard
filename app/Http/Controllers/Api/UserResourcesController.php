@@ -96,7 +96,13 @@ class UserResourcesController extends Controller
 	 */
 	public function userListings(User $user)
 	{
-		return ItemTransformer::collection($user->items()->with('category')->where('status', 'active')->get());
+		return ItemTransformer::collection(
+			$user->items()
+				->with('category')
+				->where('status', 'active')
+				->orderByDesc('created_at')
+				->get()
+		);
 	}
 
 	/**
