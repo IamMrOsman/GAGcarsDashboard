@@ -14,6 +14,11 @@ class CloudinarySignController extends Controller
 		// Only allow known upload folders from the mobile app.
 		$allowedFolders = [
 			'vehicle_uploads', // item listing images
+			'profile_images',
+			'chat_uploads',
+			'promotions',
+			'verifications',
+			'payment_uploads',
 		];
 
 		$folder = (string) $request->input('folder', 'vehicle_uploads');
@@ -32,9 +37,20 @@ class CloudinarySignController extends Controller
 		}
 
 		$timestamp = time();
-		$transformation = $svc->buildCenteredWatermarkTransformation();
+		$kind = strtolower((string) $request->input('kind', 'listing'));
+
+		$transformation = match ($kind) {
+			// Enforced listing watermark on upload.
+			'listing' => $svc->buildCenteredWatermarkTransformation(),
+			// Profile image optimization (no watermark).
+			'profile' => 'w_500,h_500,c_fill,g_face,q_auto',
+			// Vehicle image optimization without watermark (used by some flows).
+			'vehicle' => 'w_800,h_600,c_fill,q_auto',
+			// No transform; just server-signed upload.
+			default => null,
+		};
 		$watermarkEnabled = WatermarkService::isEnabled();
-		if ($watermarkEnabled && $transformation === null) {
+		if ($kind === 'listing' && $watermarkEnabled && $transformation === null) {
 			return response()->json([
 				'message' => 'Watermark is enabled but Cloudinary watermark public id is not configured.',
 				'error_code' => 'watermark_cloudinary_public_id_missing',
@@ -62,6 +78,7 @@ class CloudinarySignController extends Controller
 				'api_key' => $apiKey,
 				'timestamp' => $timestamp,
 				'folder' => $folder,
+				'kind' => $kind,
 				'transformation' => $transformation ?? '',
 				'signature' => $signature,
 			],

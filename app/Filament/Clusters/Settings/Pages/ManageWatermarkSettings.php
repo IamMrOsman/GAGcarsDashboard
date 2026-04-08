@@ -4,6 +4,8 @@ namespace App\Filament\Clusters\Settings\Pages;
 
 use App\Filament\Clusters\Settings;
 use App\Models\Setting;
+use App\Services\CloudinaryUploadService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -13,6 +15,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Storage;
 
 class ManageWatermarkSettings extends Page implements HasForms
 {
@@ -35,6 +38,71 @@ class ManageWatermarkSettings extends Page implements HasForms
 	public function mount(): void
 	{
 		$this->form->fill($this->getFormData());
+	}
+
+	protected function getHeaderActions(): array
+	{
+		return [
+			Action::make('uploadWatermarkToCloudinary')
+				->label('Upload watermark to Cloudinary')
+				->modalHeading('Upload watermark logo to Cloudinary')
+				->modalSubmitActionLabel('Upload')
+				->form([
+					FileUpload::make('logo')
+						->label('Watermark logo (PNG)')
+						->image()
+						->disk('public')
+						->directory('watermarks/tmp')
+						->preserveFilenames(false)
+						->required(),
+					TextInput::make('public_id')
+						->label('Optional Cloudinary public id')
+						->placeholder('e.g. watermarks/gag_logo')
+						->helperText('Leave empty to auto-generate a unique public_id.'),
+				])
+				->action(function (array $data, CloudinaryUploadService $uploader): void {
+					$tmpPath = (string) ($data['logo'] ?? '');
+					if ($tmpPath === '') {
+						Notification::make()->title('Please select a file')->danger()->send();
+						return;
+					}
+
+					$abs = Storage::disk('public')->path($tmpPath);
+					$result = $uploader->uploadLocalImage(
+						$abs,
+						'watermarks',
+						trim((string) ($data['public_id'] ?? '')) ?: null
+					);
+
+					// Persist Cloudinary public_id into app settings.
+					$row = Setting::where('key_slug', 'app')->first();
+					$saved = ($row && is_array($row->data)) ? $row->data : [];
+					$saved['watermark_cloudinary_public_id'] = $result['public_id'];
+
+					Setting::updateOrCreate(
+						['key_slug' => 'app'],
+						[
+							'key_name' => 'App settings',
+							'key_slug' => 'app',
+							'value' => 'configured',
+							'description' => 'Mobile client configuration and operational toggles',
+							'data' => $saved,
+						]
+					);
+
+					// Update the UI state so the user sees it immediately.
+					$this->form->fill($this->getFormData());
+
+					// Cleanup temp file.
+					Storage::disk('public')->delete($tmpPath);
+
+					Notification::make()
+						->title('Uploaded to Cloudinary')
+						->body('Saved public id: ' . $result['public_id'])
+						->success()
+						->send();
+				}),
+		];
 	}
 
 	public function form(Form $form): Form
