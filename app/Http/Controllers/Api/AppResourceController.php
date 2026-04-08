@@ -150,17 +150,13 @@ class AppResourceController extends Controller
 	}
 
 	/**
-	 * Similar listings for the item detail screen.
-	 *
-	 * Ordering: same brand first, then same category (other brands), then other active listings
-	 * in the user’s country (so the section is rarely empty). Route {category} still scopes
-	 * relevance for the middle tier; primary relevance is always the viewed item’s brand.
+	 * Similar listings (detail screen): same brand first, then same category, then other active
+	 * items in the user’s country. Category tier uses $categoryIdForOrdering (from route or item).
 	 */
-	public function getSimilarItemsByCategory(Category $category, Item $item)
+	private function similarItemsPaginatedResponse(Item $item, int $categoryIdForOrdering): \Illuminate\Http\JsonResponse
 	{
 		$countryId = auth()->user()->country_id;
 		$brandId = $item->brand_id;
-		$categoryId = (int) $category->id;
 
 		$q = Item::query()
 			->with('brand', 'category', 'brandModel', 'user')
@@ -171,20 +167,44 @@ class AppResourceController extends Controller
 		$this->applyItemFilters($q, request());
 
 		if ($brandId) {
-			$q->orderByRaw(
-				'CASE WHEN brand_id = ? THEN 0 WHEN category_id = ? THEN 1 ELSE 2 END',
-				[$brandId, $categoryId]
-			);
+			if ($categoryIdForOrdering > 0) {
+				$q->orderByRaw(
+					'CASE WHEN brand_id = ? THEN 0 WHEN category_id = ? THEN 1 ELSE 2 END',
+					[$brandId, $categoryIdForOrdering]
+				);
+			} else {
+				$q->orderByRaw('CASE WHEN brand_id = ? THEN 0 ELSE 1 END', [$brandId]);
+			}
 		} else {
-			$q->orderByRaw(
-				'CASE WHEN category_id = ? THEN 0 ELSE 1 END',
-				[$categoryId]
-			);
+			if ($categoryIdForOrdering > 0) {
+				$q->orderByRaw(
+					'CASE WHEN category_id = ? THEN 0 ELSE 1 END',
+					[$categoryIdForOrdering]
+				);
+			} else {
+				$q->orderByDesc('created_at');
+			}
 		}
 
 		$this->applyItemSort($q, request());
 
 		return response()->json($this->paginateOrGet($q, request()));
+	}
+
+	/**
+	 * Preferred endpoint for the mobile app: only the viewed item id is required (category comes from the item row).
+	 */
+	public function getSimilarItemsForItem(Item $item)
+	{
+		return $this->similarItemsPaginatedResponse($item, (int) ($item->category_id ?? 0));
+	}
+
+	/**
+	 * @deprecated Prefer {@see getSimilarItemsForItem} — kept for older clients.
+	 */
+	public function getSimilarItemsByCategory(Category $category, Item $item)
+	{
+		return $this->similarItemsPaginatedResponse($item, (int) $category->id);
 	}
 
 	/**
