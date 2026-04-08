@@ -6,6 +6,7 @@ use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemResource\Api\Requests\CreateItemRequest;
 use App\Models\CategoryRequirement;
+use App\Services\WatermarkService;
 
 class CreateHandler extends Handlers {
     public static string | null $uri = '/';
@@ -30,7 +31,29 @@ class CreateHandler extends Handlers {
     {
         $model = new (static::getModel());
 
-        $model->fill($request->all());
+        $payload = $request->all();
+
+		// Mobile uploads currently send Cloudinary URLs in `images`.
+		// Convert remote URLs into locally stored, watermarked images.
+		if (isset($payload['images']) && is_array($payload['images'])) {
+			$out = [];
+			foreach ($payload['images'] as $img) {
+				$s = is_string($img) ? trim($img) : '';
+				if ($s === '') continue;
+
+				if (str_starts_with($s, 'http')) {
+					$stored = WatermarkService::watermarkRemoteUrlToPublic($s, 'items');
+					if (is_string($stored) && $stored !== '') {
+						$out[] = $stored;
+					}
+				} else {
+					$out[] = $s;
+				}
+			}
+			$payload['images'] = $out;
+		}
+
+        $model->fill($payload);
 
 		$model->user_id = $request->user_id ?? auth()->id();
 

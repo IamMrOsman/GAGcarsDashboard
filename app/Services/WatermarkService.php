@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Setting;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class WatermarkService
 {
@@ -80,6 +82,64 @@ class WatermarkService
 				'error' => $e->getMessage(),
 			]);
 		}
+	}
+
+	/**
+	 * Download a remote image URL, watermark it, store to public disk, and return the stored path.
+	 * Returns null on failure.
+	 */
+	public static function watermarkRemoteUrlToPublic(string $url, string $directory = 'items'): ?string
+	{
+		if (!self::isEnabled()) {
+			// If disabled, keep remote URL (do not download).
+			return $url;
+		}
+
+		try {
+			$res = Http::timeout(25)->get($url);
+			if (!$res->successful()) {
+				return null;
+			}
+
+			$bytes = $res->body();
+			if ($bytes === '') {
+				return null;
+			}
+
+			$ext = self::guessExtension($res->header('Content-Type')) ?? self::guessExtensionFromUrl($url) ?? 'jpg';
+			$name = Str::lower((string) Str::ulid()) . '.' . $ext;
+			$path = trim($directory, '/') . '/' . $name;
+
+			Storage::disk('public')->put($path, $bytes);
+
+			$abs = Storage::disk('public')->path($path);
+			self::applyToAbsolutePath($abs);
+
+			return $path;
+		} catch (\Throwable $e) {
+			Log::error('Watermark remote URL failed', ['url' => $url, 'error' => $e->getMessage()]);
+			return null;
+		}
+	}
+
+	private static function guessExtension(?string $contentType): ?string
+	{
+		if (!$contentType) return null;
+		$contentType = strtolower(trim(explode(';', $contentType)[0]));
+		return match ($contentType) {
+			'image/jpeg', 'image/jpg' => 'jpg',
+			'image/png' => 'png',
+			'image/webp' => 'webp',
+			default => null,
+		};
+	}
+
+	private static function guessExtensionFromUrl(string $url): ?string
+	{
+		$path = parse_url($url, PHP_URL_PATH);
+		if (!is_string($path) || $path === '') return null;
+		$ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+		return in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true) ? ($ext === 'jpeg' ? 'jpg' : $ext) : null;
 	}
 
 	private static function getConfig(): array
