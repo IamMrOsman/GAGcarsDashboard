@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\UserNotificationController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\ClientConfigController;
+use App\Http\Controllers\Api\CloudinarySignController;
 use App\Http\Controllers\vendor\Chatify\Api\MessagesController;
 
 Route::get('/client-config', ClientConfigController::class);
@@ -38,6 +39,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	Route::post('/update-profile', [AuthController::class, 'updateProfile']);
 	Route::delete('/user', [AuthController::class, 'deleteAccount']);
 	Route::post('/delete-account/request', [AuthController::class, 'requestAccountDeletion']);
+
+	// Cloudinary uploads (server-signed to enforce watermark transformations)
+	Route::post('/cloudinary/sign-upload', CloudinarySignController::class);
 
 	Route::prefix('payments/paystack')->group(function () {
 		Route::get('/config', [PaystackController::class, 'config']);

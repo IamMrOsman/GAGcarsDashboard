@@ -103,7 +103,8 @@ class WatermarkService
 				])
 				->get($url);
 			if (!$res->successful()) {
-				return null;
+				// Keep remote URL so images still display.
+				return $url;
 			}
 
 			$contentType = (string) $res->header('Content-Type');
@@ -116,7 +117,7 @@ class WatermarkService
 
 			$bytes = $res->body();
 			if ($bytes === '') {
-				return null;
+				return $url;
 			}
 
 			$ext = $extFromType ?? self::guessExtensionFromUrl($url) ?? 'jpg';
@@ -136,7 +137,8 @@ class WatermarkService
 			return $path;
 		} catch (\Throwable $e) {
 			Log::error('Watermark remote URL failed', ['url' => $url, 'error' => $e->getMessage()]);
-			return null;
+			// Keep remote URL so images still display even if watermark fails.
+			return $url;
 		}
 	}
 

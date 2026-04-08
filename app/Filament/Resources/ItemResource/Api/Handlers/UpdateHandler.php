@@ -46,9 +46,8 @@ class UpdateHandler extends Handlers {
 
 				if (str_starts_with($s, 'http')) {
 					$stored = WatermarkService::watermarkRemoteUrlToPublic($s, 'items');
-					if (is_string($stored) && $stored !== '') {
-						$out[] = $stored;
-					}
+					// Always keep something so the item still has images.
+					$out[] = (is_string($stored) && $stored !== '') ? $stored : $s;
 				} else {
 					$out[] = $s;
 				}

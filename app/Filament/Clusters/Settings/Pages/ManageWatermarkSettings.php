@@ -61,6 +61,11 @@ class ManageWatermarkSettings extends Page implements HasForms
 							->placeholder('e.g. GAGCARS')
 							->maxLength(60),
 
+						TextInput::make('watermark_cloudinary_public_id')
+							->label('Cloudinary watermark public id')
+							->placeholder('e.g. watermarks/gag_logo')
+							->helperText('Upload your watermark logo to Cloudinary once, then put its public_id here. This is required for backend-enforced Cloudinary watermarking.'),
+
 						TextInput::make('watermark_opacity_percent')
 							->label('Opacity (%)')
 							->numeric()
@@ -134,6 +139,7 @@ class ManageWatermarkSettings extends Page implements HasForms
 			'watermark_enabled' => (bool) ($saved['watermark_enabled'] ?? false),
 			'watermark_logo_path' => (string) ($saved['watermark_logo_path'] ?? ''),
 			'watermark_text' => (string) ($saved['watermark_text'] ?? ''),
+			'watermark_cloudinary_public_id' => (string) ($saved['watermark_cloudinary_public_id'] ?? ''),
 			'watermark_opacity_percent' => (int) ($saved['watermark_opacity_percent'] ?? 18),
 			'watermark_rotation_deg' => (int) ($saved['watermark_rotation_deg'] ?? 30),
 			'watermark_scale_percent' => (int) ($saved['watermark_scale_percent'] ?? 22),
