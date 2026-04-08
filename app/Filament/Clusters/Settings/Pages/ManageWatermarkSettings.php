@@ -172,6 +172,9 @@ class ManageWatermarkSettings extends Page implements HasForms
 	{
 		try {
 			$data = $this->form->getState();
+			$row = Setting::where('key_slug', 'app')->first();
+			$existing = ($row && is_array($row->data)) ? $row->data : [];
+			$merged = array_merge($existing, $data);
 
 			Setting::updateOrCreate(
 				['key_slug' => 'app'],
@@ -180,7 +183,7 @@ class ManageWatermarkSettings extends Page implements HasForms
 					'key_slug' => 'app',
 					'value' => 'configured',
 					'description' => 'Mobile client configuration and operational toggles',
-					'data' => $data,
+					'data' => $merged,
 				]
 			);
 
