@@ -81,6 +81,14 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	});
 
 	Route::prefix('app')->group(function () {
+		// Item drafts (alias under /app — avoids edge cases with /items/drafts on some deployments)
+		Route::get('/item-drafts', [ItemDraftController::class, 'index']);
+		Route::post('/item-drafts', [ItemDraftController::class, 'store']);
+		Route::get('/item-drafts/{item}', [ItemDraftController::class, 'show']);
+		Route::patch('/item-drafts/{item}', [ItemDraftController::class, 'update']);
+		Route::delete('/item-drafts/{item}', [ItemDraftController::class, 'destroy']);
+		Route::post('/item-drafts/{item}/submit', [ItemDraftController::class, 'submit']);
+
 		Route::get('/locations', [AppResourceController::class, 'getLocations']);
 		Route::get('/similar-items/{item}', [AppResourceController::class, 'getSimilarItemsForItem']);
 		Route::get('/similar-items-by-category/{category}/{item}', [AppResourceController::class, 'getSimilarItemsByCategory']);
