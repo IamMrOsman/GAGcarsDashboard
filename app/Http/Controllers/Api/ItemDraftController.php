@@ -45,6 +45,24 @@ class ItemDraftController extends Controller
 	{
 		$user = $request->user();
 
+		$forceNew = filter_var($request->query('force_new', false), FILTER_VALIDATE_BOOL);
+		if (! $forceNew) {
+			$existing = Item::query()
+				->where('user_id', $user->id)
+				->whereIn('status', ['draft', 'pending_payment'])
+				->orderByDesc('updated_at')
+				->first();
+			if ($existing) {
+				$existing->forceFill(['last_saved_at' => now()])->save();
+
+				return response()->json([
+					'success' => true,
+					'message' => 'Draft already exists',
+					'data' => $existing->fresh(),
+				], 200);
+			}
+		}
+
 		$data = $request->validate([
 			'category_id' => ['nullable', 'integer', 'exists:categories,id'],
 			'brand_id' => ['nullable', 'integer', 'exists:brands,id'],

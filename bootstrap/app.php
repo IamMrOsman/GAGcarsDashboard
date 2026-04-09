@@ -24,5 +24,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('items:process-expiry')->hourly();
         $schedule->command('promotions:process-expiry')->hourly();
+        $schedule->command('drafts:cleanup --days=7')->daily();
     })
     ->create();
