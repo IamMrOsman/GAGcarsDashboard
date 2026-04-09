@@ -14,6 +14,7 @@ use App\Services\SmtpSettingsService;
 use App\Services\EventMessageService;
 use App\Services\DeleteAccountService;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use App\Mail\OtpMail;
 
 class AuthController extends Controller
@@ -457,13 +458,17 @@ class AuthController extends Controller
 				'message' => 'Unable to submit delete account request right now. Please try again later.',
 			], 500);
 		} catch (\Throwable $e) {
+			$ref = (string) Str::uuid();
 			\Log::error('Delete account request error', [
 				'user_id' => optional($request->user())->id,
+				'ref' => $ref,
 				'error' => $e->getMessage(),
 			]);
 
 			return response()->json([
 				'message' => 'Unable to submit delete account request right now. Please try again later.',
+				'code' => 'DELETE_ACCOUNT_REQUEST_FAILED',
+				'ref' => $ref,
 			], 500);
 		}
 	}
