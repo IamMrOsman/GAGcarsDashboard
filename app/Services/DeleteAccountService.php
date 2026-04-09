@@ -5,7 +5,10 @@ namespace App\Services;
 use App\Models\DeleteAccountRequest;
 use App\Models\DeletedUserArchive;
 use App\Models\Item;
+use App\Models\Transaction;
 use App\Models\User;
+use App\Models\WalletBalance;
+use App\Models\WalletLedger;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -25,8 +28,57 @@ class DeleteAccountService
 			// optional
 		}
 
+		$userId = (string) $user->getKey();
+
+		$listingsTotal = Item::query()
+			->where('user_id', $userId)
+			->count();
+		$listingsActive = Item::query()
+			->where('user_id', $userId)
+			->where('status', 'active')
+			->count();
+		$listingsExpired = Item::query()
+			->where('user_id', $userId)
+			->where('status', 'expired')
+			->count();
+		$listingsSold = Item::query()
+			->where('user_id', $userId)
+			->where('status', 'sold')
+			->count();
+
+		$walletBalance = WalletBalance::query()
+			->where('user_id', $userId)
+			->value('balance');
+		$walletBalance = $walletBalance === null ? 0 : (float) $walletBalance;
+
+		$totalTransactions = Transaction::query()
+			->where('user_id', $userId)
+			->count();
+
+		$totalWalletTopups = WalletLedger::query()
+			->where('user_id', $userId)
+			->where('reason', 'wallet_topup')
+			->count();
+
 		return [
 			'user' => $user->toArray(),
+			'summary' => [
+				'profile_photo' => (string) ($user->profile_photo ?? ''),
+				'uploads_left' => $user->uploads_left ?? [],
+				'listings' => [
+					'total' => $listingsTotal,
+					'active' => $listingsActive,
+					'expired' => $listingsExpired,
+					'sold' => $listingsSold,
+				],
+				'wallet' => [
+					'balance' => $walletBalance,
+				],
+				'transactions' => [
+					'total' => $totalTransactions,
+					'wallet_topups' => $totalWalletTopups,
+				],
+			],
 			'meta' => [
 				'submitted_at' => now()->toISOString(),
 			],

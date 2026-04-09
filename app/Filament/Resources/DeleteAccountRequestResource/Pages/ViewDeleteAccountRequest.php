@@ -29,6 +29,24 @@ class ViewDeleteAccountRequest extends ViewRecord
 				]),
 			Section::make('Snapshot')
 				->schema([
+					TextEntry::make('snapshot_summary')
+						->label('Summary')
+						->state(function (DeleteAccountRequest $record): string {
+							$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? []) : [];
+							if (! is_array($s)) {
+								return '';
+							}
+
+							$uploadsLeft = $s['uploads_left'] ?? null;
+							if (is_array($uploadsLeft)) {
+								$uploadsLeft = json_encode($uploadsLeft, JSON_UNESCAPED_SLASHES);
+							}
+
+							$listings = $s['listings'] ?? [];
+							$wallet = $s['wallet'] ?? [];
+							$tx = $s['transactions'] ?? [];
+
+							return implode(\"\\n\", array_filter([\n+\t\t\t\t\t\t\t\t\"Profile photo: \" . (string) ($s['profile_photo'] ?? ''),\n+\t\t\t\t\t\t\t\t\"Uploads left: \" . (is_string($uploadsLeft) ? $uploadsLeft : (string) $uploadsLeft),\n+\t\t\t\t\t\t\t\t\"Listings: total=\" . (string) ($listings['total'] ?? '') . \", active=\" . (string) ($listings['active'] ?? '') . \", expired=\" . (string) ($listings['expired'] ?? '') . \", sold=\" . (string) ($listings['sold'] ?? ''),\n+\t\t\t\t\t\t\t\t\"Wallet balance: \" . (string) ($wallet['balance'] ?? ''),\n+\t\t\t\t\t\t\t\t\"Transactions: total=\" . (string) ($tx['total'] ?? '') . \", wallet_topups=\" . (string) ($tx['wallet_topups'] ?? ''),\n+\t\t\t\t\t\t\t]));\n+\t\t\t\t\t\t})\n+\t\t\t\t\t\t->columnSpanFull(),
 					TextEntry::make('snapshot_json')
 						->label('Snapshot (JSON)')
 						->state(function (DeleteAccountRequest $record): string {
