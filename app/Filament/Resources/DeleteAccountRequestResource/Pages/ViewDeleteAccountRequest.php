@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DeleteAccountRequestResource\Pages;
 
 use App\Filament\Resources\DeleteAccountRequestResource;
+use App\Models\DeleteAccountRequest;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -28,8 +29,10 @@ class ViewDeleteAccountRequest extends ViewRecord
 				]),
 			Section::make('Snapshot')
 				->schema([
-					TextEntry::make('snapshot')
-						->formatStateUsing(function ($state): string {
+					TextEntry::make('snapshot_json')
+						->label('Snapshot (JSON)')
+						->state(function (DeleteAccountRequest $record): string {
+							$state = $record->snapshot;
 							if ($state === null) {
 								return '';
 							}
