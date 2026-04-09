@@ -98,7 +98,7 @@ class ViewDeleteAccountRequest extends ViewRecord
 										$lines[] = '| ' . ($name !== '' ? $name : '-') . ' | ' . ($count !== '' ? $count : '0') . ' |';
 									}
 
-									return implode(\"\\n\", $lines);
+									return implode("\n", $lines);
 								})
 								->markdown()
 								->columnSpan(1),
