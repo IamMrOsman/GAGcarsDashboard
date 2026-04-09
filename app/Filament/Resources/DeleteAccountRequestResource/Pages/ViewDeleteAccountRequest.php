@@ -7,6 +7,7 @@ use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Str;
 
 class ViewDeleteAccountRequest extends ViewRecord
 {
@@ -28,7 +29,18 @@ class ViewDeleteAccountRequest extends ViewRecord
 			Section::make('Snapshot')
 				->schema([
 					TextEntry::make('snapshot')
-						->formatStateUsing(fn ($state) => json_encode($state, JSON_PRETTY_PRINT))
+						->formatStateUsing(function ($state): string {
+							if ($state === null) {
+								return '';
+							}
+							if (is_string($state)) {
+								return $state;
+							}
+							$json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+							return is_string($json) ? $json : Str::of(var_export($state, true))->toString();
+						})
+						->markdown()
 						->columnSpanFull(),
 				]),
 		]);
