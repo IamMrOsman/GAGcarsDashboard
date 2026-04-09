@@ -4,6 +4,7 @@ namespace App\Filament\Resources\DeleteAccountRequestResource\Pages;
 
 use App\Filament\Resources\DeleteAccountRequestResource;
 use App\Models\DeleteAccountRequest;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -29,39 +30,100 @@ class ViewDeleteAccountRequest extends ViewRecord
 				]),
 			Section::make('Snapshot')
 				->schema([
-					TextEntry::make('snapshot_summary')
-						->label('Summary')
-						->state(function (DeleteAccountRequest $record): string {
-							$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? []) : [];
-							if (! is_array($s)) {
-								return '';
-							}
+					Section::make('Account summary')
+						->schema([
+							ImageEntry::make('snapshot_profile_photo')
+								->label('Profile image')
+								->state(function (DeleteAccountRequest $record): ?string {
+									$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? null) : null;
+									if (! is_array($s)) {
+										return null;
+									}
+									$url = (string) ($s['profile_photo'] ?? '');
 
-							$uploadsLeft = $s['uploads_left'] ?? null;
-							if (is_array($uploadsLeft)) {
-								$uploadsLeft = json_encode($uploadsLeft, JSON_UNESCAPED_SLASHES);
-							}
+									return $url !== '' ? $url : null;
+								})
+								->height(140)
+								->simpleLightbox()
+								->columnSpan(1),
 
-							$listings = $s['listings'] ?? [];
-							$wallet = $s['wallet'] ?? [];
-							$tx = $s['transactions'] ?? [];
+							TextEntry::make('snapshot_uploads_left')
+								->label('Uploads left')
+								->state(function (DeleteAccountRequest $record): string {
+									$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? null) : null;
+									if (! is_array($s)) {
+										return '';
+									}
+									$uploadsLeft = $s['uploads_left'] ?? null;
+									if (is_array($uploadsLeft)) {
+										$json = json_encode($uploadsLeft, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+										return is_string($json) ? $json : '';
+									}
+									return is_string($uploadsLeft) ? $uploadsLeft : (string) $uploadsLeft;
+								})
+								->markdown()
+								->columnSpan(1),
 
-							$lines = array_filter([
-								'Profile photo: ' . (string) ($s['profile_photo'] ?? ''),
-								'Uploads left: ' . (is_string($uploadsLeft) ? $uploadsLeft : (string) $uploadsLeft),
-								'Listings: total=' . (string) ($listings['total'] ?? '')
-									. ', active=' . (string) ($listings['active'] ?? '')
-									. ', expired=' . (string) ($listings['expired'] ?? '')
-									. ', sold=' . (string) ($listings['sold'] ?? ''),
-								'Wallet balance: ' . (string) ($wallet['balance'] ?? ''),
-								'Transactions: total=' . (string) ($tx['total'] ?? '')
-									. ', wallet_topups=' . (string) ($tx['wallet_topups'] ?? ''),
-							]);
+							TextEntry::make('snapshot_listings')
+								->label('Listings')
+								->state(function (DeleteAccountRequest $record): string {
+									$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? null) : null;
+									if (! is_array($s)) {
+										return '';
+									}
+									$l = $s['listings'] ?? [];
+									if (! is_array($l)) {
+										return '';
+									}
 
-							return implode("\n", $lines);
-						})
-						->markdown()
+									return implode("\n", [
+										'Total: ' . (string) ($l['total'] ?? 0),
+										'Active: ' . (string) ($l['active'] ?? 0),
+										'Expired: ' . (string) ($l['expired'] ?? 0),
+										'Sold: ' . (string) ($l['sold'] ?? 0),
+									]);
+								})
+								->markdown()
+								->columnSpan(1),
+
+							TextEntry::make('snapshot_wallet_balance')
+								->label('Wallet balance')
+								->state(function (DeleteAccountRequest $record): string {
+									$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? null) : null;
+									if (! is_array($s)) {
+										return '';
+									}
+									$w = $s['wallet'] ?? [];
+									if (! is_array($w)) {
+										return '';
+									}
+									return (string) ($w['balance'] ?? '');
+								})
+								->columnSpan(1),
+
+							TextEntry::make('snapshot_transactions')
+								->label('Transactions')
+								->state(function (DeleteAccountRequest $record): string {
+									$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? null) : null;
+									if (! is_array($s)) {
+										return '';
+									}
+									$t = $s['transactions'] ?? [];
+									if (! is_array($t)) {
+										return '';
+									}
+
+									return implode("\n", [
+										'Total: ' . (string) ($t['total'] ?? 0),
+										'Wallet topups: ' . (string) ($t['wallet_topups'] ?? 0),
+									]);
+								})
+								->markdown()
+								->columnSpan(1),
+						])
+						->columns(2)
 						->columnSpanFull(),
+
 					TextEntry::make('snapshot_json')
 						->label('Snapshot (JSON)')
 						->state(function (DeleteAccountRequest $record): string {
