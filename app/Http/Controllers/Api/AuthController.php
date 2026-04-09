@@ -438,6 +438,24 @@ class AuthController extends Controller
 				'request_id' => $req->id,
 				'status' => $req->status,
 			], 201);
+		} catch (\Illuminate\Database\QueryException $e) {
+			$msg = $e->getMessage();
+			// Common production issue: migrations not applied yet.
+			if (str_contains($msg, 'delete_account_requests') && str_contains($msg, 'doesn\'t exist')) {
+				return response()->json([
+					'message' => 'Server database is not up to date (missing delete-account tables). Please run migrations and try again.',
+					'code' => 'MISSING_MIGRATIONS',
+				], 503);
+			}
+
+			\Log::error('Delete account request DB error', [
+				'user_id' => optional($request->user())->id,
+				'error' => $msg,
+			]);
+
+			return response()->json([
+				'message' => 'Unable to submit delete account request right now. Please try again later.',
+			], 500);
 		} catch (\Throwable $e) {
 			\Log::error('Delete account request error', [
 				'user_id' => optional($request->user())->id,
