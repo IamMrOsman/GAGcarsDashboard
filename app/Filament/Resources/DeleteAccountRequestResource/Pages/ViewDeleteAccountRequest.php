@@ -46,7 +46,22 @@ class ViewDeleteAccountRequest extends ViewRecord
 							$wallet = $s['wallet'] ?? [];
 							$tx = $s['transactions'] ?? [];
 
-							return implode(\"\\n\", array_filter([\n+\t\t\t\t\t\t\t\t\"Profile photo: \" . (string) ($s['profile_photo'] ?? ''),\n+\t\t\t\t\t\t\t\t\"Uploads left: \" . (is_string($uploadsLeft) ? $uploadsLeft : (string) $uploadsLeft),\n+\t\t\t\t\t\t\t\t\"Listings: total=\" . (string) ($listings['total'] ?? '') . \", active=\" . (string) ($listings['active'] ?? '') . \", expired=\" . (string) ($listings['expired'] ?? '') . \", sold=\" . (string) ($listings['sold'] ?? ''),\n+\t\t\t\t\t\t\t\t\"Wallet balance: \" . (string) ($wallet['balance'] ?? ''),\n+\t\t\t\t\t\t\t\t\"Transactions: total=\" . (string) ($tx['total'] ?? '') . \", wallet_topups=\" . (string) ($tx['wallet_topups'] ?? ''),\n+\t\t\t\t\t\t\t]));\n+\t\t\t\t\t\t})\n+\t\t\t\t\t\t->columnSpanFull(),
+							$lines = array_filter([
+								'Profile photo: ' . (string) ($s['profile_photo'] ?? ''),
+								'Uploads left: ' . (is_string($uploadsLeft) ? $uploadsLeft : (string) $uploadsLeft),
+								'Listings: total=' . (string) ($listings['total'] ?? '')
+									. ', active=' . (string) ($listings['active'] ?? '')
+									. ', expired=' . (string) ($listings['expired'] ?? '')
+									. ', sold=' . (string) ($listings['sold'] ?? ''),
+								'Wallet balance: ' . (string) ($wallet['balance'] ?? ''),
+								'Transactions: total=' . (string) ($tx['total'] ?? '')
+									. ', wallet_topups=' . (string) ($tx['wallet_topups'] ?? ''),
+							]);
+
+							return implode(\"\\n\", $lines);
+						})
+						->markdown()
+						->columnSpanFull(),
 					TextEntry::make('snapshot_json')
 						->label('Snapshot (JSON)')
 						->state(function (DeleteAccountRequest $record): string {
