@@ -58,7 +58,7 @@ class ViewDeleteAccountRequest extends ViewRecord
 									. ', wallet_topups=' . (string) ($tx['wallet_topups'] ?? ''),
 							]);
 
-							return implode(\"\\n\", $lines);
+							return implode("\n", $lines);
 						})
 						->markdown()
 						->columnSpanFull(),
