@@ -47,6 +47,22 @@ class ViewDeleteAccountRequest extends ViewRecord
 								->simpleLightbox()
 								->columnSpan(1),
 
+							TextEntry::make('snapshot_email')
+								->label('Email')
+								->state(function (DeleteAccountRequest $record): string {
+									$u = is_array($record->snapshot) ? ($record->snapshot['user'] ?? null) : null;
+									return is_array($u) ? (string) ($u['email'] ?? '') : '';
+								})
+								->columnSpan(1),
+
+							TextEntry::make('snapshot_phone')
+								->label('Phone')
+								->state(function (DeleteAccountRequest $record): string {
+									$u = is_array($record->snapshot) ? ($record->snapshot['user'] ?? null) : null;
+									return is_array($u) ? (string) ($u['phone'] ?? '') : '';
+								})
+								->columnSpan(1),
+
 							TextEntry::make('snapshot_registered_at')
 								->label('Registered')
 								->state(function (DeleteAccountRequest $record): string {
@@ -69,7 +85,9 @@ class ViewDeleteAccountRequest extends ViewRecord
 									if (! is_array($c)) {
 										return '';
 									}
-									return (string) ($c['name'] ?? '');
+									$name = (string) ($c['name'] ?? '');
+									$emoji = (string) ($c['emoji'] ?? '');
+									return trim($emoji . ' ' . $name);
 								})
 								->columnSpan(1),
 
@@ -167,21 +185,28 @@ class ViewDeleteAccountRequest extends ViewRecord
 						->columns(2)
 						->columnSpanFull(),
 
-					TextEntry::make('snapshot_json')
-						->label('Snapshot (JSON)')
-						->state(function (DeleteAccountRequest $record): string {
-							$state = $record->snapshot;
-							if ($state === null) {
-								return '';
-							}
-							if (is_string($state)) {
-								return $state;
-							}
-							$json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+					Section::make('Raw snapshot (JSON)')
+						->description('Hidden by default. Expand only when you need full raw data.')
+						->collapsible()
+						->collapsed()
+						->schema([
+							TextEntry::make('snapshot_json')
+								->label('Snapshot (JSON)')
+								->state(function (DeleteAccountRequest $record): string {
+									$state = $record->snapshot;
+									if ($state === null) {
+										return '';
+									}
+									if (is_string($state)) {
+										return $state;
+									}
+									$json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-							return is_string($json) ? $json : Str::of(var_export($state, true))->toString();
-						})
-						->markdown()
+									return is_string($json) ? $json : Str::of(var_export($state, true))->toString();
+								})
+								->markdown()
+								->columnSpanFull(),
+						])
 						->columnSpanFull(),
 				]),
 		]);

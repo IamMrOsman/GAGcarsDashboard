@@ -68,6 +68,7 @@ class DeleteAccountService
 			->count();
 
 		$countryName = (string) ($user->country?->name ?? '');
+		$countryEmoji = (string) ($user->country?->emoji ?? '');
 		$currencyCode = (string) ($user->country?->currency ?? '');
 		$currencySymbol = (string) ($user->country?->currency_symbol ?? '');
 
@@ -116,6 +117,7 @@ class DeleteAccountService
 				'registered_at' => $user->created_at?->toISOString(),
 				'country' => [
 					'name' => $countryName,
+					'emoji' => $countryEmoji,
 				],
 				'wallet' => [
 					'balance' => $walletBalance,
