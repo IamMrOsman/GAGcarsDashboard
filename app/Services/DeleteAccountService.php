@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DeleteAccountRequest;
 use App\Models\DeletedUserArchive;
+use App\Models\Category;
 use App\Models\Item;
 use App\Models\Transaction;
 use App\Models\User;
@@ -24,6 +25,12 @@ class DeleteAccountService
 	{
 		try {
 			$user->loadMissing('roles');
+		} catch (\Throwable) {
+			// optional
+		}
+
+		try {
+			$user->loadMissing('country');
 		} catch (\Throwable) {
 			// optional
 		}
@@ -60,19 +67,68 @@ class DeleteAccountService
 			->where('reason', 'wallet_topup')
 			->count();
 
+		$countryName = (string) ($user->country?->name ?? '');
+		$currencyCode = (string) ($user->country?->currency ?? '');
+		$currencySymbol = (string) ($user->country?->currency_symbol ?? '');
+
+		$uploadsLeftRaw = $user->uploads_left ?? [];
+		if (! is_array($uploadsLeftRaw)) {
+			$uploadsLeftRaw = [];
+		}
+		$uploadCategoryIds = [];
+		foreach (array_keys($uploadsLeftRaw) as $k) {
+			if (preg_match('/^\d+$/', (string) $k)) {
+				$uploadCategoryIds[] = (int) $k;
+			}
+		}
+		$uploadCategoryIds = array_values(array_unique($uploadCategoryIds));
+		$catNameById = [];
+		if ($uploadCategoryIds !== []) {
+			$catNameById = Category::query()
+				->whereIn('id', $uploadCategoryIds)
+				->pluck('name', 'id')
+				->all();
+		}
+		$uploadsLeftDetailed = [];
+		foreach ($uploadsLeftRaw as $k => $v) {
+			$keyStr = (string) $k;
+			$count = (int) $v;
+			if (preg_match('/^\d+$/', $keyStr)) {
+				$cid = (int) $keyStr;
+				$uploadsLeftDetailed[] = [
+					'category_id' => $cid,
+					'category_name' => (string) ($catNameById[$cid] ?? 'Unknown'),
+					'uploads_left' => $count,
+				];
+			} else {
+				$uploadsLeftDetailed[] = [
+					'category_id' => null,
+					'category_name' => $keyStr,
+					'uploads_left' => $count,
+				];
+			}
+		}
+
 		return [
 			'user' => $user->toArray(),
 			'summary' => [
 				'profile_photo' => (string) ($user->profile_photo ?? ''),
-				'uploads_left' => $user->uploads_left ?? [],
+				'registered_at' => $user->created_at?->toISOString(),
+				'country' => [
+					'name' => $countryName,
+				],
+				'wallet' => [
+					'balance' => $walletBalance,
+					'currency_code' => $currencyCode,
+					'currency_symbol' => $currencySymbol,
+				],
+				'uploads_left' => $uploadsLeftRaw,
+				'uploads_left_detailed' => $uploadsLeftDetailed,
 				'listings' => [
 					'total' => $listingsTotal,
 					'active' => $listingsActive,
 					'expired' => $listingsExpired,
 					'sold' => $listingsSold,
-				],
-				'wallet' => [
-					'balance' => $walletBalance,
 				],
 				'transactions' => [
 					'total' => $totalTransactions,

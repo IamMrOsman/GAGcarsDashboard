@@ -47,6 +47,32 @@ class ViewDeleteAccountRequest extends ViewRecord
 								->simpleLightbox()
 								->columnSpan(1),
 
+							TextEntry::make('snapshot_registered_at')
+								->label('Registered')
+								->state(function (DeleteAccountRequest $record): string {
+									$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? null) : null;
+									if (! is_array($s)) {
+										return '';
+									}
+									return (string) ($s['registered_at'] ?? '');
+								})
+								->columnSpan(1),
+
+							TextEntry::make('snapshot_country')
+								->label('Country')
+								->state(function (DeleteAccountRequest $record): string {
+									$s = is_array($record->snapshot) ? ($record->snapshot['summary'] ?? null) : null;
+									if (! is_array($s)) {
+										return '';
+									}
+									$c = $s['country'] ?? [];
+									if (! is_array($c)) {
+										return '';
+									}
+									return (string) ($c['name'] ?? '');
+								})
+								->columnSpan(1),
+
 							TextEntry::make('snapshot_uploads_left')
 								->label('Uploads left')
 								->state(function (DeleteAccountRequest $record): string {
@@ -54,12 +80,25 @@ class ViewDeleteAccountRequest extends ViewRecord
 									if (! is_array($s)) {
 										return '';
 									}
-									$uploadsLeft = $s['uploads_left'] ?? null;
-									if (is_array($uploadsLeft)) {
-										$json = json_encode($uploadsLeft, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-										return is_string($json) ? $json : '';
+									$rows = $s['uploads_left_detailed'] ?? null;
+									if (! is_array($rows)) {
+										$uploadsLeft = $s['uploads_left'] ?? null;
+										if (is_array($uploadsLeft)) {
+											$json = json_encode($uploadsLeft, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+											return is_string($json) ? $json : '';
+										}
+										return is_string($uploadsLeft) ? $uploadsLeft : (string) $uploadsLeft;
 									}
-									return is_string($uploadsLeft) ? $uploadsLeft : (string) $uploadsLeft;
+
+									$lines = ['| Category | Uploads left |', '|---|---:|'];
+									foreach ($rows as $r) {
+										if (! is_array($r)) continue;
+										$name = (string) ($r['category_name'] ?? '');
+										$count = (string) ($r['uploads_left'] ?? '');
+										$lines[] = '| ' . ($name !== '' ? $name : '-') . ' | ' . ($count !== '' ? $count : '0') . ' |';
+									}
+
+									return implode(\"\\n\", $lines);
 								})
 								->markdown()
 								->columnSpan(1),
@@ -97,7 +136,11 @@ class ViewDeleteAccountRequest extends ViewRecord
 									if (! is_array($w)) {
 										return '';
 									}
-									return (string) ($w['balance'] ?? '');
+									$bal = (string) ($w['balance'] ?? '');
+									$code = (string) ($w['currency_code'] ?? '');
+									$sym = (string) ($w['currency_symbol'] ?? '');
+									$prefix = $sym !== '' ? $sym : $code;
+									return trim($prefix . ' ' . $bal);
 								})
 								->columnSpan(1),
 
