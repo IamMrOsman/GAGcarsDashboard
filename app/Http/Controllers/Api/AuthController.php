@@ -158,8 +158,6 @@ class AuthController extends Controller
 		// Generate token
 		$token = $user->createToken($request->phone)->plainTextToken;
 
-		$this->eventMessages->send('account_verified', $user, []);
-
 		return response()->json([
 			'message' => 'OTP verified successfully',
 			'token' => $token,

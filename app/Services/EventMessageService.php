@@ -73,6 +73,14 @@ class EventMessageService
 	}
 
 	/**
+	 * Whether an enabled template exists for this event key.
+	 */
+	public function isEnabled(string $eventKey): bool
+	{
+		return $this->findEnabledRow($eventKey) !== null;
+	}
+
+	/**
 	 * @param  array<string, string|int|float|null>  $context
 	 */
 	public static function interpolateTemplate(string $template, array $context): string

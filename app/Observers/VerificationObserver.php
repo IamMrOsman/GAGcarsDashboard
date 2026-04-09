@@ -23,10 +23,18 @@ class VerificationObserver
 		}
 
 		if ($verification->status === 'verified') {
-			$this->eventMessages->send('verification_approved', $user, []);
+			// Your definition: account_verified is triggered when a submitted verification is approved.
+			// Keep backward-compatibility with existing templates: prefer account_verified if configured,
+			// otherwise fall back to verification_approved.
+			if ($this->eventMessages->isEnabled('account_verified')) {
+				$this->eventMessages->send('account_verified', $user, []);
+			} else {
+				$this->eventMessages->send('verification_approved', $user, []);
+			}
 		}
 
 		if ($verification->status === 'rejected') {
+			// Same event family; prefer verification_rejected.
 			$this->eventMessages->send('verification_rejected', $user, []);
 		}
 	}
