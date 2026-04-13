@@ -12,6 +12,7 @@ class Dashboard extends BaseDashboard
 			// \App\Filament\Widgets\WalletKpisOverview::class,
 			\App\Filament\Widgets\EnhancedStatsOverview::class,
 			\App\Filament\Widgets\RevenueStatsOverview::class,
+			\App\Filament\Widgets\ItemsOverview::class, // Platform Growth Overview
 			\App\Filament\Widgets\RevenueTrendChart::class,
 			\App\Filament\Widgets\UserGrowthChart::class,
 			\App\Filament\Widgets\ItemsByConditionChart::class,
