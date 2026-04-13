@@ -61,6 +61,7 @@ class BroadcastResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('subject'),
                 Tables\Columns\TextColumn::make('target'),
