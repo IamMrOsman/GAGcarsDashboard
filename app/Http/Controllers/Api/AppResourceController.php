@@ -102,6 +102,17 @@ class AppResourceController extends Controller
 	}
 
 	/**
+	 * Pseudo-random order within the same similarity tier: stable for offset pagination (no ORDER BY RAND()),
+	 * different sequence per viewed listing, cheap per-row expression.
+	 */
+	private function applySimilarItemsShuffleOrder(Builder $q, Item $item, int $countryId): void
+	{
+		$salt = (string) $item->getKey().'|'.$countryId;
+		$table = $q->getModel()->getTable();
+		$q->orderByRaw('CRC32(CONCAT(`'.$table.'`.`id`, ?))', [$salt]);
+	}
+
+	/**
 	 * Resolve a brand from a route segment: numeric = id, otherwise slug (case-insensitive).
 	 */
 	protected function resolveBrandFromRouteSegment(string $brand): Brand
@@ -181,11 +192,11 @@ class AppResourceController extends Controller
 					'CASE WHEN category_id = ? THEN 0 ELSE 1 END',
 					[$categoryIdForOrdering]
 				);
-			} else {
-				$q->orderByDesc('created_at');
 			}
+			// No brand/category hints: similarity tier is skipped; shuffle + applyItemSort define order.
 		}
 
+		$this->applySimilarItemsShuffleOrder($q, $item, (int) $countryId);
 		$this->applyItemSort($q, request());
 
 		return response()->json($this->paginateOrGet($q, request()));
@@ -215,7 +226,14 @@ class AppResourceController extends Controller
 	{
 		$brandModel = $this->resolveBrandFromRouteSegment($brand);
 
-		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
+		$q = $brandModel->items()
+			->with('brand', 'category', 'brandModel', 'user')
+			->where('id', '!=', $item->id)
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
+		$this->applySimilarItemsShuffleOrder($q, $item, (int) auth()->user()->country_id);
+
+		return response()->json($q->get());
 	}
 
 	/**
@@ -226,7 +244,14 @@ class AppResourceController extends Controller
 	 */
 	public function getSimilarItemsByBrandModel(BrandModel $brandModel, Item $item)
 	{
-		return response()->json($brandModel->items()->with('brand', 'category', 'brandModel', 'user')->where('id', '!=', $item->id)->where('status', 'active')->where('country_id', auth()->user()->country_id)->get());
+		$q = $brandModel->items()
+			->with('brand', 'category', 'brandModel', 'user')
+			->where('id', '!=', $item->id)
+			->where('status', 'active')
+			->where('country_id', auth()->user()->country_id);
+		$this->applySimilarItemsShuffleOrder($q, $item, (int) auth()->user()->country_id);
+
+		return response()->json($q->get());
 	}
 
 	/**
