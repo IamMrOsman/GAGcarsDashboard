@@ -19,6 +19,8 @@ class PostObserver
 			'data' => [
 				'type' => 'blog_post',
 				'post_id' => (string) $post->id,
+				// Canonical: data.deeplink (mobile routes this). Keep deep_link for backward compatibility.
+				'deeplink' => 'gagcars://blog?post=' . (string) $post->id,
 				'deep_link' => 'gagcars://blog?post=' . (string) $post->id,
 			],
 		]);

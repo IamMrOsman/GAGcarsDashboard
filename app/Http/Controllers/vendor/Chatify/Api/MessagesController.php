@@ -191,6 +191,8 @@ class MessagesController extends Controller
 					'data' => [
 						'type' => 'chat_message',
 						'from_id' => (string) Auth::user()->id,
+						// Canonical: data.deeplink (mobile routes this). Keep deep_link for backward compatibility.
+						'deeplink' => 'gagcars://chat?user=' . (string) Auth::user()->id,
 						'deep_link' => 'gagcars://chat?user=' . (string) Auth::user()->id,
 					],
 					'android' => [
