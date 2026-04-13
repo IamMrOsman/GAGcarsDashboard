@@ -58,6 +58,7 @@ class BrandModelResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 Tables\Columns\TextColumn::make('brand.name')
                     ->numeric()
