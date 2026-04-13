@@ -24,6 +24,8 @@ class Dashboard extends BaseDashboard
 			\App\Filament\Widgets\HighValueItemsTable::class,
 			\App\Filament\Widgets\RecentItemsTable::class,
 			\App\Filament\Widgets\TopSellerUsersTable::class,
+			// Removed from dashboard home (still available in Wallet section/menu if needed):
+			// \App\Filament\Widgets\WalletTransactionsTable::class,
 		];
 	}
 
