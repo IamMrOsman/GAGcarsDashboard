@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\VerificationResource;
 use App\Models\Verification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -16,6 +17,7 @@ class PendingVerificationsTable extends TableWidget
 	{
 		return $table
 			->query(Verification::with('user')->where('status', 'pending')->latest()->limit(5))
+			->recordUrl(fn (Verification $record): string => VerificationResource::getUrl('view', ['record' => $record]))
 			->columns([
 				TextColumn::make('user.name')
 					->label('User')

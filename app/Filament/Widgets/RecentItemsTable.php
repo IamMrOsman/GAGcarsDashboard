@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\ItemResource;
 use App\Models\Item;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -16,6 +17,7 @@ class RecentItemsTable extends TableWidget
 	{
 		return $table
 			->query(Item::latest()->limit(5))
+			->recordUrl(fn (Item $record): string => ItemResource::getUrl('edit', ['record' => $record]))
 			->columns([
 				TextColumn::make('name')
 					->searchable()

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\TransactionResource;
 use App\Models\Transaction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -16,6 +17,7 @@ class RecentTransactionsTable extends TableWidget
 	{
 		return $table
 			->query(Transaction::with(['user', 'package'])->latest()->limit(10))
+			->recordUrl(fn (): string => TransactionResource::getUrl('index'))
 			->columns([
 				TextColumn::make('user.name')
 					->label('User')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\UserResource;
 use App\Models\User;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -20,6 +21,7 @@ class TopSellerUsersTable extends TableWidget
 					->orderByDesc('items_count')
 					->limit(5)
 			)
+			->recordUrl(fn (User $record): string => UserResource::getUrl('view', ['record' => $record]))
 			->columns([
 				TextColumn::make('name')
 					->searchable()
