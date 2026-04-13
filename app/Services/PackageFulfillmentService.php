@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Item;
 use App\Models\Promotion;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
@@ -52,6 +53,15 @@ class PackageFulfillmentService
 					throw ValidationException::withMessages([
 						'item_id' => [
 							'Transaction item_id is missing for promotion package.',
+						],
+					]);
+				}
+
+				$item = Item::query()->find($locked->item_id);
+				if (! $item || $item->status !== 'active') {
+					throw ValidationException::withMessages([
+						'item_id' => [
+							'Promotions can only be purchased for active listings. Expired or inactive items must be relisted first.',
 						],
 					]);
 				}
