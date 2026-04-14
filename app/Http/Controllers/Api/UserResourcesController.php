@@ -9,11 +9,12 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Filament\Resources\ItemResource\Api\Transformers\ItemTransformer;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 
 class UserResourcesController extends Controller
 {
-	private function applyItemFiltersToWishlistItemQuery(Builder $q, Request $request): Builder
+	private function applyItemFiltersToWishlistItemQuery(Builder|Relation $q, Request $request): Builder|Relation
 	{
 		$priceNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(price, ',', ''), ' ', ''), '₵', ''), '') AS UNSIGNED)";
 		$mileageNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(mileage, ',', ''), ' ', ''), 'km', ''), '') AS UNSIGNED)";
@@ -70,7 +71,7 @@ class UserResourcesController extends Controller
 		return $q;
 	}
 
-	private function applyItemSortToWishlistItemQuery(Builder $q, Request $request, string $defaultSort = 'relevance'): Builder
+	private function applyItemSortToWishlistItemQuery(Builder|Relation $q, Request $request, string $defaultSort = 'relevance'): Builder|Relation
 	{
 		$sort = strtolower(trim((string) ($request->query('sort') ?? $defaultSort)));
 		$priceNumericSql = "CAST(NULLIF(REPLACE(REPLACE(REPLACE(price, ',', ''), ' ', ''), '₵', ''), '') AS UNSIGNED)";
@@ -84,7 +85,7 @@ class UserResourcesController extends Controller
 		};
 	}
 
-	private function applyItemSearchToQuery(Builder $q, Request $request): Builder
+	private function applyItemSearchToQuery(Builder|Relation $q, Request $request): Builder|Relation
 	{
 		$term = trim((string) ($request->query('q') ?? ''));
 		if ($term !== '') {
