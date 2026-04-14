@@ -84,6 +84,19 @@ class UserResourcesController extends Controller
 		};
 	}
 
+	private function applyItemSearchToQuery(Builder $q, Request $request): Builder
+	{
+		$term = trim((string) ($request->query('q') ?? ''));
+		if ($term !== '') {
+			$like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $term).'%';
+			$q->where(function (Builder $qq) use ($like): void {
+				$qq->where('name', 'like', $like)
+					->orWhere('description', 'like', $like);
+			});
+		}
+		return $q;
+	}
+
 	private function perPage(Request $request): int
 	{
 		$perPage = (int) ($request->query('per_page') ?? 15);
@@ -94,14 +107,20 @@ class UserResourcesController extends Controller
 	 * User's Listings
 	 * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
 	 */
-	public function userListings(User $user)
+	public function userListings(User $user, Request $request)
 	{
+		$q = $user->items()
+			->with('category')
+			->where('status', 'active')
+			->orderByDesc('created_at');
+
+		// Optional search + filters + sort
+		$this->applyItemSearchToQuery($q, $request);
+		$this->applyItemFiltersToWishlistItemQuery($q, $request);
+		$this->applyItemSortToWishlistItemQuery($q, $request);
+
 		return ItemTransformer::collection(
-			$user->items()
-				->with('category')
-				->where('status', 'active')
-				->orderByDesc('created_at')
-				->get()
+			$q->paginate($this->perPage($request))->appends($request->query())
 		);
 	}
 
@@ -233,14 +252,27 @@ class UserResourcesController extends Controller
 	 * My Listings
 	 * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
 	 */
-	public function myListings()
+	public function myListings(Request $request)
 	{
-		// My Listings should only include real listings (exclude drafts).
+		$q = auth()->user()->items()
+			->with('category')
+			->whereNotIn('status', ['draft', 'pending_payment']);
+
+		// Optional tab filter: status=sold | status=not_sold
+		$status = strtolower(trim((string) ($request->query('status') ?? '')));
+		if ($status === 'sold') {
+			$q->where('status', 'sold');
+		} elseif ($status === 'not_sold') {
+			$q->where('status', '!=', 'sold');
+		}
+
+		// Optional search + filters + sort
+		$this->applyItemSearchToQuery($q, $request);
+		$this->applyItemFiltersToWishlistItemQuery($q, $request);
+		$this->applyItemSortToWishlistItemQuery($q, $request);
+
 		return ItemTransformer::collection(
-			auth()->user()->items()
-				->with('category')
-				->whereNotIn('status', ['draft', 'pending_payment'])
-				->get()
+			$q->paginate($this->perPage($request))->appends($request->query())
 		);
 	}
 
