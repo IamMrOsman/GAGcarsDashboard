@@ -255,17 +255,32 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 	}
 
 	/**
-	 * Decrement uploads for a category by one. No-op if count for category is 0 or missing.
+	 * Decrement uploads for a category by one.
+	 *
+	 * Mirrors the lookup order used by getUploadsLeftForCategory(): we first try the
+	 * category-specific key, and fall back to the global 'all' bucket so that packages
+	 * purchased without a category (stored under 'all') actually get consumed when
+	 * the user uploads into a paid category.
+	 *
+	 * No-op when neither bucket has credit left.
 	 */
 	public function decrementUploadsForCategory($categoryId): void
 	{
-		$uploads = $this->uploads_left ?? [];
+		$uploads = is_array($this->uploads_left) ? $this->uploads_left : [];
 		$key = $categoryId !== null ? (string) $categoryId : 'all';
-		$current = (int) ($uploads[$key] ?? 0);
-		if ($current <= 0) {
+
+		// Prefer the category-specific bucket when it has credit.
+		if ((int) ($uploads[$key] ?? 0) > 0) {
+			$uploads[$key] = (int) $uploads[$key] - 1;
+			$this->update(['uploads_left' => $uploads]);
 			return;
 		}
-		$uploads[$key] = $current - 1;
-		$this->update(['uploads_left' => $uploads]);
+
+		// Fallback: consume from the 'all' bucket when the category bucket is empty.
+		if ($key !== 'all' && (int) ($uploads['all'] ?? 0) > 0) {
+			$uploads['all'] = (int) $uploads['all'] - 1;
+			$this->update(['uploads_left' => $uploads]);
+			return;
+		}
 	}
 }
