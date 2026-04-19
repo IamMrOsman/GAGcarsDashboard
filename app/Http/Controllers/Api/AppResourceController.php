@@ -12,8 +12,8 @@ use App\Models\CategoryRequirement;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\ItemPriceNotification;
-use App\Services\PaymentRequirementService;
 use App\Models\Country;
+use App\Services\UploadCreditPolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -402,27 +402,22 @@ class AppResourceController extends Controller
 		$user = auth()->user();
 		$categoryId = $request->input('category_id');
 
-		// Check if payment is required for this category in the user's country
-		$paymentRequired = CategoryRequirement::where('category_id', $categoryId)
-			->where('country_id', $user->country_id)
-			->where('require_payment', true)
-			->exists();
+		$paidUpload = UploadCreditPolicy::paidUploadApplies($categoryId, $user->country_id);
 
-		// If payment is required, check if user has uploads left for this category
-		if ($paymentRequired) {
+		if ($paidUpload) {
 			$uploadsForCategory = $user->getUploadsLeftForCategory($categoryId);
 			if ($uploadsForCategory <= 0) {
 				return response()->json(['can_upload' => false, 'reason' => 'You have no uploads left for this category'], 200);
 			}
 			return response()->json([
 				'can_upload' => true,
-				'reason' => 'Payment required; you have ' . $uploadsForCategory . ' uploads left for this category',
+				'reason' => 'Upload credits apply; you have ' . $uploadsForCategory . ' uploads left for this category',
 			], 200);
 		}
 
 		return response()->json([
 			'can_upload' => true,
-			'reason' => 'Payment not required for this category',
+			'reason' => 'No upload credits required for this category',
 		], 200);
 	}
 

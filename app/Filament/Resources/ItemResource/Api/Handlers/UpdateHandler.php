@@ -2,6 +2,7 @@
 namespace App\Filament\Resources\ItemResource\Api\Handlers;
 
 use App\Models\CategoryRequirement;
+use App\Services\UploadCreditPolicy;
 use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\ItemResource;
@@ -70,12 +71,9 @@ class UpdateHandler extends Handlers {
                 ], 422);
             }
 
-            $paymentRequired = CategoryRequirement::where('category_id', $categoryId)
-                ->where('country_id', $user->country_id)
-                ->where('require_payment', true)
-                ->exists();
+            $paidUpload = UploadCreditPolicy::paidUploadApplies($categoryId, $user->country_id);
 
-            if ($paymentRequired) {
+            if ($paidUpload) {
                 $uploadsLeft = $user->getUploadsLeftForCategory($categoryId);
                 if ($uploadsLeft <= 0) {
                     return response()->json([

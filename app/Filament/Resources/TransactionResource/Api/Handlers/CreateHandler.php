@@ -5,8 +5,6 @@ use Illuminate\Http\Request;
 use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\TransactionResource;
 use App\Filament\Resources\TransactionResource\Api\Requests\CreateTransactionRequest;
-use App\Models\User;
-use App\Models\Package;
 
 class CreateHandler extends Handlers {
     public static string | null $uri = '/';
@@ -37,15 +35,9 @@ class CreateHandler extends Handlers {
 
         $model->save();
 
-        // If the package type is 'upload', add uploads for the package's category (or 'all' if no category)
-        if ($model->package && $model->package->package_type === 'upload') {
-            $user = $model->user;
-            if ($user) {
-                $amount = (int) $model->package->number_of_listings;
-                $categoryId = $model->package->category_id;
-                $user->addUploadsForCategory($categoryId, $amount);
-            }
-        }
+        // Upload credits MUST NOT be granted here: Paystack verify/webhook and wallet purchase
+        // already call PackageFulfillmentService::fulfillIfNeeded(). Granting again caused double
+        // credits when the mobile app POSTed this row after a successful Paystack verification.
 
         return static::sendSuccessResponse($model, "Successfully Create Resource");
     }

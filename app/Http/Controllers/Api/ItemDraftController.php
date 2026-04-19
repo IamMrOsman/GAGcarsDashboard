@@ -10,6 +10,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use App\Services\EventMessageService;
+use App\Services\UploadCreditPolicy;
 
 class ItemDraftController extends Controller
 {
@@ -184,12 +185,12 @@ class ItemDraftController extends Controller
 			->where('require_approval', true)
 			->exists();
 
-		$paymentRequired = CategoryRequirement::where('category_id', $item->category_id)
-			->where('country_id', $user->country_id)
-			->where('require_payment', true)
-			->exists();
+		$paidUpload = UploadCreditPolicy::paidUploadApplies(
+			$item->category_id,
+			$user->country_id,
+		);
 
-		if ($paymentRequired) {
+		if ($paidUpload) {
 			$uploadsLeft = $user->getUploadsLeftForCategory($item->category_id);
 			if ($uploadsLeft <= 0) {
 				$item->status = 'pending_payment';

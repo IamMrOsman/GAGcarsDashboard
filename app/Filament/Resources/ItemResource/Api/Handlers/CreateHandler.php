@@ -6,6 +6,7 @@ use Rupadana\ApiService\Http\Handlers;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemResource\Api\Requests\CreateItemRequest;
 use App\Models\CategoryRequirement;
+use App\Services\UploadCreditPolicy;
 
 class CreateHandler extends Handlers {
     public static string | null $uri = '/';
@@ -66,14 +67,12 @@ class CreateHandler extends Handlers {
             $model->update(['status' => 'active']);
         }
 
-        // Check if payment is required for this category in the user's country
-        $paymentRequired = CategoryRequirement::where('category_id', $model->category_id)
-            ->where('country_id', $model->user->country_id)
-            ->where('require_payment', true)
-            ->exists();
+        $consumeUploadCredit = UploadCreditPolicy::paidUploadApplies(
+            $model->category_id,
+            $model->user->country_id,
+        );
 
-        // If payment is required, decrement user's uploads for this category
-        if ($paymentRequired) {
+        if ($consumeUploadCredit) {
             $model->user->decrementUploadsForCategory($model->category_id);
         }
 
