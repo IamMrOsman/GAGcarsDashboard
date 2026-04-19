@@ -70,6 +70,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/listings', [UserResourcesController::class, 'myListings']);
 		Route::post('/wish-list/{item}', [UserResourcesController::class, 'addToWishList']);
 		Route::get('/wish-list', [UserResourcesController::class, 'wishList']);
+		Route::post('/notifications/read-all', [UserNotificationController::class, 'markAllRead']);
 		Route::get('/notifications', [UserNotificationController::class, 'index']);
 		Route::put('/notifications/{notification}/read', [UserNotificationController::class, 'markAsRead']);
 		Route::delete('/notifications', [UserNotificationController::class, 'destroyAll']);

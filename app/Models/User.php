@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
+use App\Casts\UploadsLeftCast;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
@@ -23,7 +24,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 	use HasFactory, Notifiable, HasUlids, SoftDeletes, HasApiTokens, HasRoles, TwoFactorAuthenticatable;
 
 	protected $casts = [
-		'uploads_left' => 'array',
+		'uploads_left' => UploadsLeftCast::class,
 	];
 
 	public function getFilamentAvatarUrl(): ?string

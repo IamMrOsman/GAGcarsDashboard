@@ -43,6 +43,21 @@ class UserNotificationController extends Controller
 		return response()->json(['success' => true]);
 	}
 
+	/**
+	 * Mark every notification for the current user as read (persists for new installs / devices).
+	 */
+	public function markAllRead(Request $request)
+	{
+		$user = $request->user();
+
+		UserNotification::query()
+			->where('user_id', $user->id)
+			->where('is_read', false)
+			->update(['is_read' => true]);
+
+		return response()->json(['success' => true]);
+	}
+
 	public function destroyAll(Request $request)
 	{
 		$user = $request->user();
