@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PaystackController;
 use App\Http\Controllers\Api\ItemDraftController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\UserNotificationController;
+use App\Http\Controllers\Api\BroadcastLastSeenController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\ClientConfigController;
 use App\Http\Controllers\Api\CloudinarySignController;
@@ -74,6 +75,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/notifications', [UserNotificationController::class, 'index']);
 		Route::put('/notifications/{notification}/read', [UserNotificationController::class, 'markAsRead']);
 		Route::delete('/notifications', [UserNotificationController::class, 'destroyAll']);
+		Route::get('/broadcasts/last-seen', [BroadcastLastSeenController::class, 'show']);
+		Route::post('/broadcasts/last-seen', [BroadcastLastSeenController::class, 'store']);
 	});
 
 	Route::prefix('devices')->group(function () {
