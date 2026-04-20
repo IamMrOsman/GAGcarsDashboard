@@ -9,7 +9,38 @@ class PostObserver
 {
 	public function created(Post $post): void
 	{
-		// Push to a topic so clients can receive "new blog post" alerts.
+		if (! $this->isPublished($post->status)) {
+			return;
+		}
+
+		$this->pushNewBlogPostNotification($post);
+	}
+
+	public function updated(Post $post): void
+	{
+		if (! $post->wasChanged('status')) {
+			return;
+		}
+
+		if (! $this->isPublished($post->status)) {
+			return;
+		}
+
+		// Only when moving into published (e.g. draft → published). Avoid repeats on edits.
+		if ($this->isPublished($post->getOriginal('status'))) {
+			return;
+		}
+
+		$this->pushNewBlogPostNotification($post);
+	}
+
+	private function isPublished(mixed $status): bool
+	{
+		return strtolower(trim((string) $status)) === 'published';
+	}
+
+	private function pushNewBlogPostNotification(Post $post): void
+	{
 		(new FcmService())->sendToTopic('blog', [
 			'priority' => 'high',
 			'notification' => [
@@ -26,4 +57,3 @@ class PostObserver
 		]);
 	}
 }
-
