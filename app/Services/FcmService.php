@@ -316,6 +316,8 @@ class FcmService
 	 */
 	private static function applyLegacyPayloadToV1Message(array &$message, array $payload): void
 	{
+		$priority = isset($payload['priority']) ? strtolower(trim((string) $payload['priority'])) : null;
+
 		if (isset($payload['notification']) && is_array($payload['notification'])) {
 			$n = $payload['notification'];
 			$message['notification'] = [
@@ -337,6 +339,28 @@ class FcmService
 		}
 		if (isset($payload['apns']) && is_array($payload['apns'])) {
 			$message['apns'] = $payload['apns'];
+		}
+
+		// Ensure "high priority" behaves consistently in HTTP v1.
+		// Legacy API accepts top-level `priority`, but HTTP v1 expects platform-specific fields.
+		if ($priority === 'high') {
+			if (! isset($message['android']) || ! is_array($message['android'])) {
+				$message['android'] = [];
+			}
+			if (empty($message['android']['priority'])) {
+				$message['android']['priority'] = 'HIGH';
+			}
+
+			// For notification alerts on iOS, include APNs headers so delivery is treated as an alert.
+			// (Push capability + APNs setup still required in Apple/Firebase.)
+			if (! isset($message['apns']) || ! is_array($message['apns'])) {
+				$message['apns'] = [];
+			}
+			if (! isset($message['apns']['headers']) || ! is_array($message['apns']['headers'])) {
+				$message['apns']['headers'] = [];
+			}
+			$message['apns']['headers']['apns-priority'] = (string) ($message['apns']['headers']['apns-priority'] ?? '10');
+			$message['apns']['headers']['apns-push-type'] = (string) ($message['apns']['headers']['apns-push-type'] ?? 'alert');
 		}
 	}
 
