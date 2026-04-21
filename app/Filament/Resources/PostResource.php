@@ -62,6 +62,9 @@ class PostResource extends Resource
 				Forms\Components\TagsInput::make('tags')
 					->helperText('Press enter to add a tag'),
 				Forms\Components\FileUpload::make('image')
+					->disk('public')
+					->directory('posts')
+					->visibility('public')
 					->image()
 					->required()
 					->imageEditor(),
@@ -81,6 +84,7 @@ class PostResource extends Resource
 			->defaultSort('created_at', 'desc')
 			->columns([
 				Tables\Columns\ImageColumn::make('image')
+					->disk('public')
 					->circular(),
 				Tables\Columns\TextColumn::make('title')
 					->searchable()

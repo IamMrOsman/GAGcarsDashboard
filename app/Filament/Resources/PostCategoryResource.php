@@ -43,6 +43,9 @@ class PostCategoryResource extends Resource
                 Forms\Components\Textarea::make('description')
                     ->maxLength(65535),
                 Forms\Components\FileUpload::make('image')
+                    ->disk('public')
+                    ->directory('post-categories')
+                    ->visibility('public')
                     ->image(),
                 Forms\Components\Select::make('parent_id')
                     ->relationship('parent', 'name')
@@ -66,7 +69,9 @@ class PostCategoryResource extends Resource
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('slug'),
                 Tables\Columns\TextColumn::make('description'),
-                Tables\Columns\TextColumn::make('image'),
+                Tables\Columns\ImageColumn::make('image')
+                    ->disk('public')
+                    ->circular(),
                 Tables\Columns\TextColumn::make('parent.name'),
                 Tables\Columns\TextColumn::make('status'),
             ])

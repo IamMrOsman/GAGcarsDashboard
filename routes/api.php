@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\UserNotificationController;
 use App\Http\Controllers\Api\BroadcastLastSeenController;
 use App\Http\Controllers\Api\BroadcastListController;
+use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\ClientConfigController;
 use App\Http\Controllers\Api\CloudinarySignController;
@@ -68,6 +69,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 	});
 
 	Route::get('/broadcasts', [BroadcastListController::class, 'index']);
+
+	Route::get('/posts', [PostController::class, 'index']);
+	Route::get('/posts/{id}', [PostController::class, 'show']);
 
 	Route::prefix('my')->group(function () {
 		Route::get('/verifications', [UserResourcesController::class, 'myVerifications']);
