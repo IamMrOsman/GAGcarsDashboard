@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\DeviceToken;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -237,13 +238,87 @@ class FcmService
 				->post($url, ['message' => $message]);
 
 			if (! $response->successful()) {
+				$errorCode = self::extractV1ErrorCode($response->json());
 				Log::error('FCM HTTP v1 token push failed', [
 					'status' => $response->status(),
+					'error_code' => $errorCode,
 					'body' => $response->body(),
 				]);
+				self::handleV1TokenFailure($deviceToken, $response->status(), $errorCode);
 			}
 		} catch (\Throwable $e) {
 			Log::error('FCM HTTP v1 token push exception', ['error' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * Parse an FCM HTTP v1 error response to pull out the canonical error code.
+	 * Canonical codes:
+	 *   UNREGISTERED | NOT_FOUND       -> token is dead, prune it
+	 *   INVALID_ARGUMENT               -> malformed token or payload, prune token
+	 *   SENDER_ID_MISMATCH             -> token belongs to a different Firebase project
+	 *   THIRD_PARTY_AUTH_ERROR         -> APNs key/cert missing or expired in Firebase Console
+	 *   QUOTA_EXCEEDED / UNAVAILABLE   -> retry later, do NOT prune
+	 *
+	 * @param  mixed  $json
+	 */
+	private static function extractV1ErrorCode($json): ?string
+	{
+		if (! is_array($json)) {
+			return null;
+		}
+		$err = $json['error'] ?? null;
+		if (! is_array($err)) {
+			return null;
+		}
+		$details = $err['details'] ?? [];
+		if (is_array($details)) {
+			foreach ($details as $d) {
+				if (is_array($d) && ! empty($d['errorCode'])) {
+					return (string) $d['errorCode'];
+				}
+			}
+		}
+		if (! empty($err['status'])) {
+			return (string) $err['status'];
+		}
+		return null;
+	}
+
+	/**
+	 * Remove tokens FCM has told us are dead so we stop sending to them.
+	 * This is the fix for "pushes going to an old install that was reinstalled/uninstalled".
+	 */
+	private static function handleV1TokenFailure(string $deviceToken, int $httpStatus, ?string $errorCode): void
+	{
+		$prunable = ['UNREGISTERED', 'NOT_FOUND', 'INVALID_ARGUMENT'];
+		$shouldPrune = ($httpStatus === 404)
+			|| ($errorCode !== null && in_array($errorCode, $prunable, true));
+
+		if (! $shouldPrune) {
+			if ($errorCode === 'THIRD_PARTY_AUTH_ERROR') {
+				Log::warning('FCM: APNs credentials missing/invalid in Firebase (THIRD_PARTY_AUTH_ERROR). '
+					. 'Upload an APNs Authentication Key (.p8) in Firebase Console → Project settings → Cloud Messaging.');
+			}
+			if ($errorCode === 'SENDER_ID_MISMATCH') {
+				Log::warning('FCM: SENDER_ID_MISMATCH — device token was generated against a different '
+					. 'Firebase project than the one this service is sending from.');
+			}
+			return;
+		}
+
+		try {
+			$tokenHash = hash('sha256', trim($deviceToken));
+			$deleted = DeviceToken::query()
+				->where('token_hash', $tokenHash)
+				->delete();
+			Log::info('FCM: pruned dead device token', [
+				'deleted' => $deleted,
+				'error_code' => $errorCode,
+				'http_status' => $httpStatus,
+			]);
+		} catch (\Throwable $e) {
+			Log::error('FCM: failed to prune dead device token', ['error' => $e->getMessage()]);
 		}
 	}
 
@@ -272,10 +347,17 @@ class FcmService
 				->post($url, ['message' => $message]);
 
 			if (! $response->successful()) {
+				$errorCode = self::extractV1ErrorCode($response->json());
 				Log::error('FCM HTTP v1 topic push failed', [
 					'status' => $response->status(),
+					'error_code' => $errorCode,
+					'topic' => $topic,
 					'body' => $response->body(),
 				]);
+				if ($errorCode === 'THIRD_PARTY_AUTH_ERROR') {
+					Log::warning('FCM: APNs credentials missing/invalid in Firebase (THIRD_PARTY_AUTH_ERROR) — '
+						. 'topic push cannot reach iOS devices.');
+				}
 			}
 		} catch (\Throwable $e) {
 			Log::error('FCM HTTP v1 topic push exception', ['error' => $e->getMessage()]);
