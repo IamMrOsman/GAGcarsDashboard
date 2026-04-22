@@ -447,11 +447,12 @@ class FcmService
 		}
 
 		// Sound defaults. FCM HTTP v1 does NOT auto-play a sound from the top-level
-		// `notification` block — iOS needs `apns.payload.aps.sound` and Android
-		// honours `android.notification.sound`. Default to the system sound for any
-		// user-visible push unless a caller has explicitly overridden it.
+		// `notification` block — iOS needs `apns.payload.aps.sound` (file name
+		// bundled into the iOS app) and Android honours `android.notification.sound`
+		// (raw resource name, no extension). The app ships `chat_sound.aiff` on
+		// iOS and `chat_sound.wav` under res/raw on Android. Callers can override
+		// by passing their own apns/android blocks.
 		if ($hasNotification) {
-			// iOS: apns.payload.aps.sound = "default"
 			if (! isset($message['apns']) || ! is_array($message['apns'])) {
 				$message['apns'] = [];
 			}
@@ -462,10 +463,9 @@ class FcmService
 				$message['apns']['payload']['aps'] = [];
 			}
 			if (! array_key_exists('sound', $message['apns']['payload']['aps'])) {
-				$message['apns']['payload']['aps']['sound'] = 'default';
+				$message['apns']['payload']['aps']['sound'] = 'chat_sound.aiff';
 			}
 
-			// Android: android.notification.sound = "default"
 			if (! isset($message['android']) || ! is_array($message['android'])) {
 				$message['android'] = [];
 			}
@@ -473,7 +473,10 @@ class FcmService
 				$message['android']['notification'] = [];
 			}
 			if (! array_key_exists('sound', $message['android']['notification'])) {
-				$message['android']['notification']['sound'] = 'default';
+				$message['android']['notification']['sound'] = 'chat_sound';
+			}
+			if (! array_key_exists('channel_id', $message['android']['notification'])) {
+				$message['android']['notification']['channel_id'] = 'gagcars_chat_sound_v1';
 			}
 		}
 	}
