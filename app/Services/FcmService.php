@@ -399,8 +399,9 @@ class FcmService
 	private static function applyLegacyPayloadToV1Message(array &$message, array $payload): void
 	{
 		$priority = isset($payload['priority']) ? strtolower(trim((string) $payload['priority'])) : null;
+		$hasNotification = isset($payload['notification']) && is_array($payload['notification']);
 
-		if (isset($payload['notification']) && is_array($payload['notification'])) {
+		if ($hasNotification) {
 			$n = $payload['notification'];
 			$message['notification'] = [
 				'title' => (string) ($n['title'] ?? ''),
@@ -443,6 +444,37 @@ class FcmService
 			}
 			$message['apns']['headers']['apns-priority'] = (string) ($message['apns']['headers']['apns-priority'] ?? '10');
 			$message['apns']['headers']['apns-push-type'] = (string) ($message['apns']['headers']['apns-push-type'] ?? 'alert');
+		}
+
+		// Sound defaults. FCM HTTP v1 does NOT auto-play a sound from the top-level
+		// `notification` block — iOS needs `apns.payload.aps.sound` and Android
+		// honours `android.notification.sound`. Default to the system sound for any
+		// user-visible push unless a caller has explicitly overridden it.
+		if ($hasNotification) {
+			// iOS: apns.payload.aps.sound = "default"
+			if (! isset($message['apns']) || ! is_array($message['apns'])) {
+				$message['apns'] = [];
+			}
+			if (! isset($message['apns']['payload']) || ! is_array($message['apns']['payload'])) {
+				$message['apns']['payload'] = [];
+			}
+			if (! isset($message['apns']['payload']['aps']) || ! is_array($message['apns']['payload']['aps'])) {
+				$message['apns']['payload']['aps'] = [];
+			}
+			if (! array_key_exists('sound', $message['apns']['payload']['aps'])) {
+				$message['apns']['payload']['aps']['sound'] = 'default';
+			}
+
+			// Android: android.notification.sound = "default"
+			if (! isset($message['android']) || ! is_array($message['android'])) {
+				$message['android'] = [];
+			}
+			if (! isset($message['android']['notification']) || ! is_array($message['android']['notification'])) {
+				$message['android']['notification'] = [];
+			}
+			if (! array_key_exists('sound', $message['android']['notification'])) {
+				$message['android']['notification']['sound'] = 'default';
+			}
 		}
 	}
 
