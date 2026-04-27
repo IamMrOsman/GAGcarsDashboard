@@ -9,10 +9,12 @@ use App\Models\Transaction;
 use App\Models\WalletBalance;
 use App\Models\WalletLedger;
 use App\Models\WalletTopup;
+use App\Models\CategoryRequirement;
 use App\Services\PaystackService;
 use App\Services\PaystackSettingsService;
 use App\Services\PackageFulfillmentService;
 use App\Services\EventMessageService;
+use App\Services\UploadCreditPolicy;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -369,6 +371,163 @@ class PaystackController extends Controller
 	}
 
 	/**
+	 * Verify an upload-package payment and submit the prepared item draft.
+	 *
+	 * Flutter still uploads device-local images to the draft first. This endpoint
+	 * owns the critical server-side sequence after that: verify Paystack,
+	 * fulfill the upload package idempotently, consume one credit, and publish
+	 * the draft. Retrying the same request is safe once the draft is submitted.
+	 */
+	public function verifyAndSubmitDraft(Request $request)
+	{
+		if (!PaystackSettingsService::isPaystackConfigured()) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Paystack is not configured',
+			], 503);
+		}
+
+		$data = $request->validate([
+			'reference' => ['required', 'string'],
+			'draft_id' => ['required', 'string', 'exists:items,id'],
+		]);
+
+		$user = $request->user();
+		$transaction = Transaction::with(['package'])
+			->where('reference', $data['reference'])
+			->firstOrFail();
+
+		if ((string) $transaction->user_id !== (string) $user->id) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Forbidden',
+			], 403);
+		}
+
+		$package = $transaction->package;
+		if (! $package || $package->package_type !== 'upload') {
+			return response()->json([
+				'success' => false,
+				'message' => 'This payment is not for an upload package.',
+			], 422);
+		}
+
+		$draft = Item::query()->findOrFail($data['draft_id']);
+		if ((string) $draft->user_id !== (string) $user->id) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Forbidden',
+			], 403);
+		}
+
+		try {
+			$res = $this->paystack->verifyTransaction($data['reference']);
+		} catch (RequestException $e) {
+			$body = $e->response?->json();
+			$message = is_array($body) && isset($body['message']) && is_string($body['message'])
+				? $body['message']
+				: 'Payment verification failed.';
+			$transaction->update([
+				'status' => 'verification_error',
+				'gateway_response' => $this->encodeGatewayResponseForStorage(
+					is_array($body) ? $body : ['error' => $e->getMessage()],
+				),
+			]);
+
+			return response()->json([
+				'success' => false,
+				'message' => $message,
+			], 422);
+		} catch (ConnectionException $e) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Unable to reach payment gateway. Try again shortly.',
+			], 503);
+		}
+
+		$res = is_array($res) ? $res : [];
+
+		$paystackStatus = (string) data_get($res, 'data.status');
+		$paidAmount = (int) data_get($res, 'data.amount', 0);
+		$currency = (string) data_get($res, 'data.currency');
+		$paidAt = data_get($res, 'data.paid_at');
+		$gatewayTxnId = data_get($res, 'data.id');
+		$expectedAmount = (int) round(((float) $transaction->amount) * 100);
+
+		if ($expectedAmount > 0 && $paidAmount > 0 && $expectedAmount !== $paidAmount) {
+			$transaction->update([
+				'status' => 'amount_mismatch',
+				'gateway_response' => $this->encodeGatewayResponseForStorage($res),
+				'currency' => $currency ?: $transaction->currency,
+				'gateway_transaction_id' => $gatewayTxnId ? (string) $gatewayTxnId : $transaction->gateway_transaction_id,
+			]);
+
+			return response()->json([
+				'success' => false,
+				'message' => 'Payment amount mismatch',
+			], 409);
+		}
+
+		$success = $paystackStatus === 'success';
+		$transaction->update([
+			'status' => $success ? 'success' : ($paystackStatus ?: 'failed'),
+			'gateway_response' => $this->encodeGatewayResponseForStorage($res),
+			'currency' => $currency ?: $transaction->currency,
+			'gateway_transaction_id' => $gatewayTxnId ? (string) $gatewayTxnId : $transaction->gateway_transaction_id,
+			'paid_at' => $success && $paidAt ? Carbon::parse($paidAt) : $transaction->paid_at,
+		]);
+
+		if (! $success) {
+			$transaction->loadMissing('user');
+			if ($transaction->user) {
+				$this->eventMessages->send('payment_failed', $transaction->user, [
+					'amount' => (string) $transaction->amount,
+					'reference' => (string) ($transaction->reference ?? ''),
+				]);
+			}
+
+			return response()->json([
+				'success' => false,
+				'message' => 'Payment not successful',
+				'data' => [
+					'paystack' => $res,
+				],
+			], 200);
+		}
+
+		$this->packageFulfillment->fulfillIfNeeded($transaction);
+		$user->refresh();
+
+		$draft = $draft->fresh();
+		if (! $draft) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Draft not found after payment verification.',
+			], 404);
+		}
+
+		$submitResult = $this->submitPaidUploadDraft($draft, $user);
+		if ($submitResult['success'] !== true) {
+			return response()->json($submitResult, $submitResult['status_code'] ?? 422);
+		}
+
+		$tx = $transaction->fresh(['package', 'item']);
+		$transactionPayload = $tx
+			? Arr::except($tx->toArray(), ['gateway_response'])
+			: [];
+
+		return response()->json([
+			'success' => true,
+			'message' => 'Payment verified and draft submitted',
+			'data' => [
+				'transaction' => $transactionPayload,
+				'item' => $submitResult['data'],
+				'paystack' => $res,
+			],
+		], 200);
+	}
+
+	/**
 	 * Paystack webhook endpoint.
 	 * Configure this URL in Paystack dashboard.
 	 */
@@ -484,6 +643,85 @@ class PaystackController extends Controller
 		}
 
 		return response()->json(['success' => true], 200);
+	}
+
+	private function submitPaidUploadDraft(Item $item, $user): array
+	{
+		$missing = [];
+		foreach (['category_id', 'name', 'slug', 'location'] as $key) {
+			if (empty($item->{$key})) {
+				$missing[] = $key;
+			}
+		}
+
+		$images = $item->images ?? [];
+		if (!is_array($images) || count($images) < 1) {
+			$missing[] = 'images';
+		}
+
+		if ($missing !== []) {
+			return [
+				'success' => false,
+				'message' => 'Missing required fields: ' . implode(', ', $missing),
+				'status_code' => 422,
+			];
+		}
+
+		// Retry-safe: if a previous call already submitted this draft, do not
+		// consume another upload credit.
+		if (!in_array($item->status, ['draft', 'pending_payment'], true)) {
+			return [
+				'success' => true,
+				'message' => 'Draft already submitted',
+				'data' => $item,
+			];
+		}
+
+		$approvalRequired = CategoryRequirement::where('category_id', $item->category_id)
+			->where('country_id', $user->country_id)
+			->where('require_approval', true)
+			->exists();
+
+		$paidUpload = UploadCreditPolicy::paidUploadApplies(
+			$item->category_id,
+			$user->country_id,
+		);
+
+		if ($paidUpload) {
+			$uploadsLeft = $user->getUploadsLeftForCategory($item->category_id);
+			if ($uploadsLeft <= 0) {
+				$item->status = 'pending_payment';
+				$item->save();
+
+				return [
+					'success' => false,
+					'message' => 'No uploads left for this category after payment verification. Please contact support with your payment reference.',
+					'status_code' => 402,
+				];
+			}
+
+			$user->decrementUploadsForCategory($item->category_id);
+		}
+
+		$item->status = $approvalRequired ? 'pending_approval' : 'active';
+		$item->last_saved_at = now();
+		$item->save();
+
+		if ($item->status === 'pending_approval') {
+			$this->eventMessages->send('item_submitted_for_approval', $user, [
+				'item_name' => (string) ($item->name ?? ''),
+			]);
+		} else {
+			$this->eventMessages->send('item_listed', $user, [
+				'item_name' => (string) ($item->name ?? ''),
+			]);
+		}
+
+		return [
+			'success' => true,
+			'message' => 'Draft submitted',
+			'data' => $item->fresh(),
+		];
 	}
 
 	/**

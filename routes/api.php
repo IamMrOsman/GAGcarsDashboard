@@ -50,6 +50,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 		Route::get('/config', [PaystackController::class, 'config']);
 		Route::post('/initialize', [PaystackController::class, 'initialize']);
 		Route::post('/verify', [PaystackController::class, 'verify']);
+		Route::post('/verify-and-submit-draft', [PaystackController::class, 'verifyAndSubmitDraft']);
 	});
 
 	Route::prefix('items/drafts')->group(function () {
