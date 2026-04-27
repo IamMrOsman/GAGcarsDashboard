@@ -44,6 +44,8 @@ class UpdateHandler extends Handlers {
         }
 
         $payload = $request->all();
+        $requestedStatus = strtolower(trim((string) ($payload['status'] ?? '')));
+        $markAsSold = $requestedStatus === 'sold';
 
 		// Mobile sends Cloudinary URLs in images. Watermarking is enforced at upload time,
 		// so keep URLs as-is to ensure fast delivery from Cloudinary.
@@ -57,13 +59,14 @@ class UpdateHandler extends Handlers {
 			$payload['images'] = $out;
 		}
 
-        // Never trust the client to set status (prevents skipping payment / relist rules).
+        // Never trust arbitrary client status changes (prevents skipping payment / relist rules).
+        // Marking an owned listing as sold is the one allowed direct status transition.
         unset($payload['status']);
 
         $wasExpired = $model->status === 'expired';
         $newStatus = null;
 
-        if ($wasExpired) {
+        if ($wasExpired && ! $markAsSold) {
             $categoryId = $payload['category_id'] ?? $model->category_id;
             if (! $categoryId) {
                 return response()->json([
@@ -95,6 +98,10 @@ class UpdateHandler extends Handlers {
 
         if ($wasExpired && $newStatus !== null) {
             $model->status = $newStatus;
+        }
+
+        if ($markAsSold) {
+            $model->status = 'sold';
         }
 
         $model->save();

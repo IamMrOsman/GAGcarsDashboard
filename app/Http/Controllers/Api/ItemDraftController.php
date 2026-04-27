@@ -140,6 +140,13 @@ class ItemDraftController extends Controller
 	{
 		$this->authorizeDraft($request, $item);
 
+		if (! in_array($item->status, ['draft', 'pending_payment'], true)) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Only draft listings can be deleted from this endpoint.',
+			], 409);
+		}
+
 		$item->delete();
 
 		return response()->json([
