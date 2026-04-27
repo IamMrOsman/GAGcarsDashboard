@@ -19,9 +19,15 @@ class EnhancedStatsOverview extends StatsOverviewWidget
 		$previousPeriodEnd = now()->subMonth()->endOfMonth();
 
 		// Items
-		$totalItems = Item::count();
-		$currentMonthItems = Item::whereBetween('created_at', [$currentPeriodStart, now()])->count();
-		$previousMonthItems = Item::whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])->count();
+		$itemCountQuery = fn () => Item::query()
+			->whereNotIn('status', ['draft', 'pending_payment']);
+		$totalItems = $itemCountQuery()->count();
+		$currentMonthItems = $itemCountQuery()
+			->whereBetween('created_at', [$currentPeriodStart, now()])
+			->count();
+		$previousMonthItems = $itemCountQuery()
+			->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
+			->count();
 		$itemsChange = $previousMonthItems > 0
 			? round((($currentMonthItems - $previousMonthItems) / $previousMonthItems) * 100, 1)
 			: 0;
@@ -50,6 +56,7 @@ class EnhancedStatsOverview extends StatsOverviewWidget
 				->chart(
 					Item::query()
 						->select(DB::raw('count(*) as count'))
+						->whereNotIn('status', ['draft', 'pending_payment'])
 						->whereDate('created_at', '>', now()->subDays(7))
 						->groupBy(DB::raw('Date(created_at)'))
 						->pluck('count')
