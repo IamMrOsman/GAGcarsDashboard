@@ -73,13 +73,55 @@ class PackageFulfillmentService
 					]);
 				}
 
-				Promotion::create([
-					'user_id' => $user->id,
-					'item_id' => $locked->item_id,
-					'start_at' => now(),
-					'end_at' => now()->addDays($days),
-					'status' => 'active',
-				]);
+				// Idempotent + UX-friendly promotion behavior:
+				// - If the item is already promoted, extend the current active promotion
+				//   instead of creating another row (which can show twice in admin).
+				// - If multiple active rows exist (from historical bugs/retries), merge them
+				//   into one by expiring the extras.
+				$now = now();
+				$active = Promotion::query()
+					->where('user_id', $user->id)
+					->where('item_id', $locked->item_id)
+					->where('status', 'active')
+					->where(function ($q) use ($now) {
+						$q->whereNull('end_at')->orWhere('end_at', '>=', $now);
+					})
+					->orderByDesc('end_at')
+					->lockForUpdate()
+					->get();
+
+				if ($active->isNotEmpty()) {
+					$primary = $active->first();
+
+					// If end_at is null (open-ended), set a bounded end date.
+					$baseEnd = $primary->end_at ?? $now;
+					$newEnd = $baseEnd->copy()->addDays($days);
+
+					$primary->update([
+						'start_at' => $primary->start_at ?? $now,
+						'end_at' => $newEnd,
+						'status' => 'active',
+					]);
+
+					// Expire any other active duplicates to avoid double rows in Filament.
+					$extraIds = $active->slice(1)->pluck('id')->all();
+					if ($extraIds !== []) {
+						Promotion::query()
+							->whereIn('id', $extraIds)
+							->update([
+								'status' => 'expired',
+								'end_at' => $now,
+							]);
+					}
+				} else {
+					Promotion::create([
+						'user_id' => $user->id,
+						'item_id' => $locked->item_id,
+						'start_at' => $now,
+						'end_at' => $now->copy()->addDays($days),
+						'status' => 'active',
+					]);
+				}
 			}
 
 			$locked->update([
